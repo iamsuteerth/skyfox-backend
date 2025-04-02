@@ -1,4 +1,3 @@
-
 package validator
 
 import (
@@ -35,6 +34,11 @@ func (d *DtoValidator) lazyInit() {
 	d.sync.Do(func() {
 		d.validate = validator.New()
 		d.validate.SetTagName("binding")
+
+		d.validate.RegisterValidation("customName", ValidateName)
+		d.validate.RegisterValidation("customUsername", ValidateUsername)
+		d.validate.RegisterValidation("customPhone", ValidatePhoneNumber)
+
 		d.validate.RegisterValidation("phoneNumber", validatePhoneNumber())
 		d.validate.RegisterValidation("maxSeats", validateMaxSeatsAllowed())
 	})
@@ -63,9 +67,6 @@ func validatePhoneNumber() func(fl validator.FieldLevel) bool {
 func validateMaxSeatsAllowed() func(fl validator.FieldLevel) bool {
 	return func(fl validator.FieldLevel) bool {
 		seatsRequested := fl.Field().Int()
-		if MAX_NO_OF_SEATS_PER_BOOKING < seatsRequested {
-			return false
-		}
-		return true
+		return MAX_NO_OF_SEATS_PER_BOOKING >= seatsRequested
 	}
 }

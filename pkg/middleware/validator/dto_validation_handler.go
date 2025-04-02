@@ -44,15 +44,15 @@ func validationErrorToText(fieldErr validator.FieldError) string {
 	case "min":
 		return fmt.Sprintf("%s must be longer than %s", fieldErr.Field(), fieldErr.Param())
 	case "email":
-		return fmt.Sprintf("Invalid email format")
+		return "Invalid email format"
 	case "len":
 		return fmt.Sprintf("%s must be %s characters long", fieldErr.Field(), fieldErr.Param())
 	case "gte":
 		return fmt.Sprintf("%s must be greater than %s", fieldErr.Field(), fieldErr.Param())
 	case "phoneNumber":
-		return fmt.Sprintf("Invalid phone number")
+		return "Invalid phone number"
 	case "maxSeats":
-		return fmt.Sprintf("Number of seats exceeds maximum allowed")
+		return "Number of seats exceeds maximum allowed"
 	}
 	return fmt.Sprintf("%s is not valid", fieldErr.Field())
 }

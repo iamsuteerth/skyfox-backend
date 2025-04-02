@@ -106,7 +106,7 @@ The application uses JWT (JSON Web Token) for authentication. Tokens are valid f
 ### Authentication
 
 #### Login
-- **URL**: `/api/login`
+- **URL**: `/login`
 - **Method**: `POST`
 - **Authentication**: None
 - **Request Body**:
