@@ -8,25 +8,30 @@ This document outlines the setup process, migration, and development workflow fo
 
 ## Prerequisites
 
-- Go 1.23+
-- PostgreSQL client tools (`psql` command)
+- Go 1.20+
 - Supabase account with a project
+- Git
 
 ## Environment Setup
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/skyfox-backend.git
+git clone https://github.com/iamsuteerth/skyfox-backend.git
 cd skyfox-backend
 ```
 
-2. Set up environment variables:
-```bash
-export DB_HOST=your-supabase-uri
-export DB_PORT=5432
-export DB_NAME=postgres
-export POSTGRES_USERNAME=postgres
-export DB_PASSWORD=your-supabase-db-password
+2. Create a `.env` file in the root directory with the following variables:
+```
+# Database Configuration
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres
+
+# Auth Configuration
+JWT_SECRET_KEY=your_secure_jwt_secret
+
+# Application Configuration
+PORT=8080
+APP_ENV=development  # Options: development, production
+LOG_LEVEL=info       # Options: debug, info, warn, error
 ```
 
 3. Install dependencies:
@@ -34,94 +39,160 @@ export DB_PASSWORD=your-supabase-db-password
 go mod download
 ```
 
+## Project Structure
+
+The project follows a clean architecture approach with the following structure:
+
+- `pkg/` - Core application code
+  - `config/` - Configuration management
+  - `controllers/` - HTTP request handlers
+  - `database/seed/` - Database seeding functionality
+  - `dto/` - Data transfer objects (for future API implementations)
+  - `models/` - Domain models
+  - `repositories/` - Database access layer
+  - `services/` - Business logic
+  - `utils/` - Utility functions and error handling
+- `server/` - Application entry point
+- `supabase/migration/` - Database migration scripts
+- `scripts/` - Utility scripts for development
+
 ## Database Migration
 
-The project uses a custom Go-based migration tool to manage database schema changes with Supabase.
-
-### Migration Files
-
-Migration files are stored in the `supabase/migration` directory using the format:
+The migration files are stored in the `supabase/migration` directory:
 - `000001_initial_schema.up.sql` - Creates the initial schema
 - `000001_initial_schema.down.sql` - Drops the initial schema
 - `000002_seat_types.up.sql` - Adds seat types
 - `000002_seat_types.down.sql` - Removes seat types
 
-### Running Migrations
+To apply these migrations to your Supabase project, use the Supabase SQL Editor to execute the SQL scripts.
 
-To apply migrations:
+## Running the Application
+
+To run the application:
+
 ```bash
-make run-migrations
+cd server
+go run main.go
 ```
 
-To roll back migrations:
-```bash
-make rollback-migrations
+The server will start on the port specified in your `.env` file (default 8080).
+
+## Logging
+
+The application uses structured logging with zerolog. Log levels can be configured in the `.env` file:
+- `debug` - Detailed information for debugging
+- `info` - General information about application flow
+- `warn` - Warning events that might need attention
+- `error` - Error events that might still allow the application to continue running
+
+## Database Seeding
+
+The application automatically seeds the database with initial data on startup:
+
+- Admin users:
+  - Username: `seed-user-1`, Password: `foobar`, Role: `admin`
+  - Username: `seed-user-2`, Password: `foobar`, Role: `admin`
+- Staff user:
+  - Username: `staff-1`, Password: `foobar`, Role: `staff`
+
+The seeding process creates records in both the user table and staff table, ensuring proper relationships.
+
+## Authentication
+
+The application uses JWT (JSON Web Token) for authentication. Tokens are valid for 24 hours and include the user's role for authorization purposes.
+
+## API Endpoints
+
+### Authentication
+
+#### Login
+- **URL**: `/api/login`
+- **Method**: `POST`
+- **Authentication**: None
+- **Request Body**:
+  ```json
+  {
+    "username": "string",
+    "password": "string"
+  }
+  ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Login successful",
+    "request_id": "unique-request-id",
+    "status": "SUCCESS",
+    "data": {
+      "user": {
+        "username": "string",
+        "role": "string"
+      },
+      "token": "jwt-token"
+    }
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "error": "Invalid username or password",
+    "request_id": "unique-request-id"
+  }
+  ```
+
+## Error Handling
+
+The application uses standardized error responses:
+
+For general errors:
+```json
+{
+  "error": "Error message",
+  "request_id": "unique-request-id"
+}
 ```
 
-If you encounter a "dirty database" error, you can force a specific migration version:
-```bash
-make force-migration
+For validation errors:
+```json
+{
+  "errors": [
+    {
+      "field": "field_name",
+      "message": "Error message for this field"
+    }
+  ],
+  "request_id": "unique-request-id",
+  "status": "REJECT"
+}
 ```
-
-## Seeding Data
-
-The project includes a seed script to populate the database with test data.
-
-To seed the database:
-```bash
-make seedData
-```
-
-This will:
-- Clear existing data and reset sequences
-- Add 4 time slots (Morning, Afternoon, Evening, Night)
-- Add 100 seats (A1-J10), with rows A-E as Standard type and F-J as Deluxe type
-- Add movie shows for the next 21 days across all time slots
-
-## Development
-
-### Available Make Commands
-
-- `make run-migrations` - Apply database migrations
-- `make rollback-migrations` - Revert the most recent migration
-- `make force-migration` - Force a dirty migration
-- `make deploy` - Build and run the Go server locally
-- `make seedData` - Populate the database with test data
 
 ## Database Schema
 
 The database includes the following tables:
 
 1. **usertable** - User authentication and roles
+   - Contains username, password (hashed), and role
+
 2. **password_history** - Password management
-3. **stafftable** - Staff member information
+   - Tracks previous passwords for security measures
+
+3. **stafftable** - Staff information
+   - Links staff members to user accounts
+
 4. **customertable** - Customer information
+
 5. **admin_booked_customer** - Customers booked by admins
+
 6. **seat** - Theater seats (Standard and Deluxe types)
+
 7. **slot** - Movie time slots
+
 8. **show** - Movie screenings
+
 9. **booking** - Ticket reservations
+
 10. **booking_seat_mapping** - Mapping between bookings and seats
-
-## External Services
-
-The application integrates with:
-1. **Movie Service** - External API for movie information
-2. **Payment Service** - External API for payment processing
-
-Both services require API keys stored in environment variables.
-
-## Local Development
-
-For local development:
-- The Go server runs directly on the development machine
-- Movie and payment services run in containers
-- Database is hosted on Supabase
-
-## Deployment
-
-The project is configured for local development only. Future updates will include production deployment configurations.
 
 ## License
 
 See the [LICENSE](LICENSE) file for details.
+
