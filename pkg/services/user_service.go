@@ -1,4 +1,3 @@
-// pkg/services/user_service.go
 package services
 
 import (
@@ -7,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/repositories"
@@ -15,6 +15,7 @@ import (
 
 type UserService interface {
 	Login(ctx context.Context, username, password string) (*models.User, string, error)
+	FindByUsername(ctx *gin.Context, username string) (*models.User, error)
 }
 
 type userService struct {
@@ -63,4 +64,9 @@ func generateToken(user *models.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secretKey))
+}
+
+func (s *userService) FindByUsername(ctx *gin.Context, username string) (*models.User, error) {
+	bgCtx := ctx.Request.Context()
+	return s.userRepo.FindByUsername(bgCtx, username)
 }

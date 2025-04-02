@@ -1,60 +1,64 @@
-// server/main.go
 package main
 
 import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 
 	"github.com/iamsuteerth/skyfox-backend/pkg/config"
+	"github.com/iamsuteerth/skyfox-backend/pkg/constants"
 	"github.com/iamsuteerth/skyfox-backend/pkg/controllers"
 	"github.com/iamsuteerth/skyfox-backend/pkg/database/seed"
+	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/cors"
+	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/security"
+	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/validator"
 	"github.com/iamsuteerth/skyfox-backend/pkg/repositories"
 	"github.com/iamsuteerth/skyfox-backend/pkg/services"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
 )
 
 func main() {
-	// Load .env file
 	if err := godotenv.Load("../.env"); err != nil {
 		log.Warn().Msg("Warning: .env file not found")
 	}
 
-	// Initialize logger
 	utils.InitLogger()
 
-	// Get database connection
 	db := config.GetDBConnection()
 	defer config.CloseDBConnection()
 
-	// Initialize repositories
 	userRepo := repositories.NewUserRepository(db)
 	staffRepo := repositories.NewStaffRepository(db)
 
-	// Seed the database
 	seed.SeedDB(userRepo, staffRepo)
 
-	// Initialize services
 	userService := services.NewUserService(userRepo)
 
-	// Initialize controllers
 	authController := controllers.NewAuthController(userService)
 
-	// Set up router
+	binding.Validator = new(validator.DtoValidator)
+
 	router := gin.Default()
+	router.Use(cors.SetupCORS())
 
-	// API routes
-	api := router.Group("/api")
-	{
-		// Public routes
-		api.POST("/login", authController.Login)
+	noAuthRouter := router.Group("")
 
-		// Protected routes will come later
-	}
+	authRouter := router.Group("")
+	authRouter.Use(security.AuthMiddleware())
 
-	// Start the server
+	adminRouter := router.Group("")
+	adminRouter.Use(security.AuthMiddleware())
+	adminRouter.Use(security.AdminMiddleware())
+
+	staffRouter := router.Group("")
+	staffRouter.Use(security.AuthMiddleware())
+	staffRouter.Use(security.StaffMiddleware())
+
+	noAuthRouter.POST(constants.LoginEndPoint, authController.Login)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

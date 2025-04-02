@@ -1,4 +1,3 @@
-// pkg/models/password_history.go
 package models
 
 type PasswordHistory struct {

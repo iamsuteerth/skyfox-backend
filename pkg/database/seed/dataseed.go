@@ -1,4 +1,3 @@
-// pkg/database/seed/dataseed.go
 package seed
 
 import (
@@ -10,16 +9,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// SeedDB seeds the database with initial data
 func SeedDB(userRepo repositories.UserRepository, staffRepo repositories.StaffRepository) {
 	ctx := context.Background()
 	log.Info().Msg("Starting database seeding...")
 
-	// Add admin users
 	seedUser(ctx, userRepo, staffRepo, "seed-user-1", "foobar", "admin", "Admin One", 101)
 	seedUser(ctx, userRepo, staffRepo, "seed-user-2", "foobar", "admin", "Admin Two", 102)
 
-	// Add staff user
 	seedUser(ctx, userRepo, staffRepo, "staff-1", "foobar", "staff", "Staff One", 501)
 
 	log.Info().Msg("Database seeding completed successfully")
@@ -27,7 +23,7 @@ func SeedDB(userRepo repositories.UserRepository, staffRepo repositories.StaffRe
 
 func seedUser(ctx context.Context, userRepo repositories.UserRepository, staffRepo repositories.StaffRepository,
 	username, password, role, staffName string, counterNumber int) {
-	// Check if user exists
+
 	user, _ := userRepo.FindByUsername(ctx, username)
 	staff, _ := staffRepo.FindByUsername(ctx, username)
 	passwordHistory, _ := userRepo.FindByUsernameinPasswordHistory(ctx, username)

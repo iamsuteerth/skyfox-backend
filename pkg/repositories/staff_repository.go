@@ -1,4 +1,3 @@
-// pkg/repositories/staff_repository.go
 package repositories
 
 import (

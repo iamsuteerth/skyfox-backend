@@ -1,4 +1,3 @@
-// pkg/utils/errors.go
 package utils
 
 import (
@@ -8,7 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// AppError represents an application error
 type AppError struct {
 	HTTPCode int
 	Code     string
@@ -26,13 +24,11 @@ func (ae AppError) Error() string {
 	return ""
 }
 
-// Error response format
 type ErrorResponse struct {
 	Error     string `json:"error"`
 	RequestID string `json:"request_id"`
 }
 
-// ValidationErrorResponse format
 type ValidationErrorResponse struct {
 	Errors    []ValidationError `json:"errors"`
 	RequestID string            `json:"request_id"`
@@ -44,7 +40,6 @@ type ValidationError struct {
 	Message string `json:"message"`
 }
 
-// SuccessResponse format
 type SuccessResponse struct {
 	Message   string      `json:"message"`
 	RequestID string      `json:"request_id"`
@@ -52,7 +47,6 @@ type SuccessResponse struct {
 	Data      interface{} `json:"data,omitempty"`
 }
 
-// Error constructors
 func NewNotFoundError(code string, message string, err error) *AppError {
 	return &AppError{
 		HTTPCode: http.StatusNotFound,
@@ -89,7 +83,6 @@ func NewUnauthorizedError(code string, message string, err error) *AppError {
 	}
 }
 
-// HandleErrorResponse sends appropriate error response
 func HandleErrorResponse(ctx *gin.Context, err error, requestID string) {
 	appErr, ok := err.(*AppError)
 	if !ok {
@@ -102,7 +95,6 @@ func HandleErrorResponse(ctx *gin.Context, err error, requestID string) {
 	})
 }
 
-// GetRequestID retrieves or generates a request ID
 func GetRequestID(ctx *gin.Context) string {
 	requestID := ctx.GetHeader("X-Request-ID")
 	if requestID == "" {
