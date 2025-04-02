@@ -38,6 +38,8 @@ func (repo *skyCustomerRepository) FindByUsername(ctx context.Context, username 
 		&customer.Number,
 		&customer.Email,
 		&customer.ProfileImg,
+		&customer.SecurityAnswerHash,
+		&customer.SecurityQuestionID,
 	)
 
 	if err != nil {
@@ -61,6 +63,8 @@ func (repo *skyCustomerRepository) FindByEmail(ctx context.Context, email string
 		&customer.Number,
 		&customer.Email,
 		&customer.ProfileImg,
+		&customer.SecurityAnswerHash,
+		&customer.SecurityQuestionID,
 	)
 
 	if err != nil {
@@ -101,10 +105,10 @@ func (repo *skyCustomerRepository) ExistsByEmailOrMobile(ctx context.Context, em
 
 func (repo *skyCustomerRepository) Create(ctx context.Context, customer *models.SkyCustomer) error {
 	query := `
-		INSERT INTO customertable (name, username, number, email, profile_img)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id
-	`
+    INSERT INTO customertable (name, username, number, email, profile_img, security_question_id, security_answer_hash)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING id
+    `
 
 	err := repo.db.QueryRow(ctx, query,
 		customer.Name,
@@ -112,6 +116,8 @@ func (repo *skyCustomerRepository) Create(ctx context.Context, customer *models.
 		customer.Number,
 		customer.Email,
 		customer.ProfileImg,
+		customer.SecurityQuestionID,
+		customer.SecurityAnswerHash,
 	).Scan(&customer.ID)
 
 	if err != nil {

@@ -38,6 +38,7 @@ func (d *DtoValidator) lazyInit() {
 		d.validate.RegisterValidation("customUsername", ValidateUsername)
 		d.validate.RegisterValidation("customPhone", ValidatePhoneNumber)
 		d.validate.RegisterValidation("customPassword", ValidatePassword)
+		d.validate.RegisterValidation("securityAnswer", validateSecurityAnswer)
 
 		d.validate.RegisterValidation("maxSeats", validateMaxSeatsAllowed())
 	})

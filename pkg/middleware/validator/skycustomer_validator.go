@@ -14,6 +14,7 @@ func RegisterCustomValidations(v *validator.Validate) {
 	v.RegisterValidation("customUsername", ValidateUsername)
 	v.RegisterValidation("customPhone", ValidatePhoneNumber)
 	v.RegisterValidation("customPassword", ValidatePassword)
+	v.RegisterValidation("securityAnswer", validateSecurityAnswer)
 }
 
 func ValidateName(fl validator.FieldLevel) bool {
@@ -126,6 +127,11 @@ func ValidatePassword(fl validator.FieldLevel) bool {
 	return hasSpecial
 }
 
+func validateSecurityAnswer(fl validator.FieldLevel) bool {
+	answer := fl.Field().String()
+	return len(strings.TrimSpace(answer)) >= 3
+}
+
 var ValidationErrorMessages = map[string]string{
 	"required":       "This field is required",
 	"email":          "Invalid email format",
@@ -133,6 +139,7 @@ var ValidationErrorMessages = map[string]string{
 	"customUsername": "Username must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters",
 	"customPhone":    "Phone number must be exactly 10 digits",
 	"customPassword": "Password must be at least 8 characters with at least one uppercase letter and one special character",
+	"securityAnswer": "Security answer must be at least 3 characters long",
 	"min":            "Value must be at least %s characters long",
 	"max":            "Value must be at most %s characters long",
 }
@@ -163,10 +170,12 @@ func HandleValidationErrors(c *gin.Context, err error) {
 			})
 		}
 
-		c.JSON(400, utils.ValidationErrorResponse{
+		c.JSON(400, utils.StandardizedErrorResponse{
 			Errors:    errors,
 			RequestID: requestID,
-			Status:    "REJECT",
+			Status:    "ERROR",
+			Code:      "VALIDATION_ERROR",
+			Message:   "Validation failed",
 		})
 		return
 	}

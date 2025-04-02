@@ -10,6 +10,26 @@ import (
 	"github.com/google/uuid"
 )
 
+type StandardizedErrorResponse struct {
+	Status    string            `json:"status"`
+	Code      string            `json:"code"`
+	Message   string            `json:"message"`
+	RequestID string            `json:"request_id"`
+	Errors    []ValidationError `json:"errors,omitempty"`
+}
+
+type ValidationError struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}
+
+type SuccessResponse struct {
+	Message   string      `json:"message"`
+	RequestID string      `json:"request_id"`
+	Status    string      `json:"status"`
+	Data      interface{} `json:"data,omitempty"`
+}
+
 type AppError struct {
 	HTTPCode         int
 	Code             string
@@ -26,29 +46,6 @@ func (ae AppError) Error() string {
 		return ae.Err.Error()
 	}
 	return ""
-}
-
-type ErrorResponse struct {
-	Error     string `json:"error"`
-	RequestID string `json:"request_id"`
-}
-
-type ValidationErrorResponse struct {
-	Errors    []ValidationError `json:"errors"`
-	RequestID string            `json:"request_id"`
-	Status    string            `json:"status"`
-}
-
-type ValidationError struct {
-	Field   string `json:"field"`
-	Message string `json:"message"`
-}
-
-type SuccessResponse struct {
-	Message   string      `json:"message"`
-	RequestID string      `json:"request_id"`
-	Status    string      `json:"status"`
-	Data      interface{} `json:"data,omitempty"`
 }
 
 func NewNotFoundError(code string, message string, err error) *AppError {
@@ -87,34 +84,6 @@ func NewUnauthorizedError(code string, message string, err error) *AppError {
 	}
 }
 
-func HandleErrorResponse(ctx *gin.Context, err error, requestID string) {
-	appErr, ok := err.(*AppError)
-	if !ok {
-		appErr = NewInternalServerError("INTERNAL_ERROR", "An unexpected error occurred", err)
-	}
-
-	if appErr.Code == "VALIDATION_ERROR" && len(appErr.ValidationErrors) > 0 {
-		ctx.JSON(appErr.HTTPCode, ValidationErrorResponse{
-			Errors:    appErr.ValidationErrors,
-			RequestID: requestID,
-			Status:    "REJECT",
-		})
-	} else {
-		ctx.JSON(appErr.HTTPCode, ErrorResponse{
-			Error:     appErr.Message,
-			RequestID: requestID,
-		})
-	}
-}
-
-func GetRequestID(ctx *gin.Context) string {
-	requestID := ctx.GetHeader("X-Request-ID")
-	if requestID == "" {
-		requestID = uuid.New().String()
-	}
-	return requestID
-}
-
 func NewValidationError(validationErrors validator.ValidationErrors) *AppError {
 	errors := make([]ValidationError, 0)
 	for _, err := range validationErrors {
@@ -133,6 +102,34 @@ func NewValidationError(validationErrors validator.ValidationErrors) *AppError {
 	}
 }
 
+func HandleErrorResponse(ctx *gin.Context, err error, requestID string) {
+	var response StandardizedErrorResponse
+	response.RequestID = requestID
+	response.Status = "ERROR"
+
+	appErr, ok := err.(*AppError)
+	if !ok {
+		appErr = NewInternalServerError("INTERNAL_ERROR", "An unexpected error occurred", err)
+	}
+
+	response.Code = appErr.Code
+	response.Message = appErr.Message
+
+	if len(appErr.ValidationErrors) > 0 {
+		response.Errors = appErr.ValidationErrors
+	}
+
+	ctx.JSON(appErr.HTTPCode, response)
+}
+
+func GetRequestID(ctx *gin.Context) string {
+	requestID := ctx.GetHeader("X-Request-ID")
+	if requestID == "" {
+		requestID = uuid.New().String()
+	}
+	return requestID
+}
+
 func getValidationErrorMessage(tag string, param string) string {
 	messages := map[string]string{
 		"required":       "This field is required",
@@ -143,6 +140,7 @@ func getValidationErrorMessage(tag string, param string) string {
 		"customUsername": "Username must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters",
 		"customPhone":    "Phone number must be exactly 10 digits",
 		"customPassword": "Password must be at least 8 characters with at least one uppercase letter and one special character",
+		"securityAnswer": "Security answer must be at least 3 characters long",
 	}
 
 	if msg, exists := messages[tag]; exists {
@@ -151,6 +149,5 @@ func getValidationErrorMessage(tag string, param string) string {
 		}
 		return msg
 	}
-
 	return "Invalid value"
 }

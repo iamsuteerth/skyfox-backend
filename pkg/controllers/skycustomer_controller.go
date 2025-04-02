@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -16,14 +17,20 @@ import (
 )
 
 type SkyCustomerController struct {
-	userService        services.UserService
-	skyCustomerService services.SkyCustomerService
+	userService             services.UserService
+	skyCustomerService      services.SkyCustomerService
+	securityQuestionService services.SecurityQuestionService
 }
 
-func NewSkyCustomerController(userService services.UserService, skyCustomerService services.SkyCustomerService) *SkyCustomerController {
+func NewSkyCustomerController(
+	userService services.UserService,
+	skyCustomerService services.SkyCustomerService,
+	securityQuestionService services.SecurityQuestionService,
+) *SkyCustomerController {
 	return &SkyCustomerController{
-		userService:        userService,
-		skyCustomerService: skyCustomerService,
+		userService:             userService,
+		skyCustomerService:      skyCustomerService,
+		securityQuestionService: securityQuestionService,
 	}
 }
 
@@ -41,6 +48,11 @@ func (sk *SkyCustomerController) Signup(c *gin.Context) {
 		return
 	}
 
+	if err := sk.securityQuestionService.ValidateSecurityQuestionExists(c.Request.Context(), req.SecurityQuestionID); err != nil {
+		utils.HandleErrorResponse(c, err, requestID)
+		return
+	}
+
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
 		utils.HandleErrorResponse(c, utils.NewInternalServerError("PASSWORD_HASH_ERROR", "Failed to hash password", err), requestID)
@@ -49,9 +61,16 @@ func (sk *SkyCustomerController) Signup(c *gin.Context) {
 
 	user := models.NewUser(req.Username, hashedPassword, "customer")
 	passwordHistory := models.NewPasswordHistory(req.Username, hashedPassword, "", "")
-	skyCustomer := models.NewSkyCustomer(req.Name, req.Username, req.PhoneNumber, req.Email, req.ProfileImg)
+	skyCustomer := models.NewSkyCustomer(req.Name, req.Username, req.PhoneNumber, req.Email, req.ProfileImg, 0, "")
 
-	if err := sk.skyCustomerService.CreateCustomerWithUser(c.Request.Context(), user, passwordHistory, skyCustomer); err != nil {
+	if err := sk.skyCustomerService.CreateCustomer(
+		c.Request.Context(),
+		&skyCustomer,
+		&user,
+		&passwordHistory,
+		req.SecurityQuestionID,
+		req.SecurityAnswer,
+	); err != nil {
 		utils.HandleErrorResponse(c, err, requestID)
 		return
 	}
@@ -80,8 +99,19 @@ func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *re
 		req.Email = c.Request.FormValue("email")
 		req.PhoneNumber = c.Request.FormValue("number")
 		req.Password = c.Request.FormValue("password")
+		req.SecurityAnswer = c.Request.FormValue("security_answer")
 
-		if req.Name == "" || req.Username == "" || req.Email == "" || req.PhoneNumber == "" || req.Password == "" {
+		securityQuestionIDStr := c.Request.FormValue("security_question_id")
+		if securityQuestionIDStr != "" {
+			securityQuestionID, err := strconv.Atoi(securityQuestionIDStr)
+			if err != nil {
+				return utils.NewBadRequestError("INVALID_SECURITY_QUESTION", "Security question ID must be a valid number", err)
+			}
+			req.SecurityQuestionID = securityQuestionID
+		}
+
+		if req.Name == "" || req.Username == "" || req.Email == "" || req.PhoneNumber == "" ||
+			req.Password == "" || req.SecurityQuestionID == 0 || req.SecurityAnswer == "" {
 			return utils.NewBadRequestError("MISSING_FIELDS", "All fields are required", nil)
 		}
 
@@ -110,9 +140,14 @@ func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *re
 			}
 			return utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err)
 		}
+
+		if req.SecurityQuestionID == 0 || req.SecurityAnswer == "" {
+			return utils.NewBadRequestError("MISSING_SECURITY_FIELDS", "Security question and answer are required", nil)
+		}
 	}
 
 	req.Name = utils.ToCamelCase(strings.TrimSpace(req.Name))
+	req.SecurityAnswer = strings.TrimSpace(req.SecurityAnswer)
 
 	return nil
 }

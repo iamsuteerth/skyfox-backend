@@ -34,14 +34,17 @@ func main() {
 	userRepo := repositories.NewUserRepository(db)
 	staffRepo := repositories.NewStaffRepository(db)
 	skyCustomerRepository := repositories.NewSkyCustomerRepository(db)
+	securityQuestionRepository := repositories.NewSecurityQuestionRepository(db)
 
 	seed.SeedDB(userRepo, staffRepo)
 
 	userService := services.NewUserService(userRepo)
-	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepo)
+	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepo, securityQuestionRepository)
+	securityQuestionService := services.NewSecurityQuestionService(securityQuestionRepository)
 
 	authController := controllers.NewAuthController(userService)
-	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService)
+	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
+	securityQuestionController := controllers.NewSecurityQuestionController(securityQuestionService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -69,6 +72,8 @@ func main() {
 	noAuthRouter.POST(constants.LoginEndPoint, authController.Login)
 	// Customer Signup
 	noAuthRouter.POST(constants.SkyCustomerSignUpEndPoint, skyCustomerController.Signup)
+	// Get Security Questions
+	noAuthRouter.GET(constants.SecurityQuestions, securityQuestionController.GetSecurityQuestions)
 
 	port := os.Getenv("PORT")
 	if port == "" {

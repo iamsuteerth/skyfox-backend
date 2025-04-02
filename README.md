@@ -46,6 +46,8 @@ The migration files are stored in the `supabase/migration` directory:
 - `000001_initial_schema.down.sql` - Drops the initial schema
 - `000002_seat_types.up.sql` - Adds seat types
 - `000002_seat_types.down.sql` - Removes seat types
+- `000003_add_security_questions.up.sql` - Adds security questions system
+- `000003_add_security_questions.down.sql` - Removes security questions system
 
 To apply these migrations to your Supabase project, use the Supabase SQL Editor to execute the SQL scripts.
 
@@ -117,8 +119,34 @@ The application uses JWT (JSON Web Token) for authentication. Tokens are valid f
 - **Error Response (401 Unauthorized)**:
   ```json
   {
-    "error": "Invalid username or password",
+    "status": "ERROR",
+    "code": "INVALID_CREDENTIALS",
+    "message": "Invalid username or password",
     "request_id": "unique-request-id"
+  }
+  ```
+
+#### Get Security Questions
+- **URL**: `/api/security-questions`
+- **Method**: `GET`
+- **Authentication**: None
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Security questions retrieved successfully",
+    "request_id": "unique-request-id",
+    "status": "SUCCESS",
+    "data": [
+      {
+        "id": 1,
+        "question": "What was the name of your first pet?"
+      },
+      {
+        "id": 2,
+        "question": "What was your childhood nickname?"
+      }
+      // Additional security questions...
+    ]
   }
   ```
 
@@ -134,7 +162,9 @@ The application uses JWT (JSON Web Token) for authentication. Tokens are valid f
     "password": "string",
     "number": "string",
     "email": "string",
-    "profile_img": null
+    "profile_img": null,
+    "security_question_id": 1,
+    "security_answer": "string"
   }
   ```
 - **Success Response (201 Created)**:
@@ -143,7 +173,7 @@ The application uses JWT (JSON Web Token) for authentication. Tokens are valid f
     "message": "User registered successfully",
     "request_id": "unique-request-id",
     "status": "SUCCESS",
-      "data": {
+    "data": {
       "username": "string",
       "name": "string"
     }
@@ -152,30 +182,30 @@ The application uses JWT (JSON Web Token) for authentication. Tokens are valid f
 - **Validation Error Response (400 Bad Request)**:
   ```json
   {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "unique-request-id",
     "errors": [
       {
         "field": "Name",
         "message": "Name must be 3-70 characters, max 4 words, letters only, no consecutive spaces"
       },
       {
-        "field": "Username",
-        "message": "Username must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters"
-      },
-      {
-        "field": "Password",
-        "message": "Password must be at least 8 characters with at least one uppercase letter and one special character"
-      },
-      {
-        "field": "PhoneNumber",
-        "message": "Phone number must be exactly 10 digits"
-      },
-      {
-        "field": "Email",
-        "message": "Invalid email format"
+        "field": "SecurityAnswer",
+        "message": "Security answer must be at least 3 characters long"
       }
-    ],
-    "request_id": "4da30d4c-1a9a-4f64-917c-067b79a7de7a",
-    "status": "REJECT"
+      // Other validation errors...
+    ]
+  }
+  ```
+- **Security Question Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_SECURITY_QUESTION",
+    "message": "The selected security question does not exist",
+    "request_id": "unique-request-id"
   }
   ```
 - The validation system enforces strict rules for different field types:
@@ -184,32 +214,32 @@ The application uses JWT (JSON Web Token) for authentication. Tokens are valid f
   - **Password**: Must be at least 8 characters with at least one uppercase letter and one special character
   - **Phone Number**: Must be exactly 10 digits
   - **Email**: Must be in valid email format
+  - **Security Answer**: Must be at least 3 characters long
 
 ## Error Handling
 
 The application uses standardized error responses:
 
-For general errors:
 ```json
 {
-  "error": "Error message",
-  "request_id": "unique-request-id"
-}
-```
-
-For validation errors:
-```json
-{
+  "status": "ERROR",
+  "code": "ERROR_CODE",
+  "message": "Error message",
+  "request_id": "unique-request-id",
   "errors": [
     {
       "field": "field_name",
       "message": "Error message for this field"
     }
-  ],
-  "request_id": "unique-request-id",
-  "status": "REJECT"
+  ]
 }
 ```
+
+- `status`: Always "ERROR" for error responses
+- `code`: Machine-readable error code (e.g., "VALIDATION_ERROR", "INVALID_CREDENTIALS")
+- `message`: Human-readable error message
+- `request_id`: Unique identifier for the request
+- `errors`: Array of field-specific validation errors (only present for validation failures)
 
 ## Database Schema
 
@@ -225,20 +255,34 @@ The database includes the following tables:
    - Links staff members to user accounts
 
 4. **customertable** - Customer information
+   - Contains security_question_id and security_answer_hash for account security
 
-5. **admin_booked_customer** - Customers booked by admins
+5. **security_questions** - Predefined security questions
+   - Used for account recovery and additional security
 
-6. **seat** - Theater seats (Standard and Deluxe types)
+6. **admin_booked_customer** - Customers booked by admins
 
-7. **slot** - Movie time slots
+7. **seat** - Theater seats (Standard and Deluxe types)
 
-8. **show** - Movie screenings
+8. **slot** - Movie time slots
 
-9. **booking** - Ticket reservations
+9. **show** - Movie screenings
 
-10. **booking_seat_mapping** - Mapping between bookings and seats
+10. **booking** - Ticket reservations
+
+11. **booking_seat_mapping** - Mapping between bookings and seats
+
+## Security Features
+
+### Password Management
+- Passwords are securely hashed before storage
+- Password history is maintained to prevent reuse
+
+### Security Questions
+- Used as an additional layer of security for account recovery
+- Security answers are hashed before storage
+- Required during signup and used for password reset
 
 ## License
 
 See the [LICENSE](LICENSE) file for details.
-

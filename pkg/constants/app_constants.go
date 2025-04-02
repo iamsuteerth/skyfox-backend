@@ -18,6 +18,7 @@ const (
 	PaymentAPI                 = "localhost:8082/payment"
 	SendOTPEndPoint            = "/send-otp"
 	VerifyOTPEndPoint          = "/verify-otp"
+	SecurityQuestions          = "/security-questions"
 )
 
 const (

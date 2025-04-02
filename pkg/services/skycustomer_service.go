@@ -11,7 +11,7 @@ import (
 
 type SkyCustomerService interface {
 	ValidateUserDetails(ctx context.Context, username, email, phoneNumber string) error
-	CreateCustomerWithUser(ctx context.Context, user models.User, passwordHistory models.PasswordHistory, customer models.SkyCustomer) error
+	CreateCustomer(ctx context.Context, customer *models.SkyCustomer, user *models.User, passwordHistory *models.PasswordHistory, securityQuestionID int, securityAnswer string) error
 	ExistsByEmailOrMobile(ctx context.Context, email, mobileNumber string) (bool, string, error)
 	GetUsernameByEmail(ctx context.Context, email string) (string, error)
 	GetCustomerProfileImg(ctx context.Context, username string) ([]byte, error)
@@ -19,14 +19,20 @@ type SkyCustomerService interface {
 }
 
 type skyCustomerService struct {
-	skyCustomerRepo repositories.SkyCustomerRepository
-	userRepo        repositories.UserRepository
+	skyCustomerRepo      repositories.SkyCustomerRepository
+	userRepo             repositories.UserRepository
+	securityQuestionRepo repositories.SecurityQuestionRepository
 }
 
-func NewSkyCustomerService(skyCustomerRepo repositories.SkyCustomerRepository, userRepo repositories.UserRepository) SkyCustomerService {
+func NewSkyCustomerService(
+	skyCustomerRepo repositories.SkyCustomerRepository,
+	userRepo repositories.UserRepository,
+	securityQuestionRepo repositories.SecurityQuestionRepository,
+) SkyCustomerService {
 	return &skyCustomerService{
-		skyCustomerRepo: skyCustomerRepo,
-		userRepo:        userRepo,
+		skyCustomerRepo:      skyCustomerRepo,
+		userRepo:             userRepo,
+		securityQuestionRepo: securityQuestionRepo,
 	}
 }
 
@@ -59,17 +65,40 @@ func (s *skyCustomerService) ValidateUserDetails(ctx context.Context, username, 
 	return nil
 }
 
-func (s *skyCustomerService) CreateCustomerWithUser(ctx context.Context, user models.User, passwordHistory models.PasswordHistory, customer models.SkyCustomer) error {
-	if err := s.userRepo.Create(ctx, &user); err != nil {
+func (s *skyCustomerService) CreateCustomer(
+	ctx context.Context,
+	customer *models.SkyCustomer,
+	user *models.User,
+	passwordHistory *models.PasswordHistory,
+	securityQuestionID int,
+	securityAnswer string,
+) error {
+	exists, err := s.securityQuestionRepo.QuestionExists(ctx, securityQuestionID)
+	if err != nil {
 		return err
 	}
 
-	if err := s.userRepo.SavePasswordHistory(ctx, &passwordHistory); err != nil {
+	if !exists {
+		return utils.NewBadRequestError("INVALID_SECURITY_QUESTION", "The selected security question does not exist", nil)
+	}
+
+	securityAnswerHash, err := utils.HashPassword(securityAnswer)
+	if err != nil {
+		return utils.NewInternalServerError("SECURITY_ANSWER_HASH_ERROR", "Failed to hash security answer", err)
+	}
+
+	customer.SecurityQuestionID = securityQuestionID
+	customer.SecurityAnswerHash = securityAnswerHash
+
+	if err := s.userRepo.Create(ctx, user); err != nil {
 		return err
 	}
 
-	if err := s.skyCustomerRepo.Create(ctx, &customer); err != nil {
+	if err := s.userRepo.SavePasswordHistory(ctx, passwordHistory); err != nil {
+		return err
+	}
 
+	if err := s.skyCustomerRepo.Create(ctx, customer); err != nil {
 		return err
 	}
 
