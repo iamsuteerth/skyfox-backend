@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 
+	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
+	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/services"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
@@ -25,18 +27,9 @@ func NewSkyCustomerController(userService services.UserService, skyCustomerServi
 	}
 }
 
-type SignupRequest struct {
-	Name        string `json:"name" binding:"required,customName"`
-	Username    string `json:"username" binding:"required,customUsername"`
-	Password    string `json:"password" binding:"required,min=8,max=32"`
-	PhoneNumber string `json:"number" binding:"required,customPhone"`
-	Email       string `json:"email" binding:"required,email"`
-	ProfileImg  []byte `json:"profile_img"`
-}
-
 func (sk *SkyCustomerController) Signup(c *gin.Context) {
 	requestID := utils.GetRequestID(c)
-	var req SignupRequest
+	var req request.SignupRequest
 
 	if err := sk.parseAndValidateRequest(c, &req); err != nil {
 		utils.HandleErrorResponse(c, err, requestID)
@@ -67,14 +60,14 @@ func (sk *SkyCustomerController) Signup(c *gin.Context) {
 		Message:   "User registered successfully",
 		RequestID: requestID,
 		Status:    "SUCCESS",
-		Data: gin.H{
-			"username": req.Username,
-			"name":     req.Name,
+		Data: response.SignupResponse{
+			Username: req.Username,
+			Name:     req.Name,
 		},
 	})
 }
 
-func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *SignupRequest) error {
+func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *request.SignupRequest) error {
 	contentType := c.Request.Header.Get("Content-Type")
 
 	if strings.Contains(contentType, "multipart/form-data") {

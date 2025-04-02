@@ -2,7 +2,6 @@ package validator
 
 import (
 	"reflect"
-	"regexp"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
@@ -38,8 +37,8 @@ func (d *DtoValidator) lazyInit() {
 		d.validate.RegisterValidation("customName", ValidateName)
 		d.validate.RegisterValidation("customUsername", ValidateUsername)
 		d.validate.RegisterValidation("customPhone", ValidatePhoneNumber)
+		d.validate.RegisterValidation("customPassword", ValidatePassword)
 
-		d.validate.RegisterValidation("phoneNumber", validatePhoneNumber())
 		d.validate.RegisterValidation("maxSeats", validateMaxSeatsAllowed())
 	})
 }
@@ -51,17 +50,6 @@ func dataType(data interface{}) reflect.Kind {
 		kind = value.Elem().Kind()
 	}
 	return kind
-}
-
-func validatePhoneNumber() func(fl validator.FieldLevel) bool {
-	return func(fl validator.FieldLevel) bool {
-		phoneNumberLength := fl.Field().Len()
-		if phoneNumberLength != 10 {
-			return false
-		}
-		match, _ := regexp.MatchString("\\d{10}", fl.Field().String())
-		return match
-	}
 }
 
 func validateMaxSeatsAllowed() func(fl validator.FieldLevel) bool {

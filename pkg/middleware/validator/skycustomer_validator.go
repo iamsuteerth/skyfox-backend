@@ -13,6 +13,7 @@ func RegisterCustomValidations(v *validator.Validate) {
 	v.RegisterValidation("customName", ValidateName)
 	v.RegisterValidation("customUsername", ValidateUsername)
 	v.RegisterValidation("customPhone", ValidatePhoneNumber)
+	v.RegisterValidation("customPassword", ValidatePassword)
 }
 
 func ValidateName(fl validator.FieldLevel) bool {
@@ -84,12 +85,54 @@ func ValidatePhoneNumber(fl validator.FieldLevel) bool {
 	return true
 }
 
+func ValidatePassword(fl validator.FieldLevel) bool {
+	password := fl.Field().String()
+
+	if len(password) < 8 {
+		return false
+	}
+
+	hasUpper := false
+	for _, c := range password {
+		if unicode.IsUpper(c) {
+			hasUpper = true
+			break
+		}
+	}
+	if !hasUpper {
+		return false
+	}
+
+	hasLower := false
+	for _, c := range password {
+		if unicode.IsLower(c) {
+			hasLower = true
+			break
+		}
+	}
+	if !hasLower {
+		return false
+	}
+
+	specialChars := "!@#$%^&*()-_+={}[]|\\:;\"'<>,.?/"
+	hasSpecial := false
+	for _, c := range password {
+		if strings.ContainsRune(specialChars, c) {
+			hasSpecial = true
+			break
+		}
+	}
+
+	return hasSpecial
+}
+
 var ValidationErrorMessages = map[string]string{
 	"required":       "This field is required",
 	"email":          "Invalid email format",
 	"customName":     "Name must be 3-70 characters, max 4 words, letters only, no consecutive spaces",
 	"customUsername": "Username must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters",
 	"customPhone":    "Phone number must be exactly 10 digits",
+	"customPassword": "Password must be at least 8 characters with at least one uppercase letter and one special character",
 	"min":            "Value must be at least %s characters long",
 	"max":            "Value must be at most %s characters long",
 }

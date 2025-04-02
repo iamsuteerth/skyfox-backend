@@ -39,23 +39,6 @@ LOG_LEVEL=info       # Options: debug, info, warn, error
 go mod download
 ```
 
-## Project Structure
-
-The project follows a clean architecture approach with the following structure:
-
-- `pkg/` - Core application code
-  - `config/` - Configuration management
-  - `controllers/` - HTTP request handlers
-  - `database/seed/` - Database seeding functionality
-  - `dto/` - Data transfer objects (for future API implementations)
-  - `models/` - Domain models
-  - `repositories/` - Database access layer
-  - `services/` - Business logic
-  - `utils/` - Utility functions and error handling
-- `server/` - Application entry point
-- `supabase/migration/` - Database migration scripts
-- `scripts/` - Utility scripts for development
-
 ## Database Migration
 
 The migration files are stored in the `supabase/migration` directory:
@@ -138,6 +121,69 @@ The application uses JWT (JSON Web Token) for authentication. Tokens are valid f
     "request_id": "unique-request-id"
   }
   ```
+
+#### Customer Signup
+- **URL**: `/customer/signup`
+- **Method**: `POST`
+- **Authentication**: None
+- **Request Body**:
+  ```json
+  {
+    "name": "string",
+    "username": "string",
+    "password": "string",
+    "number": "string",
+    "email": "string",
+    "profile_img": null
+  }
+  ```
+- **Success Response (201 Created)**:
+  ```json
+  {
+    "message": "User registered successfully",
+    "request_id": "unique-request-id",
+    "status": "SUCCESS",
+      "data": {
+      "username": "string",
+      "name": "string"
+    }
+  }
+  ```
+- **Validation Error Response (400 Bad Request)**:
+  ```json
+  {
+    "errors": [
+      {
+        "field": "Name",
+        "message": "Name must be 3-70 characters, max 4 words, letters only, no consecutive spaces"
+      },
+      {
+        "field": "Username",
+        "message": "Username must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters"
+      },
+      {
+        "field": "Password",
+        "message": "Password must be at least 8 characters with at least one uppercase letter and one special character"
+      },
+      {
+        "field": "PhoneNumber",
+        "message": "Phone number must be exactly 10 digits"
+      },
+      {
+        "field": "Email",
+        "message": "Invalid email format"
+      }
+    ],
+    "request_id": "4da30d4c-1a9a-4f64-917c-067b79a7de7a",
+    "status": "REJECT"
+  }
+  ```
+- The validation system enforces strict rules for different field types:
+  - **Name**: Must be 3-70 characters, max 4 words, letters only, no consecutive spaces
+  - **Username**: Must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters
+  - **Password**: Must be at least 8 characters with at least one uppercase letter and one special character
+  - **Phone Number**: Must be exactly 10 digits
+  - **Email**: Must be in valid email format
 
 ## Error Handling
 

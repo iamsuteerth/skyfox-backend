@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
+	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/services"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
 )
@@ -19,11 +21,7 @@ func NewAuthController(userService services.UserService) *AuthController {
 }
 
 func (c *AuthController) Login(ctx *gin.Context) {
-	var loginRequest struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-
+	var loginRequest request.LoginRequest
 	requestID := utils.GetRequestID(ctx)
 
 	if err := ctx.ShouldBindJSON(&loginRequest); err != nil {
@@ -37,16 +35,18 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
+	loginResponse := response.LoginResponse{
+		User: response.UserInfo{
+			Username: user.Username,
+			Role:     user.Role,
+		},
+		Token: token,
+	}
+
 	ctx.JSON(http.StatusOK, utils.SuccessResponse{
 		Message:   "Login successful",
 		RequestID: requestID,
 		Status:    "SUCCESS",
-		Data: gin.H{
-			"user": gin.H{
-				"username": user.Username,
-				"role":     user.Role,
-			},
-			"token": token,
-		},
+		Data:      loginResponse,
 	})
 }

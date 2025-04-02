@@ -116,7 +116,6 @@ func GetRequestID(ctx *gin.Context) string {
 }
 
 func NewValidationError(validationErrors validator.ValidationErrors) *AppError {
-	// Convert validation errors to a slice of ValidationError
 	errors := make([]ValidationError, 0)
 	for _, err := range validationErrors {
 		errors = append(errors, ValidationError{
@@ -134,7 +133,6 @@ func NewValidationError(validationErrors validator.ValidationErrors) *AppError {
 	}
 }
 
-// Helper function to get a human-readable error message for a validation tag
 func getValidationErrorMessage(tag string, param string) string {
 	messages := map[string]string{
 		"required":       "This field is required",
@@ -144,6 +142,7 @@ func getValidationErrorMessage(tag string, param string) string {
 		"customName":     "Name must be 3-70 characters, max 4 words, letters only, no consecutive spaces",
 		"customUsername": "Username must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters",
 		"customPhone":    "Phone number must be exactly 10 digits",
+		"customPassword": "Password must be at least 8 characters with at least one uppercase letter and one special character",
 	}
 
 	if msg, exists := messages[tag]; exists {
