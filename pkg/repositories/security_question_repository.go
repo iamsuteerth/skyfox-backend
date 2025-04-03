@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -15,6 +16,7 @@ type SecurityQuestion struct {
 type SecurityQuestionRepository interface {
 	FindAll(ctx context.Context) ([]SecurityQuestion, error)
 	QuestionExists(ctx context.Context, id int) (bool, error)
+	FindByID(ctx context.Context, id int) (*SecurityQuestion, error)
 }
 
 type securityQuestionRepository struct {
@@ -56,4 +58,19 @@ func (repo *securityQuestionRepository) QuestionExists(ctx context.Context, id i
 	}
 
 	return exists, nil
+}
+
+func (repo *securityQuestionRepository) FindByID(ctx context.Context, id int) (*SecurityQuestion, error) {
+	query := `SELECT id, question FROM security_questions WHERE id = $1`
+
+	var question SecurityQuestion
+	err := repo.db.QueryRow(ctx, query, id).Scan(&question.ID, &question.Question)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, utils.NewNotFoundError("SECURITY_QUESTION_NOT_FOUND", "Security question not found", nil)
+		}
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Error fetching security question", err)
+	}
+
+	return &question, nil
 }

@@ -53,7 +53,7 @@ func (repo *skyCustomerRepository) FindByUsername(ctx context.Context, username 
 }
 
 func (repo *skyCustomerRepository) FindByEmail(ctx context.Context, email string) (*models.SkyCustomer, error) {
-	query := `SELECT id, name, username, number, email, profile_img FROM customertable WHERE email = $1`
+	query := `SELECT id, name, username, number, email, profile_img, security_question_id, security_answer_hash FROM customertable WHERE email = $1`
 
 	var customer models.SkyCustomer
 	err := repo.db.QueryRow(ctx, query, email).Scan(
@@ -63,8 +63,8 @@ func (repo *skyCustomerRepository) FindByEmail(ctx context.Context, email string
 		&customer.Number,
 		&customer.Email,
 		&customer.ProfileImg,
-		&customer.SecurityAnswerHash,
 		&customer.SecurityQuestionID,
+		&customer.SecurityAnswerHash,
 	)
 
 	if err != nil {

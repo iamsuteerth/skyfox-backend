@@ -2,9 +2,31 @@
 
 A Go-based backend service for the SkyFox movie booking system with Supabase PostgreSQL integration.
 
-## Project Setup
+## Overview
 
-This document outlines the setup process, migration, and development workflow for the SkyFox backend project.
+SkyFox Backend is a modern, well-structured API service that provides authentication, customer management, and security question features for the SkyFox movie booking application. Built with Go and the Gin framework, it implements clean architecture principles with proper separation of controllers, services, and repositories.
+
+## Features
+
+- JWT-based authentication with role-based authorization
+- Customer signup with comprehensive validation
+- Security question system for account recovery
+- Standardized error responses
+- PostgreSQL database integration via Supabase
+
+## Project Structure
+
+The project follows a clean architecture approach:
+- Controllers: Handle HTTP requests and responses
+- Services: Implement business logic
+- Repositories: Manage data access
+- Models: Define data structures
+- DTOs: Handle data transfer objects
+- Middleware: Process requests (validation, authentication)
+
+## API Documentation
+
+For detailed API documentation, please see the [API Documentation](./docs/README.md).
 
 ## Prerequisites
 
@@ -85,136 +107,6 @@ The seeding process creates records in both the user table and staff table, ensu
 ## Authentication
 
 The application uses JWT (JSON Web Token) for authentication. Tokens are valid for 24 hours and include the user's role for authorization purposes.
-
-## API Endpoints
-
-### Authentication
-
-#### Login
-- **URL**: `/login`
-- **Method**: `POST`
-- **Authentication**: None
-- **Request Body**:
-  ```json
-  {
-    "username": "string",
-    "password": "string"
-  }
-  ```
-- **Success Response (200 OK)**:
-  ```json
-  {
-    "message": "Login successful",
-    "request_id": "unique-request-id",
-    "status": "SUCCESS",
-    "data": {
-      "user": {
-        "username": "string",
-        "role": "string"
-      },
-      "token": "jwt-token"
-    }
-  }
-  ```
-- **Error Response (401 Unauthorized)**:
-  ```json
-  {
-    "status": "ERROR",
-    "code": "INVALID_CREDENTIALS",
-    "message": "Invalid username or password",
-    "request_id": "unique-request-id"
-  }
-  ```
-
-#### Get Security Questions
-- **URL**: `/api/security-questions`
-- **Method**: `GET`
-- **Authentication**: None
-- **Success Response (200 OK)**:
-  ```json
-  {
-    "message": "Security questions retrieved successfully",
-    "request_id": "unique-request-id",
-    "status": "SUCCESS",
-    "data": [
-      {
-        "id": 1,
-        "question": "What was the name of your first pet?"
-      },
-      {
-        "id": 2,
-        "question": "What was your childhood nickname?"
-      }
-      // Additional security questions...
-    ]
-  }
-  ```
-
-#### Customer Signup
-- **URL**: `/customer/signup`
-- **Method**: `POST`
-- **Authentication**: None
-- **Request Body**:
-  ```json
-  {
-    "name": "string",
-    "username": "string",
-    "password": "string",
-    "number": "string",
-    "email": "string",
-    "profile_img": null,
-    "security_question_id": 1,
-    "security_answer": "string"
-  }
-  ```
-- **Success Response (201 Created)**:
-  ```json
-  {
-    "message": "User registered successfully",
-    "request_id": "unique-request-id",
-    "status": "SUCCESS",
-    "data": {
-      "username": "string",
-      "name": "string"
-    }
-  }
-  ```
-- **Validation Error Response (400 Bad Request)**:
-  ```json
-  {
-    "status": "ERROR",
-    "code": "VALIDATION_ERROR",
-    "message": "Validation failed",
-    "request_id": "unique-request-id",
-    "errors": [
-      {
-        "field": "Name",
-        "message": "Name must be 3-70 characters, max 4 words, letters only, no consecutive spaces"
-      },
-      {
-        "field": "SecurityAnswer",
-        "message": "Security answer must be at least 3 characters long"
-      }
-      // Other validation errors...
-    ]
-  }
-  ```
-- **Security Question Error Response (400 Bad Request)**:
-  ```json
-  {
-    "status": "ERROR",
-    "code": "INVALID_SECURITY_QUESTION",
-    "message": "The selected security question does not exist",
-    "request_id": "unique-request-id"
-  }
-  ```
-- The validation system enforces strict rules for different field types:
-  - **Name**: Must be 3-70 characters, max 4 words, letters only, no consecutive spaces
-  - **Username**: Must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters
-  - **Password**: Must be at least 8 characters with at least one uppercase letter and one special character
-  - **Phone Number**: Must be exactly 10 digits
-  - **Email**: Must be in valid email format
-  - **Security Answer**: Must be at least 3 characters long
 
 ## Error Handling
 

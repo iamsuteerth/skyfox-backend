@@ -19,9 +19,10 @@ const (
 	SendOTPEndPoint            = "/send-otp"
 	VerifyOTPEndPoint          = "/verify-otp"
 	SecurityQuestions          = "/security-questions"
+	SecurityQuestionByEmail    = "/security-questions/by-email"
 )
 
 const (
 	TOTAL_NO_OF_SEATS           = 100
-	MAX_NO_OF_SEATS_PER_BOOKING = 100
+	MAX_NO_OF_SEATS_PER_BOOKING = 15
 )

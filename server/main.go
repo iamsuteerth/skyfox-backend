@@ -40,7 +40,7 @@ func main() {
 
 	userService := services.NewUserService(userRepo)
 	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepo, securityQuestionRepository)
-	securityQuestionService := services.NewSecurityQuestionService(securityQuestionRepository)
+	securityQuestionService := services.NewSecurityQuestionService(securityQuestionRepository, skyCustomerRepository)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -74,6 +74,7 @@ func main() {
 	noAuthRouter.POST(constants.SkyCustomerSignUpEndPoint, skyCustomerController.Signup)
 	// Get Security Questions
 	noAuthRouter.GET(constants.SecurityQuestions, securityQuestionController.GetSecurityQuestions)
+	noAuthRouter.GET(constants.SecurityQuestionByEmail, securityQuestionController.GetSecurityQuestionByEmail)
 
 	port := os.Getenv("PORT")
 	if port == "" {
