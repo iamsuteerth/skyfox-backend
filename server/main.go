@@ -31,21 +31,23 @@ func main() {
 	db := config.GetDBConnection()
 	defer config.CloseDBConnection()
 
-	userRepo := repositories.NewUserRepository(db)
-	staffRepo := repositories.NewStaffRepository(db)
+	userRepository := repositories.NewUserRepository(db)
+	staffRepository := repositories.NewStaffRepository(db)
 	skyCustomerRepository := repositories.NewSkyCustomerRepository(db)
 	securityQuestionRepository := repositories.NewSecurityQuestionRepository(db)
 	resetTokenRepository := repositories.NewResetTokenRepository(db)
 
-	seed.SeedDB(userRepo, staffRepo)
+	seed.SeedDB(userRepository, staffRepository)
 
-	userService := services.NewUserService(userRepo)
-	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepo, securityQuestionRepository)
+	userService := services.NewUserService(userRepository)
+	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepository, securityQuestionRepository)
 	securityQuestionService := services.NewSecurityQuestionService(securityQuestionRepository, skyCustomerRepository, resetTokenRepository)
+	forgotPasswordService := services.NewForgotPasswordService(resetTokenRepository, skyCustomerRepository, userRepository)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
 	securityQuestionController := controllers.NewSecurityQuestionController(securityQuestionService)
+	forgotPasswordController := controllers.NewForgotPasswordController(forgotPasswordService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -78,6 +80,8 @@ func main() {
 	noAuthRouter.GET(constants.SecurityQuestionByEmail, securityQuestionController.GetSecurityQuestionByEmail)
 	// Verify Security Question Answer
 	noAuthRouter.POST(constants.VerifySecurityAnswerEndpoint, securityQuestionController.VerifySecurityAnswer)
+	// Forgot Password for Customer
+	noAuthRouter.POST(constants.ForgotPasswordEndpoint, forgotPasswordController.ForgotPassword)
 
 	port := os.Getenv("PORT")
 	if port == "" {

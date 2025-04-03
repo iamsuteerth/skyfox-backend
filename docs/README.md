@@ -196,6 +196,69 @@
   }
   ```
 
+### Reset Password with Token
+- **URL**: `/forgot-password`
+- **Method**: `POST`
+- **Authentication**: None
+- **Request Body**:
+  ```json
+  {
+    "email": "user@example.com",
+    "reset_token": "f200d83b-ab92-41a7-ba59-929d1472e692",
+    "new_password": "SecurePass@123"
+  }
+  ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Password has been reset successfully",
+    "request_id": "unique-request-id",
+    "status": "SUCCESS"
+  }
+  ```
+- **Validation Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "unique-request-id",
+    "errors": [
+      {
+        "field": "Email",
+        "message": "Invalid email format"
+      },
+      {
+        "field": "ResetToken",
+        "message": "This field is required"
+      },
+      {
+        "field": "NewPassword",
+        "message": "Password must be at least 8 characters with at least one uppercase letter and one special character"
+      }
+    ]
+  }
+  ```
+- **Invalid Token Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_RESET_TOKEN",
+    "message": "The reset token is invalid, expired, or has already been used",
+    "request_id": "unique-request-id"
+  }
+  ```
+- **Password Reuse Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "PASSWORD_REUSE",
+    "message": "New password cannot match any of your previous passwords",
+    "request_id": "unique-request-id"
+  }
+  ```
+
+
 ## Field Validation Rules
 
 - **Name**: Must be 3-70 characters, max 4 words, letters only, no consecutive spaces
