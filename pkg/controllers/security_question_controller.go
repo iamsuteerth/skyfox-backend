@@ -63,3 +63,35 @@ func (c *SecurityQuestionController) GetSecurityQuestionByEmail(ctx *gin.Context
 		Data:      question,
 	})
 }
+
+func (c *SecurityQuestionController) VerifySecurityAnswer(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
+	var req request.VerifySecurityAnswerRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		if validationErrs, ok := err.(validator.ValidationErrors); ok {
+			utils.HandleErrorResponse(ctx, utils.NewValidationError(validationErrs), requestID)
+			return
+		}
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
+		return
+	}
+
+	tokenResponse, err := c.securityQuestionService.VerifySecurityAnswerAndGenerateToken(
+		ctx.Request.Context(),
+		req.Email,
+		req.SecurityAnswer,
+	)
+
+	if err != nil {
+		utils.HandleErrorResponse(ctx, err, requestID)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse{
+		Message:   "Security answer verified successfully",
+		RequestID: requestID,
+		Status:    "SUCCESS",
+		Data:      tokenResponse,
+	})
+}

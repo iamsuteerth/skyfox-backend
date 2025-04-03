@@ -96,6 +96,53 @@
     "request_id": "unique-request-id"
   }
   ```
+### Verify Security Answer
+- **URL**: `/verify-security-answer`
+- **Method**: `POST`
+- **Authentication**: None
+- **Request Body**:
+  ```json
+  {
+    "email": "user@example.com",
+    "security_answer": "string"
+  }
+  ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Security answer verified successfully",
+    "request_id": "unique-request-id",
+    "status": "SUCCESS",
+    "data": {
+      "reset_token": "f200d83b-ab92-41a7-ba59-929d1472e692",
+      "expires_in_seconds": 300
+    }
+  }
+  ```
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_ANSWER",
+    "message": "The security answer provided is incorrect",
+    "request_id": "unique-request-id"
+  }
+  ```
+- **Validation Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "unique-request-id",
+    "errors": [
+      {
+        "field": "SecurityAnswer",
+        "message": "Security answer must be at least 3 characters long"
+      }
+    ]
+  }
+  ```
 
 ## User Management
 
