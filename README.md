@@ -14,6 +14,10 @@ SkyFox Backend is a modern, well-structured API service that provides authentica
 - Token-based password reset functionality with expiration and uniqueness
 - Standardized error responses
 - PostgreSQL database integration via Supabase
+- Movie data integration with an external movie service
+- Show scheduling and management system
+- Role-based content filtering (different views for customers vs. admins)
+- Available slot management for preventing double-booking
 
 ## Project Structure
 
@@ -55,6 +59,10 @@ JWT_SECRET_KEY=your_secure_jwt_secret
 PORT=8080
 APP_ENV=development  # Options: development, production
 LOG_LEVEL=info       # Options: debug, info, warn, error
+
+# Movie Service Configuration
+MOVIE_SERVICE_URL=http://localhost:4567
+MOVIE_SERVICE_API_KEY=your_movie_service_api_key
 ```
 
 3. Install dependencies:
@@ -109,9 +117,34 @@ The application automatically seeds the database with initial data on startup:
 
 The seeding process creates records in both the `user` table and `staff` table, ensuring proper relationships.
 
+## External Service Integration
+
+### Movie Service
+The application integrates with an external movie service to retrieve movie data:
+- Requires `MOVIE_SERVICE_URL` and `MOVIE_SERVICE_API_KEY` environment variables
+- Fetches movie details like title, runtime, plot, and poster images
+- Caches movie data to minimize external API calls
+
 ## Authentication
 
 The application uses JWT (JSON Web Token) for authentication. Tokens are valid for 24 hours and include the user's role for authorization purposes.
+
+## Role-Based Access
+
+The application implements role-based access control:
+
+1. **Customer Role**:
+   - Can view shows only for the current date plus 6 days
+   - Has access to personal profile and booking history
+
+2. **Staff Role**:
+   - Has access to check-in functionality
+   - Can download booking data as CSV
+
+3. **Admin Role**:
+   - Can view shows for any date
+   - Can create and schedule new shows
+   - Can view revenue data
 
 ## Security Question and Password Reset System
 

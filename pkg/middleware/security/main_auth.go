@@ -2,21 +2,25 @@ package security
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
 	"github.com/rs/zerolog/log"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		requestID := utils.GetRequestID(c)
+
 		secretKey := os.Getenv("JWT_SECRET_KEY")
 		if secretKey == "" {
 			log.Error().Msg("JWT_SECRET_KEY is not set in environment variables")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Server configuration error"})
+			utils.HandleErrorResponse(c,
+				utils.NewInternalServerError("SERVER_CONFIG_ERROR", "Server configuration error", fmt.Errorf("JWT_SECRET_KEY not set")),
+				requestID)
 			c.Abort()
 			return
 		}
@@ -24,7 +28,9 @@ func AuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			log.Debug().Msg("Missing Authorization header")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+			utils.HandleErrorResponse(c,
+				utils.NewUnauthorizedError("MISSING_AUTH_HEADER", "Missing Authorization header", nil),
+				requestID)
 			c.Abort()
 			return
 		}
@@ -32,7 +38,9 @@ func AuthMiddleware() gin.HandlerFunc {
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			log.Debug().Msg("Invalid Authorization header format")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+			utils.HandleErrorResponse(c,
+				utils.NewUnauthorizedError("INVALID_TOKEN_FORMAT", "Invalid token format", nil),
+				requestID)
 			c.Abort()
 			return
 		}
@@ -48,7 +56,9 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if err != nil || !token.Valid {
 			log.Debug().Err(err).Msg("Invalid token")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			utils.HandleErrorResponse(c,
+				utils.NewUnauthorizedError("INVALID_TOKEN", "Unauthorized", err),
+				requestID)
 			c.Abort()
 			return
 		}
@@ -58,7 +68,9 @@ func AuthMiddleware() gin.HandlerFunc {
 			log.Debug().Interface("claims", claims).Msg("Token claims set in context")
 		} else {
 			log.Debug().Msg("Invalid token claims")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			utils.HandleErrorResponse(c,
+				utils.NewUnauthorizedError("INVALID_TOKEN_CLAIMS", "Invalid token claims", nil),
+				requestID)
 			c.Abort()
 			return
 		}
@@ -69,10 +81,14 @@ func AuthMiddleware() gin.HandlerFunc {
 
 func AdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		requestID := utils.GetRequestID(c)
+
 		claims, exists := c.Get("claims")
 		if !exists {
 			log.Debug().Msg("No claims found in context")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized (No claims found)"})
+			utils.HandleErrorResponse(c,
+				utils.NewUnauthorizedError("NO_CLAIMS_FOUND", "No authentication claims found", nil),
+				requestID)
 			c.Abort()
 			return
 		}
@@ -80,7 +96,9 @@ func AdminMiddleware() gin.HandlerFunc {
 		role, ok := claims.(jwt.MapClaims)["role"].(string)
 		if !ok || role != "admin" {
 			log.Debug().Str("role", role).Msg("Access denied for non-admin user")
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden, Only Admins Allowed"})
+			utils.HandleErrorResponse(c,
+				utils.NewBadRequestError("FORBIDDEN", "Access denied. Admin role required", nil),
+				requestID)
 			c.Abort()
 			return
 		}
@@ -91,18 +109,24 @@ func AdminMiddleware() gin.HandlerFunc {
 
 func StaffMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		requestID := utils.GetRequestID(c)
+
 		claims, exists := c.Get("claims")
 		if !exists {
 			log.Debug().Msg("No claims found in context")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized (No claims Found)"})
+			utils.HandleErrorResponse(c,
+				utils.NewUnauthorizedError("NO_CLAIMS_FOUND", "No authentication claims found", nil),
+				requestID)
 			c.Abort()
 			return
 		}
 
 		role, ok := claims.(jwt.MapClaims)["role"].(string)
-		if !ok || (role != "admin" && role != "staff") {
+		if !ok || (role != "staff") {
 			log.Debug().Str("role", role).Msg("Access denied for non-staff user")
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden, Only Staff Allowed"})
+			utils.HandleErrorResponse(c,
+				utils.NewBadRequestError("FORBIDDEN", "Access denied. Staff or admin role required", nil),
+				requestID)
 			c.Abort()
 			return
 		}

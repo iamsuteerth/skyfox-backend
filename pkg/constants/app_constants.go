@@ -22,6 +22,7 @@ const (
 	SecurityQuestionByEmail      = "/security-questions/by-email"
 	VerifySecurityAnswerEndpoint = "/verify-security-answer"
 	ForgotPasswordEndpoint       = "/forgot-password"
+	MoviesEndPoint               = "/movies"
 )
 
 const (
