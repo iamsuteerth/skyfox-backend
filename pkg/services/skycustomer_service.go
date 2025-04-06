@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/repositories"
@@ -17,6 +18,7 @@ type SkyCustomerService interface {
 	GetProfileImageURL(ctx context.Context, username string) (string, error)
 	CustomerDetails(ctx context.Context, username string) (*models.SkyCustomer, error)
 	UpdateProfileImage(ctx context.Context, username string, imageBytes []byte, imageSHA string) error
+	GetProfileImagePresignedURL(ctx context.Context, username string) (string, time.Time, error)
 }
 
 type skyCustomerService struct {
@@ -184,4 +186,28 @@ func (s *skyCustomerService) UpdateProfileImage(ctx context.Context, username st
 	}
 
 	return nil
+}
+
+func (s *skyCustomerService) GetProfileImagePresignedURL(ctx context.Context, username string) (string, time.Time, error) {
+	durationMinutes := 1440
+
+	duration := time.Duration(durationMinutes) * time.Minute
+
+	rawURL, err := s.skyCustomerRepo.GetCustomerProfileImg(ctx, username)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	if rawURL == "" {
+		return "", time.Time{}, utils.NewNotFoundError("PROFILE_IMAGE_NOT_FOUND", "No profile image found for this user", nil)
+	}
+
+	presignedURL, err := s.s3Service.GeneratePresignedURL(ctx, rawURL, duration)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	expiresAt := time.Now().Add(duration)
+
+	return presignedURL, expiresAt, nil
 }

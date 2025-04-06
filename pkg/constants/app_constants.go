@@ -23,6 +23,7 @@ const (
 	VerifySecurityAnswerEndpoint = "/verify-security-answer"
 	ForgotPasswordEndpoint       = "/forgot-password"
 	MoviesEndPoint               = "/movies"
+	CustomerProfileImage         = "/customer/profile-image"
 )
 
 const (

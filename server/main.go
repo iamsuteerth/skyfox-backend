@@ -104,6 +104,8 @@ func main() {
 	}
 	// Get Available Slots - Admin
 	adminRouter.GET(constants.SlotEndPoint, slotController.GetAvailableSlots)
+	// Only get profile image
+	authRouter.GET(constants.CustomerProfileImage, skyCustomerController.GetProfileImagePresignedURL)
 
 	port := os.Getenv("PORT")
 	if port == "" {

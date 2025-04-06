@@ -25,6 +25,7 @@ type S3Service interface {
 	UploadProfileImage(ctx context.Context, imageBytes []byte, username string, sha string) (string, error)
 	DeleteProfileImage(ctx context.Context, objectKey string) error
 	ValidateSHA(imageBytes []byte, providedSHA string) bool
+	GeneratePresignedURL(ctx context.Context, objectKey string, duration time.Duration) (string, error)
 }
 
 type s3Service struct {
@@ -74,7 +75,7 @@ func (s *s3Service) UploadProfileImage(ctx context.Context, imageBytes []byte, u
 
 	var buf bytes.Buffer
 
-	if err := jpeg.Encode(&buf, scaledImg, &jpeg.Options{Quality: 85}); err != nil {
+	if err := jpeg.Encode(&buf, scaledImg, &jpeg.Options{Quality: 100}); err != nil {
 		log.Error().Err(err).Msg("Failed to encode scaled image to JPEG")
 		return "", utils.NewInternalServerError("JPEG_ENCODE_FAILED", "Failed to encode image to JPEG", err)
 	}
@@ -130,4 +131,27 @@ func (s *s3Service) ValidateSHA(imageBytes []byte, providedSHA string) bool {
 	calculatedSHA := hex.EncodeToString(hash[:])
 
 	return calculatedSHA == providedSHA
+}
+
+func (s *s3Service) GeneratePresignedURL(ctx context.Context, objectKey string, duration time.Duration) (string, error) {
+    if strings.HasPrefix(objectKey, "http") {
+        parts := strings.Split(objectKey, ".com/")
+        if len(parts) < 2 {
+            return "", utils.NewBadRequestError("INVALID_OBJECT_KEY", "Invalid object URL format", nil)
+        }
+        objectKey = parts[1]
+    }
+
+    req, _ := s.s3Client.GetObjectRequest(&s3.GetObjectInput{
+        Bucket: aws.String(s.bucket),
+        Key:    aws.String(objectKey),
+    })
+
+    presignedURL, err := req.Presign(duration)
+    if err != nil {
+        log.Error().Err(err).Str("objectKey", objectKey).Msg("Failed to generate presigned URL")
+        return "", utils.NewInternalServerError("PRESIGNED_URL_GENERATION_FAILED", "Failed to generate presigned URL", err)
+    }
+
+    return presignedURL, nil
 }

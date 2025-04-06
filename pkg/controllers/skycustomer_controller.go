@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
+	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/security"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/services"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
@@ -176,4 +178,38 @@ func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *re
 	req.SecurityAnswer = strings.TrimSpace(req.SecurityAnswer)
 
 	return nil
+}
+
+func (sk *SkyCustomerController) GetProfileImagePresignedURL(c *gin.Context) {
+	requestID := utils.GetRequestID(c)
+
+	claims, err := security.GetTokenClaims(c)
+	if err != nil {
+		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
+		return
+	}
+
+	tokenUsername, ok := claims["username"].(string)
+	if !ok || tokenUsername == "" {
+		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
+		return
+	}
+
+	username := tokenUsername
+
+	presignedURL, expiresAt, err := sk.skyCustomerService.GetProfileImagePresignedURL(c.Request.Context(), username)
+	if err != nil {
+		utils.HandleErrorResponse(c, err, requestID)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.SuccessResponse{
+		Message:   "Presigned URL generated successfully",
+		RequestID: requestID,
+		Status:    "SUCCESS",
+		Data: response.ProfileImageResponse{
+			PresignedURL: presignedURL,
+			ExpiresAt:    expiresAt.Format(time.RFC3339),
+		},
+	})
 }
