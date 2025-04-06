@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/base64"
 	"net/http"
 	"strconv"
 	"strings"
@@ -59,9 +60,15 @@ func (sk *SkyCustomerController) Signup(c *gin.Context) {
 		return
 	}
 
+	imageBytes, err := base64.StdEncoding.DecodeString(req.ProfileImg)
+	if err != nil {
+		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_IMAGE", "Invalid base64 image data", err), requestID)
+		return
+	}
+
 	user := models.NewUser(req.Username, hashedPassword, "customer")
 	passwordHistory := models.NewPasswordHistory(req.Username, hashedPassword, "", "")
-	skyCustomer := models.NewSkyCustomer(req.Name, req.Username, req.PhoneNumber, req.Email, req.ProfileImg, 0, "")
+	skyCustomer := models.NewSkyCustomer(req.Name, req.Username, req.PhoneNumber, req.Email, imageBytes, 0, "")
 
 	if err := sk.skyCustomerService.CreateCustomer(
 		c.Request.Context(),
@@ -70,7 +77,7 @@ func (sk *SkyCustomerController) Signup(c *gin.Context) {
 		&passwordHistory,
 		req.SecurityQuestionID,
 		req.SecurityAnswer,
-		req.ProfileImg,
+		imageBytes,
 		req.ProfileImgSHA,
 	); err != nil {
 		utils.HandleErrorResponse(c, err, requestID)
@@ -102,6 +109,7 @@ func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *re
 		req.PhoneNumber = c.Request.FormValue("number")
 		req.Password = c.Request.FormValue("password")
 		req.SecurityAnswer = c.Request.FormValue("security_answer")
+		req.ProfileImgSHA = c.Request.FormValue("profile_img_sha")
 
 		securityQuestionIDStr := c.Request.FormValue("security_question_id")
 		if securityQuestionIDStr != "" {
@@ -130,10 +138,22 @@ func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *re
 			if header.Size > 5<<20 {
 				return utils.NewBadRequestError("FILE_TOO_LARGE", "File size exceeds 5MB limit", nil)
 			}
-			req.ProfileImg = make([]byte, header.Size)
-			if _, err := file.Read(req.ProfileImg); err != nil {
+
+			imageBytes := make([]byte, header.Size)
+			if _, err := file.Read(imageBytes); err != nil {
 				return utils.NewInternalServerError("FILE_READ_ERROR", "Failed to read file", err)
 			}
+
+			req.ProfileImg = base64.StdEncoding.EncodeToString(imageBytes)
+		} else {
+			req.ProfileImg = c.Request.FormValue("profile_img")
+			if req.ProfileImg == "" {
+				return utils.NewBadRequestError("MISSING_PROFILE_IMAGE", "Profile image is required", nil)
+			}
+		}
+
+		if req.ProfileImgSHA == "" {
+			return utils.NewBadRequestError("MISSING_IMAGE_HASH", "Profile image hash is required", nil)
 		}
 	} else {
 		if err := c.ShouldBindJSON(req); err != nil {
@@ -145,6 +165,10 @@ func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *re
 
 		if req.SecurityQuestionID == 0 || req.SecurityAnswer == "" {
 			return utils.NewBadRequestError("MISSING_SECURITY_FIELDS", "Security question and answer are required", nil)
+		}
+
+		if req.ProfileImg == "" || req.ProfileImgSHA == "" {
+			return utils.NewBadRequestError("MISSING_PROFILE_IMAGE", "Profile image and hash are required", nil)
 		}
 	}
 
