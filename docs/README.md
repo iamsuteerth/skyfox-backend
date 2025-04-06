@@ -74,15 +74,11 @@
   ```
 
 ### Get Security Question By Email
-- **URL**: `/security-question/by-email`
+- **URL**: `/security-question/by-email?email=`
 - **Method**: `POST`
 - **Authentication**: None
-- **Request Body**:
-  ```json
-  {
-    "email": "user@example.com"
-  }
-  ```
+- **Query Parameters**:
+  - `email`: Validation performaned
 - **Success Response (200 OK)**:
   ```json
   {
@@ -167,7 +163,8 @@
     "password": "string",
     "number": "string",
     "email": "string",
-    "profile_img": null,
+    "profile_img": "base64 encoded image",
+    "profile_img_sha":"sha256 hash of image",
     "security_question_id": 1,
     "security_answer": "string"
   }
@@ -263,6 +260,54 @@
     "status": "ERROR",
     "code": "PASSWORD_REUSE",
     "message": "New password cannot match any of your previous passwords",
+    "request_id": "unique-request-id"
+  }
+  ```
+## Customer Profile
+
+### Get Profile Image Presigned URL
+- **URL**: `/customer/profile-image`
+- **Method**: `GET`
+- **Authentication**: Required
+- **Notes**: 
+  - Generates a presigned URL for accessing the user's profile image
+  - URL expires after 24 hours (1440 minutes)
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Presigned URL generated successfully",
+    "request_id": "unique-request-id",
+    "status": "SUCCESS",
+    "data": {
+      "presigned_url": "https://bucket-name.s3.region.amazonaws.com/profile-images/username_timestamp.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...",
+      "expires_at": "2025-04-08T00:17:00Z"
+    }
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "UNAUTHORIZED",
+    "message": "Unable to verify credentials",
+    "request_id": "unique-request-id"
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Invalid token claims",
+    "request_id": "unique-request-id"
+  }
+  ```
+- **Error Response (404 Not Found)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "PROFILE_IMAGE_NOT_FOUND",
+    "message": "No profile image found for this user",
     "request_id": "unique-request-id"
   }
   ```

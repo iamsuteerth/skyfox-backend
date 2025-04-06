@@ -18,6 +18,7 @@ SkyFox Backend is a modern, well-structured API service that provides authentica
 - Show scheduling and management system
 - Role-based content filtering (different views for customers vs. admins)
 - Available slot management for preventing double-booking
+- Secure profile image management with S3 and presigned URLs
 
 ## Project Structure
 
@@ -38,6 +39,7 @@ For detailed API documentation, please see the [API Documentation](./docs/README
 - Go 1.20+
 - Supabase account with a project
 - Git
+- AWS S3 bucket for profile image storage
 
 ## Environment Setup
 
@@ -63,6 +65,12 @@ LOG_LEVEL=info       # Options: debug, info, warn, error
 # Movie Service Configuration
 MOVIE_SERVICE_URL=http://localhost:4567
 MOVIE_SERVICE_API_KEY=your_movie_service_api_key
+
+# AWS S3 Configuration
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=your-region
+S3_BUCKET=your-project-profile-images
 ```
 
 3. Install dependencies:
@@ -124,6 +132,39 @@ The application integrates with an external movie service to retrieve movie data
 - Requires `MOVIE_SERVICE_URL` and `MOVIE_SERVICE_API_KEY` environment variables
 - Fetches movie details like title, runtime, plot, and poster images
 - Caches movie data to minimize external API calls
+
+### AWS S3 Integration for Profile Images
+The application implements a sophisticated profile image management system using **AWS S3**:
+
+1. **Secure Upload Process**:
+   - Frontend scales the image to 64x64 pixels and converts it to base64
+   - A SHA-256 hash is calculated from the original image bytes
+   - Both the base64 string and hash are sent to the backend
+   
+2. **Verification and Processing**:
+   - Backend decodes the base64 string back to a byte array
+   - Recalculates the SHA-256 hash to verify integrity
+   - Rescales the image to ensure consistent 64x64 dimensions
+   - Uploads the processed image to AWS S3 with private ACL
+   
+3. **Efficient Storage**:
+   - Only the S3 URL is stored in the database, not the image data
+   - This keeps the database lightweight and optimized
+   
+4. **Secure Retrieval**:
+   - When an image is requested, a presigned URL is generated with a 24-hour expiration
+   - This approach prevents direct access to S3 resources
+   
+5. **Performance Benefits**:
+   - Users directly interact with AWS S3 when fetching images
+   - This offloads bandwidth and processing from the application server
+   - Results in faster image loading and better scalability
+   
+6. **Cleanup Handling**:
+   - When profile images are updated, old S3 objects are automatically deleted
+   - Failed operations include proper rollback to maintain data consistency
+
+This implementation provides an optimal balance of security, performance, and user experience by leveraging AWS S3's capabilities while maintaining proper access controls.
 
 ## Authentication
 
@@ -204,6 +245,7 @@ The database includes the following tables:
 
 4. **customertable** - Customer information
    - Contains `security_question_id` and `security_answer_hash` for account security
+   - Stores S3 URLs for profile images
 
 5. **security_questions** - Predefined security questions
    - Used for account recovery and additional security
