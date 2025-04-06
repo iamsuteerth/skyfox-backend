@@ -34,6 +34,7 @@ func main() {
 
 	movieServiceConfig := config.GetMovieServiceConfig()
 	movieService := movieservice.NewMovieService(movieServiceConfig)
+	s3Service := services.NewS3Service()
 
 	userRepository := repositories.NewUserRepository(db)
 	staffRepository := repositories.NewStaffRepository(db)
@@ -47,7 +48,7 @@ func main() {
 	seed.SeedDB(userRepository, staffRepository)
 
 	userService := services.NewUserService(userRepository)
-	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepository, securityQuestionRepository)
+	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepository, securityQuestionRepository, s3Service)
 	securityQuestionService := services.NewSecurityQuestionService(securityQuestionRepository, skyCustomerRepository, resetTokenRepository)
 	forgotPasswordService := services.NewForgotPasswordService(resetTokenRepository, skyCustomerRepository, userRepository)
 	showService := services.NewShowService(showRepository, bookingRepository, movieService, slotRepository)

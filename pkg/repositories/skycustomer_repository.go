@@ -16,7 +16,8 @@ type SkyCustomerRepository interface {
 	ExistsByEmailOrMobile(ctx context.Context, email, mobileNumber string) (bool, string, error)
 	Create(ctx context.Context, customer *models.SkyCustomer) error
 	UpdateCustomerDetails(ctx context.Context, username string, updates map[string]interface{}) error
-	GetCustomerProfileImg(ctx context.Context, username string) ([]byte, error)
+	GetCustomerProfileImg(ctx context.Context, username string) (string, error)
+	UpdateProfileImageURL(ctx context.Context, username string, profileImgURL string) error
 }
 
 type skyCustomerRepository struct {
@@ -151,18 +152,29 @@ func (repo *skyCustomerRepository) UpdateCustomerDetails(ctx context.Context, us
 	return nil
 }
 
-func (repo *skyCustomerRepository) GetCustomerProfileImg(ctx context.Context, username string) ([]byte, error) {
+func (repo *skyCustomerRepository) GetCustomerProfileImg(ctx context.Context, username string) (string, error) {
 	query := "SELECT profile_img FROM customertable WHERE username = $1"
 
-	var profileImg []byte
+	var profileImg string
 	err := repo.db.QueryRow(ctx, query, username).Scan(&profileImg)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, utils.NewNotFoundError("USER_NOT_FOUND", fmt.Sprintf("No user found with username: %s", username), nil)
+			return "", utils.NewNotFoundError("USER_NOT_FOUND", fmt.Sprintf("No user found with username: %s", username), nil)
 		}
-		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Error fetching profile image", err)
+		return "", utils.NewInternalServerError("DATABASE_ERROR", "Error fetching profile image URL", err)
 	}
 
 	return profileImg, nil
+}
+
+func (repo *skyCustomerRepository) UpdateProfileImageURL(ctx context.Context, username string, profileImgURL string) error {
+	query := "UPDATE customertable SET profile_img = $1 WHERE username = $2"
+
+	_, err := repo.db.Exec(ctx, query, profileImgURL, username)
+	if err != nil {
+		return utils.NewInternalServerError("DATABASE_ERROR", "Error updating profile image URL", err)
+	}
+
+	return nil
 }

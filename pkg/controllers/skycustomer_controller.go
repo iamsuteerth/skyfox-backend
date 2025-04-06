@@ -70,6 +70,8 @@ func (sk *SkyCustomerController) Signup(c *gin.Context) {
 		&passwordHistory,
 		req.SecurityQuestionID,
 		req.SecurityAnswer,
+		req.ProfileImg,
+		req.ProfileImgSHA,
 	); err != nil {
 		utils.HandleErrorResponse(c, err, requestID)
 		return

@@ -6,18 +6,19 @@ type SkyCustomer struct {
 	Username           string `json:"username"`
 	Number             string `json:"number"`
 	Email              string `json:"email"`
-	ProfileImg         []byte `json:"profile_img,omitempty"`
+	ProfileImg         string `json:"profile_img"`
+	ProfileImgBytes    []byte `json:"profile_img_bytes"`
 	SecurityQuestionID int    `json:"security_question_id"`
 	SecurityAnswerHash string `json:"-"`
 }
 
-func NewSkyCustomer(name, username, number, email string, profileImg []byte, securityQuestionID int, securityAnswerHash string) SkyCustomer {
+func NewSkyCustomer(name, username, number, email string, profileImgBytes []byte, securityQuestionID int, securityAnswerHash string) SkyCustomer {
 	return SkyCustomer{
 		Name:               name,
 		Username:           username,
 		Number:             number,
 		Email:              email,
-		ProfileImg:         profileImg,
+		ProfileImgBytes:    profileImgBytes,
 		SecurityQuestionID: securityQuestionID,
 		SecurityAnswerHash: securityAnswerHash,
 	}

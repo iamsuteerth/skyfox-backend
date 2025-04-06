@@ -28,6 +28,15 @@
     }
   }
   ```
+- **Error Response (400 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_REQUEST",
+    "message": "Invalid request body",
+    "request_id": "unique-request-id"
+  }
+  ```
 - **Error Response (401 Unauthorized)**:
   ```json
   {
