@@ -6,6 +6,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"os"
 	"strings"
 	"time"
@@ -15,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
+	"github.com/nfnt/resize"
 	"github.com/rs/zerolog/log"
 )
 
@@ -57,23 +60,32 @@ func NewS3Service() S3Service {
 }
 
 func (s *s3Service) UploadProfileImage(ctx context.Context, imageBytes []byte, username string, providedSHA string) (string, error) {
-	// Validate SHA
 	if !s.ValidateSHA(imageBytes, providedSHA) {
 		return "", utils.NewBadRequestError("INVALID_IMAGE_HASH", "The image hash does not match", nil)
 	}
 
-	// Scale image to 64x64 (in a real implementation, this would use an image processing library)
-	// For now, we'll assume the image is already properly scaled
+	img, _, err := image.Decode(bytes.NewReader(imageBytes))
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to decode image bytes")
+		return "", utils.NewInternalServerError("IMAGE_DECODE_FAILED", "Unable to decode image from byte array", err)
+	}
 
-	// Generate a unique object key
+	scaledImg := resize.Resize(64, 64, img, resize.Lanczos3)
+
+	var buf bytes.Buffer
+
+	if err := jpeg.Encode(&buf, scaledImg, &jpeg.Options{Quality: 85}); err != nil {
+		log.Error().Err(err).Msg("Failed to encode scaled image to JPEG")
+		return "", utils.NewInternalServerError("JPEG_ENCODE_FAILED", "Failed to encode image to JPEG", err)
+	}
+
 	timestamp := time.Now().Unix()
 	objectKey := fmt.Sprintf("profile-images/%s_%d.jpg", username, timestamp)
 
-	// Upload to S3
-	_, err := s.s3Client.PutObjectWithContext(ctx, &s3.PutObjectInput{
+	_, err = s.s3Client.PutObjectWithContext(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),
 		Key:         aws.String(objectKey),
-		Body:        bytes.NewReader(imageBytes),
+		Body:        bytes.NewReader(buf.Bytes()),
 		ContentType: aws.String("image/jpeg"),
 		ACL:         aws.String("private"),
 	})
@@ -83,7 +95,6 @@ func (s *s3Service) UploadProfileImage(ctx context.Context, imageBytes []byte, u
 		return "", utils.NewInternalServerError("S3_UPLOAD_FAILED", "Failed to upload profile image", err)
 	}
 
-	// Construct the URL (this will be stored in the database)
 	imageURL := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s",
 		s.bucket,
 		*s.s3Client.Config.Region,
@@ -93,7 +104,6 @@ func (s *s3Service) UploadProfileImage(ctx context.Context, imageBytes []byte, u
 }
 
 func (s *s3Service) DeleteProfileImage(ctx context.Context, objectKey string) error {
-	// Extract the object key from the URL if needed
 	if strings.HasPrefix(objectKey, "http") {
 		parts := strings.Split(objectKey, ".com/")
 		if len(parts) < 2 {
@@ -116,10 +126,8 @@ func (s *s3Service) DeleteProfileImage(ctx context.Context, objectKey string) er
 }
 
 func (s *s3Service) ValidateSHA(imageBytes []byte, providedSHA string) bool {
-	// Calculate SHA-256 hash of the image bytes
 	hash := sha256.Sum256(imageBytes)
 	calculatedSHA := hex.EncodeToString(hash[:])
 
-	// Compare with provided SHA
 	return calculatedSHA == providedSHA
 }
