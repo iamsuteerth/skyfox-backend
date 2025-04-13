@@ -337,6 +337,8 @@ The application uses standardized error responses:
 
 ## Database Schema
 
+![Supabase Database Schema](./database_schema.png)
+
 The database includes the following tables:
 
 1. **usertable** - User authentication and roles
