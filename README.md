@@ -6,6 +6,8 @@ A Go-based backend service for the SkyFox movie booking system with Supabase Pos
 
 SkyFox Backend is a modern, well-structured API service that provides authentication, customer management, and a security question-based password recovery system for the SkyFox movie booking application. Built with Go and the Gin framework, it implements clean architecture principles with proper separation of controllers, services, and repositories.
 
+![Architecture Diagram](./skyfox-backend-arch.png)
+
 ## Features
 
 - JWT-based authentication with role-based authorization
