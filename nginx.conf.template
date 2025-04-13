@@ -85,9 +85,8 @@ http {
 
         # Health check endpoint - accessible without API key
         location /health {
-            access_log off;
+            default_type application/json;
             return 200 '{"status":"healthy"}';
-            add_header Content-Type application/json;
         }
 
         # API key validation for all other paths

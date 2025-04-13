@@ -78,6 +78,109 @@ S3_BUCKET=your-project-profile-images
 go mod download
 ```
 
+## AWS Elastic Beanstalk Deployment
+
+The SkyFox Backend is deployed on AWS Elastic Beanstalk, providing a scalable and managed environment for the application.
+
+### Deployment Architecture
+
+Our deployment uses a containerized approach with Docker, running on ARM64 architecture for optimal cost-efficiency and performance:
+
+- **Platform**: Docker running on 64bit Amazon Linux 2023
+- **Instance Type**: ARM64-based t4g instances (t4g.micro, t4g.small)
+- **Environment Type**: Single instance (suitable for development and initial production)
+
+### Deployment Process
+
+1. **Multi-Stage Docker Build**:
+   - First stage: Builds the Go application with proper optimization
+   - Second stage: Creates a lightweight image with Nginx and the compiled binary
+
+2. **Image Storage**:
+   - The Docker image is stored in Amazon ECR (Elastic Container Registry)
+   - Tagged and versioned for consistent deployments
+
+3. **Environment Configuration**:
+   - Environment variables are securely managed through Elastic Beanstalk
+   - IAM roles provide secure access to AWS services like S3
+
+4. **Monitoring and Logging**:
+   - Basic CloudWatch monitoring is enabled
+   - Application logs are retained for 7 days
+   - Supervisor manages process logs within the container
+
+## Nginx Reverse Proxy with API Key Security
+
+The SkyFox Backend implements a robust security layer using Nginx as a reverse proxy with API key validation.
+
+### Key Features
+
+- **API Gateway Pattern**: Nginx functions as an API Gateway, providing a security layer in front of the Go application
+- **API Key Validation**: All requests (except health checks) require a valid API key in the `X-Api-Key` header
+- **Rate Limiting**: Protects against abuse with configurable request rate limiting
+- **Process Management**: Supervisor ensures both Nginx and the Go application run reliably
+- **Security Headers**: Implements best practices for HTTP security headers
+- **Performance Optimization**: Includes Gzip compression, connection optimizations, and efficient file serving
+
+### How It Works
+
+1. **Request Flow**:
+   - Incoming requests arrive at Nginx on port 80
+   - Nginx validates the API key in the `X-Api-Key` header
+   - Valid requests are proxied to the Go application on port 8080
+   - The API key is stripped before forwarding to the backend for security
+
+2. **Configuration Management**:
+   - Nginx configuration uses environment variable substitution
+   - The API Gateway key is securely stored as an environment variable
+   - Configuration is generated at container startup
+
+3. **Health Checks**:
+   - A dedicated `/health` endpoint bypasses API key requirements
+   - Returns a simple JSON response: `{"status":"healthy"}`
+   - Enables monitoring systems to verify application health
+
+### Security Benefits
+
+- **Attack Surface Reduction**: The Go application is never directly exposed to the internet
+- **Secret Management**: API keys are never hard-coded in the application
+- **Request Filtering**: Unauthorized requests are blocked before reaching the application code
+- **Header Sanitization**: Security-sensitive headers are managed by Nginx
+- **Connection Control**: Timeouts and buffer sizes are optimized to prevent abuse
+- **Standardized Errors**: Unauthorized requests receive consistent error responses
+
+### Testing with Docker
+
+To test this setup locally:
+
+1. **Build the Docker image**:
+   ```bash
+   docker build -t skyfox-backend:local .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -p 80:80 \
+     -e PORT=8080 \
+     -e API_GATEWAY_KEY=your_api_key_here \
+     -e OTHER_ENV_VARIABLES=values \
+     skyfox-backend:local
+   ```
+
+3. **Test the API key validation**:
+   ```bash
+   # This should return 403
+   curl http://localhost/
+
+   # This should succeed
+   curl -H "X-Api-Key: your_api_key_here" http://localhost/
+
+   # Health check should always work
+   curl http://localhost/health
+   ```
+
+This deployment architecture provides a secure, scalable, and maintainable infrastructure for the SkyFox Backend service, leveraging AWS managed services while implementing industry best practices for API security.
+
 ## Database Migration
 
 The migration files are stored in the `supabase/migration` directory:
@@ -140,26 +243,26 @@ The application implements a sophisticated profile image management system using
    - Frontend scales the image to 64x64 pixels and converts it to base64
    - A SHA-256 hash is calculated from the original image bytes
    - Both the base64 string and hash are sent to the backend
-   
+
 2. **Verification and Processing**:
    - Backend decodes the base64 string back to a byte array
    - Recalculates the SHA-256 hash to verify integrity
    - Rescales the image to ensure consistent 64x64 dimensions
    - Uploads the processed image to AWS S3 with private ACL
-   
+
 3. **Efficient Storage**:
    - Only the S3 URL is stored in the database, not the image data
    - This keeps the database lightweight and optimized
-   
+
 4. **Secure Retrieval**:
    - When an image is requested, a presigned URL is generated with a 24-hour expiration
    - This approach prevents direct access to S3 resources
-   
+
 5. **Performance Benefits**:
    - Users directly interact with AWS S3 when fetching images
    - This offloads bandwidth and processing from the application server
    - Results in faster image loading and better scalability
-   
+
 6. **Cleanup Handling**:
    - When profile images are updated, old S3 objects are automatically deleted
    - Failed operations include proper rollback to maintain data consistency
