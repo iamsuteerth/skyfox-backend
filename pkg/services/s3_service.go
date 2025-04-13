@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
@@ -34,19 +33,24 @@ type s3Service struct {
 }
 
 func NewS3Service() S3Service {
-	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
-	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	// accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
+	// secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
 	region := os.Getenv("AWS_REGION")
 	bucket := os.Getenv("S3_BUCKET")
 
-	if accessKey == "" || secretKey == "" || region == "" || bucket == "" {
+	// if accessKey == "" || secretKey == "" || region == "" || bucket == "" {
+	// 	log.Error().Msg("S3 configuration missing")
+	// 	return nil
+	// }
+
+	if region == "" || bucket == "" {
 		log.Error().Msg("S3 configuration missing")
 		return nil
 	}
 
 	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(region),
-		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
+		Region: aws.String(region),
+		// Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
 	})
 
 	if err != nil {
@@ -134,24 +138,24 @@ func (s *s3Service) ValidateSHA(imageBytes []byte, providedSHA string) bool {
 }
 
 func (s *s3Service) GeneratePresignedURL(ctx context.Context, objectKey string, duration time.Duration) (string, error) {
-    if strings.HasPrefix(objectKey, "http") {
-        parts := strings.Split(objectKey, ".com/")
-        if len(parts) < 2 {
-            return "", utils.NewBadRequestError("INVALID_OBJECT_KEY", "Invalid object URL format", nil)
-        }
-        objectKey = parts[1]
-    }
+	if strings.HasPrefix(objectKey, "http") {
+		parts := strings.Split(objectKey, ".com/")
+		if len(parts) < 2 {
+			return "", utils.NewBadRequestError("INVALID_OBJECT_KEY", "Invalid object URL format", nil)
+		}
+		objectKey = parts[1]
+	}
 
-    req, _ := s.s3Client.GetObjectRequest(&s3.GetObjectInput{
-        Bucket: aws.String(s.bucket),
-        Key:    aws.String(objectKey),
-    })
+	req, _ := s.s3Client.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(objectKey),
+	})
 
-    presignedURL, err := req.Presign(duration)
-    if err != nil {
-        log.Error().Err(err).Str("objectKey", objectKey).Msg("Failed to generate presigned URL")
-        return "", utils.NewInternalServerError("PRESIGNED_URL_GENERATION_FAILED", "Failed to generate presigned URL", err)
-    }
+	presignedURL, err := req.Presign(duration)
+	if err != nil {
+		log.Error().Err(err).Str("objectKey", objectKey).Msg("Failed to generate presigned URL")
+		return "", utils.NewInternalServerError("PRESIGNED_URL_GENERATION_FAILED", "Failed to generate presigned URL", err)
+	}
 
-    return presignedURL, nil
+	return presignedURL, nil
 }
