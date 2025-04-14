@@ -33,15 +33,8 @@ type s3Service struct {
 }
 
 func NewS3Service() S3Service {
-	// accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
-	// secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
 	region := os.Getenv("AWS_REGION")
 	bucket := os.Getenv("S3_BUCKET")
-
-	// if accessKey == "" || secretKey == "" || region == "" || bucket == "" {
-	// 	log.Error().Msg("S3 configuration missing")
-	// 	return nil
-	// }
 
 	if region == "" || bucket == "" {
 		log.Error().Msg("S3 configuration missing")
@@ -50,7 +43,6 @@ func NewS3Service() S3Service {
 
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
-		// Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
 	})
 
 	if err != nil {

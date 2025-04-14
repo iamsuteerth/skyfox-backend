@@ -5,8 +5,8 @@ import (
 )
 
 type MovieResponse struct {
-	ImdbId      string `json:"imdbid"`
-	Title       string `json:"title"`
+	MovieId     string `json:"movieId"`
+	Name        string `json:"name"`
 	RunTime     string `json:"runtime"`
 	Plot        string `json:"plot"`
 	ImdbRating  string `json:"imdbRating"`
@@ -16,8 +16,8 @@ type MovieResponse struct {
 
 func NewMovieResponse(movie *models.Movie) MovieResponse {
 	return MovieResponse{
-		ImdbId:      movie.MovieId,
-		Title:       movie.Name,
+		MovieId:     movie.MovieId,
+		Name:        movie.Name,
 		RunTime:     movie.Duration,
 		Plot:        movie.Plot,
 		ImdbRating:  movie.ImdbRating,

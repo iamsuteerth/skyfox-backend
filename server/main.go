@@ -83,29 +83,46 @@ func main() {
 	staffRouter.Use(security.AuthMiddleware())
 	staffRouter.Use(security.StaffMiddleware())
 
-	// Login
-	noAuthRouter.POST(constants.LoginEndPoint, authController.Login)
-	// Customer Signup
-	noAuthRouter.POST(constants.SkyCustomerSignUpEndPoint, skyCustomerController.Signup)
-	// Get Security Questions
-	noAuthRouter.GET(constants.SecurityQuestions, securityQuestionController.GetSecurityQuestions)
-	noAuthRouter.GET(constants.SecurityQuestionByEmail, securityQuestionController.GetSecurityQuestionByEmail)
-	// Verify Security Question Answer
-	noAuthRouter.POST(constants.VerifySecurityAnswerEndpoint, securityQuestionController.VerifySecurityAnswer)
-	// Forgot Password for Customer
-	noAuthRouter.POST(constants.ForgotPasswordEndpoint, forgotPasswordController.ForgotPassword)
-	// Get Shows (RBAC)
-	authRouter.GET(constants.ShowEndPoint, showController.GetShows)
-	// Show Creation - Admin
-	showCreation := adminRouter.Group(constants.ShowEndPoint)
+	noAuthAPIs := noAuthRouter.Group("")
 	{
-		showCreation.GET(constants.MoviesEndPoint, showController.GetMovies)
-		showCreation.POST("", showController.CreateShow)
+		// Authentication
+		noAuthAPIs.POST(constants.LoginEndPoint, authController.Login) // Login
+
+		// SkyCustomer - Public
+		noAuthAPIs.POST(constants.SkyCustomerSignUpEndPoint, skyCustomerController.Signup) // Customer Signup
+
+		// Security Questions
+		noAuthAPIs.GET(constants.SecurityQuestions, securityQuestionController.GetSecurityQuestions)             // Get all Security Questions
+		noAuthAPIs.GET(constants.SecurityQuestionByEmail, securityQuestionController.GetSecurityQuestionByEmail) // Get Security Question by Email
+		noAuthAPIs.POST(constants.VerifySecurityAnswerEndpoint, securityQuestionController.VerifySecurityAnswer) // Verify Security Answer
+
+		// Password Recovery
+		noAuthAPIs.POST(constants.ForgotPasswordEndpoint, forgotPasswordController.ForgotPassword) // Forgot Password
 	}
-	// Get Available Slots - Admin
-	adminRouter.GET(constants.SlotEndPoint, slotController.GetAvailableSlots)
-	// Only get profile image
-	authRouter.GET(constants.CustomerProfileImage, skyCustomerController.GetProfileImagePresignedURL)
+
+	// Authenticated Routes
+	authAPIs := authRouter.Group("")
+	{
+		// Shows (for logged-in users with RBAC)
+		authAPIs.GET(constants.ShowEndPoint, showController.GetShows) // Get Shows (RBAC-based)
+
+		// Customer Profile
+		authAPIs.GET(constants.CustomerProfileImage, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
+	}
+
+	// Admin Routes
+	adminAPIs := adminRouter.Group("")
+	{
+		// Slot Management
+		adminAPIs.GET(constants.SlotEndPoint, slotController.GetAvailableSlots) // Get Available Slots
+
+		// Show Management
+		showCreation := adminAPIs.Group(constants.ShowEndPoint)
+		{
+			showCreation.GET(constants.MoviesEndPoint, showController.GetMovies) // Get Movies for Show creation
+			showCreation.POST("", showController.CreateShow)                     // Create a Show
+		}
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
