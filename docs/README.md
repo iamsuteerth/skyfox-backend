@@ -532,7 +532,7 @@
 ### Get Customer Profile
 - **URL**: `/customer/profile`
 - **Method**: `GET`
-- **Authentication**: Required
+- **Authentication**: Required (Customer Only)
 - **Description**: Retrieves all customer profile information except the profile image.
 - **Success Response (200 OK)**:
   ```json
@@ -559,11 +559,20 @@
     "request_id": "unique-request-id"
   }
   ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Customer role required",
+    "request_id": "2326c83e-5a3d-4cd9-bcea-61deaa5bbedf"
+  }
+  ```
 
 ### Get Profile Image Presigned URL
 - **URL**: `/customer/profile-image`
 - **Method**: `GET`
-- **Authentication**: Required
+- **Authentication**: Required (Customer Only)
 - **Notes**: 
   - Generates a presigned URL for accessing the user's profile image
   - URL expires after 24 hours (1440 minutes)
@@ -605,6 +614,129 @@
     "code": "PROFILE_IMAGE_NOT_FOUND",
     "message": "No profile image found for this user",
     "request_id": "unique-request-id"
+  }
+  ```
+
+### Update Customer Profile
+- **URL**: `/customer/update-profile`
+- **Method**: `POST`
+- **Authentication**: Required (Customer only)
+- **Description**: Updates customer profile information with security question verification
+- **Notes**:
+  - The security answer must match the answer provided during signup
+  - Email and phone number must be unique across all users
+- **Request Body**:
+  ```json
+  {
+    "name": "string",
+    "email": "string",
+    "phone_number": "string",
+    "security_answer": "string"
+  }
+  ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Profile updated successfully",
+    "request_id": "99a4762c-4d27-424f-83be-40a592cfbc28",
+    "status": "SUCCESS",
+    "data": {
+        "username": "suteerth",
+        "name": "Suteerth S",
+        "email": "suteerth1@gmail.com",
+        "phone_number": "1234567892"
+    }
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Customer role required",
+    "request_id": "2326c83e-5a3d-4cd9-bcea-61deaa5bbedf"
+  }
+  ```
+- **Invalid Request Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_REQUEST",
+    "message": "Invalid request data",
+    "request_id": "1ca237fd-a6d6-419e-b1a2-05ccde846447"
+  }
+  ```
+- **Missing Fields Validation Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "70d23976-ab8e-432e-9dda-62109eed19b5",
+    "errors": [
+        {
+            "field": "Name",
+            "message": "This field is required"
+        },
+        {
+            "field": "Email",
+            "message": "This field is required"
+        },
+        {
+            "field": "PhoneNumber",
+            "message": "This field is required"
+        },
+        {
+            "field": "SecurityAnswer",
+            "message": "This field is required"
+        }
+    ]
+  }
+  ```
+- **Format Validation Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "48cf1f2e-fe7f-4887-a75f-ba359801bd5f",
+    "errors": [
+        {
+            "field": "Email",
+            "message": "Invalid email format"
+        },
+        {
+            "field": "PhoneNumber",
+            "message": "Phone number must be exactly 10 digits"
+        }
+    ]
+  }
+  ```
+- **Security Answer Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_SECURITY_ANSWER",
+    "message": "The security answer provided is incorrect",
+    "request_id": "3fabb098-188a-4c96-87f0-c5730b04cded"
+  }
+  ```
+- **Duplicate Email Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "email_EXISTS",
+    "message": "Email already exists",
+    "request_id": "77b0fc67-0b01-4494-bdd8-1e187c7f756c"
+  }
+  ```
+- **Duplicate Phone Number Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "mobilenumber_EXISTS",
+    "message": "Mobile number already exists",
+    "request_id": "418e8e21-3ba6-4010-8449-15ce24a12da6"
   }
   ```
 

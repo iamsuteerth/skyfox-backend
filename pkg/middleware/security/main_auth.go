@@ -79,6 +79,34 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
+func CustomerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requestID := utils.GetRequestID(c)
+
+		claims, exists := c.Get("claims")
+		if !exists {
+			log.Debug().Msg("No claims found in context")
+			utils.HandleErrorResponse(c,
+				utils.NewUnauthorizedError("NO_CLAIMS_FOUND", "No authentication claims found", nil),
+				requestID)
+			c.Abort()
+			return
+		}
+
+		role, ok := claims.(jwt.MapClaims)["role"].(string)
+		if !ok || role != "customer" {
+			log.Debug().Str("role", role).Msg("Access denied for non-customers.")
+			utils.HandleErrorResponse(c,
+				utils.NewForbiddenError("FORBIDDEN", "Access denied. Customer role required", nil),
+				requestID)
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
 func AdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestID := utils.GetRequestID(c)

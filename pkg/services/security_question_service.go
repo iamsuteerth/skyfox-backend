@@ -15,6 +15,7 @@ type SecurityQuestionService interface {
 	ValidateSecurityQuestionExists(ctx context.Context, questionID int) error
 	GetSecurityQuestionByEmail(ctx context.Context, email string) (*response.SecurityQuestionResponse, error)
 	VerifySecurityAnswerAndGenerateToken(ctx context.Context, email, securityAnswer string) (*response.VerifySecurityAnswerResponse, error)
+	VerifySecurityAnswer(ctx context.Context, email, securityAnswer string) (*response.VerifySecurityAnswerWithoutTokenResponse, error)
 }
 
 type securityQuestionService struct {
@@ -114,5 +115,26 @@ func (s *securityQuestionService) VerifySecurityAnswerAndGenerateToken(ctx conte
 	return &response.VerifySecurityAnswerResponse{
 		ResetToken: token,
 		ExpiresIn:  expiresInSeconds,
+	}, nil
+}
+
+func (s *securityQuestionService) VerifySecurityAnswer(ctx context.Context, email, securityAnswer string) (*response.VerifySecurityAnswerWithoutTokenResponse, error) {
+	customer, err := s.skyCustomerRepo.FindByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	if customer == nil {
+		return nil, utils.NewNotFoundError("USER_NOT_FOUND", "No user found with the provided email", nil)
+	}
+
+	if !utils.CheckPasswordHash(securityAnswer, customer.SecurityAnswerHash) {
+		return &response.VerifySecurityAnswerWithoutTokenResponse{
+			ValidAnswer: false,
+		}, nil
+	}
+
+	return &response.VerifySecurityAnswerWithoutTokenResponse{
+		ValidAnswer: true,
 	}, nil
 }

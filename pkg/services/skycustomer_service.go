@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/repositories"
@@ -14,12 +15,10 @@ import (
 type SkyCustomerService interface {
 	ValidateUserDetails(ctx context.Context, username, email, phoneNumber string) error
 	CreateCustomer(ctx context.Context, customer *models.SkyCustomer, user *models.User, passwordHistory *models.PasswordHistory, securityQuestionID int, securityAnswer string, profileImgBytes []byte, profileImgSHA string) error
-	ExistsByEmailOrMobile(ctx context.Context, email, mobileNumber string) (bool, string, error)
-	GetUsernameByEmail(ctx context.Context, email string) (string, error)
-	GetProfileImageURL(ctx context.Context, username string) (string, error)
+	GetProfileImagePresignedURL(ctx context.Context, username string) (string, time.Time, error)
 	GetCustomerProfile(ctx context.Context, username string) (*response.CustomerProfileResponse, error)
 	UpdateProfileImage(ctx context.Context, username string, imageBytes []byte, imageSHA string) error
-	GetProfileImagePresignedURL(ctx context.Context, username string) (string, time.Time, error)
+	UpdateCustomerProfile(ctx context.Context, username string, request *request.UpdateCustomerProfileRequest) (*response.UpdateCustomerProfileResponse, error)
 }
 
 type skyCustomerService struct {
@@ -52,7 +51,7 @@ func (s *skyCustomerService) ValidateUserDetails(ctx context.Context, username, 
 		return utils.NewBadRequestError("USERNAME_EXISTS", "Username is already taken", nil)
 	}
 
-	exists, field, err := s.ExistsByEmailOrMobile(ctx, email, phoneNumber)
+	exists, field, err := s.skyCustomerRepo.ExistsByEmailOrMobile(ctx, email, phoneNumber)
 	if err != nil {
 		return utils.NewInternalServerError("DATABASE_ERROR", "Error checking customer data", err)
 	}
@@ -127,25 +126,6 @@ func (s *skyCustomerService) CreateCustomer(
 	return nil
 }
 
-func (s *skyCustomerService) ExistsByEmailOrMobile(ctx context.Context, email, mobileNumber string) (bool, string, error) {
-	return s.skyCustomerRepo.ExistsByEmailOrMobile(ctx, email, mobileNumber)
-}
-
-func (s *skyCustomerService) GetUsernameByEmail(ctx context.Context, email string) (string, error) {
-	customer, err := s.skyCustomerRepo.FindByEmail(ctx, email)
-	if err != nil {
-		return "", utils.NewInternalServerError("DATABASE_ERROR", "Error fetching customer by email", err)
-	}
-	if customer == nil {
-		return "", utils.NewNotFoundError("USER_NOT_FOUND", fmt.Sprintf("No user found with email: %s", email), nil)
-	}
-	return customer.Username, nil
-}
-
-func (s *skyCustomerService) GetProfileImageURL(ctx context.Context, username string) (string, error) {
-	return s.skyCustomerRepo.GetCustomerProfileImg(ctx, username)
-}
-
 func (s *skyCustomerService) GetCustomerProfile(ctx context.Context, username string) (*response.CustomerProfileResponse, error) {
 	customer, err := s.skyCustomerRepo.FindByUsername(ctx, username)
 	if err != nil {
@@ -201,6 +181,52 @@ func (s *skyCustomerService) GetProfileImagePresignedURL(ctx context.Context, us
 	expiresAt := time.Now().Add(duration)
 
 	return presignedURL, expiresAt, nil
+}
+
+func (s *skyCustomerService) UpdateCustomerProfile(ctx context.Context, username string, request *request.UpdateCustomerProfileRequest) (*response.UpdateCustomerProfileResponse, error) {
+	customer, err := s.skyCustomerRepo.FindByUsername(ctx, username)
+	if err != nil {
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Error fetching customer details", err)
+	}
+
+	if customer == nil {
+		return nil, utils.NewNotFoundError("USER_NOT_FOUND", fmt.Sprintf("No customer found with username: %s", username), nil)
+	}
+
+	exists, field, err := s.skyCustomerRepo.ExistsByEmailOrMobile(ctx, request.Email, request.PhoneNumber)
+	if err != nil {
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Error checking customer data", err)
+	}
+	if exists {
+		var errorMessage string
+		switch field {
+		case "email":
+			errorMessage = "Email already exists"
+		case "mobilenumber":
+			errorMessage = "Mobile number already exists"
+		default:
+			errorMessage = fmt.Sprintf("%s already exists", field)
+		}
+		return nil, utils.NewBadRequestError(field+"_EXISTS", errorMessage, nil)
+	}
+
+	updates := map[string]interface{}{
+		"name":   request.Name,
+		"email":  request.Email,
+		"number": request.PhoneNumber,
+	}
+
+	err = s.skyCustomerRepo.UpdateCustomerDetails(ctx, username, updates)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.UpdateCustomerProfileResponse{
+		Username:    username,
+		Name:        request.Name,
+		Email:       request.Email,
+		PhoneNumber: request.PhoneNumber,
+	}, nil
 }
 
 func (s *skyCustomerService) UpdateProfileImage(ctx context.Context, username string, imageBytes []byte, imageSHA string) error {

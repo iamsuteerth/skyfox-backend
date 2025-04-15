@@ -77,6 +77,10 @@ func main() {
 	authRouter := router.Group("")
 	authRouter.Use(security.AuthMiddleware())
 
+	customeRouter := router.Group("")
+	customeRouter.Use(security.AuthMiddleware())
+	customeRouter.Use(security.CustomerMiddleware())
+
 	adminRouter := router.Group("")
 	adminRouter.Use(security.AuthMiddleware())
 	adminRouter.Use(security.AdminMiddleware())
@@ -98,7 +102,7 @@ func main() {
 		}
 		securityQuestions := noAuthAPIs.Group(constants.SecurityQuestionsEndPoint)
 		{
-			securityQuestions.GET(constants.SecurityQuestionsEndPoint, securityQuestionController.GetSecurityQuestions)     // Get all Security Questions
+			securityQuestions.GET("", securityQuestionController.GetSecurityQuestions)                                      // Get all Security Questions
 			securityQuestions.GET(constants.ByEmailEndPoint, securityQuestionController.GetSecurityQuestionByEmail)         // Get Security Question by Email
 			securityQuestions.POST(constants.VerifySecurityAnswerEndPoint, securityQuestionController.VerifySecurityAnswer) // Verify Security Answer
 		}
@@ -106,23 +110,20 @@ func main() {
 
 	authAPIs := authRouter.Group("")
 	{
-		shows := authAPIs.Group("")
-		{
-			shows.GET(constants.ShowEndPoint, showController.GetShows) // Get Shows (RBAC-based)
-		}
-		customer := authAPIs.Group(constants.SkyCustomerEndPoint)
-		{
-			customer.GET(constants.ProfileImageEndPoint, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
-			customer.GET(constants.ProfileEndPoint, skyCustomerController.GetCustomerProfile)               // Get customer profile details
-		}
+		authAPIs.GET(constants.ShowEndPoint, showController.GetShows) // Get Shows (RBAC-based)
+	}
+
+	customerAPIs := customeRouter.Group(constants.SkyCustomerEndPoint)
+	{
+		customerAPIs.GET(constants.ProfileImageEndPoint, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
+		customerAPIs.GET(constants.ProfileEndPoint, skyCustomerController.GetCustomerProfile)               // Get Customer Profile
+		customerAPIs.POST(constants.UpdateProfileEndPoint, skyCustomerController.UpdateCustomerProfile)     // Update Customer Profile
 	}
 
 	adminAPIs := adminRouter.Group("")
 	{
-		// Slot Management
 		adminAPIs.GET(constants.SlotEndPoint, slotController.GetAvailableSlots) // Get Available Slots
 
-		// Show Management
 		showCreation := adminAPIs.Group(constants.ShowEndPoint)
 		{
 			showCreation.GET(constants.MoviesEndPoint, showController.GetMovies) // Get Movies for Show creation
