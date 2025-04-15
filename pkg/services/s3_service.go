@@ -67,7 +67,7 @@ func (s *s3Service) UploadProfileImage(ctx context.Context, imageBytes []byte, u
 		return "", utils.NewInternalServerError("IMAGE_DECODE_FAILED", "Unable to decode image from byte array", err)
 	}
 
-	scaledImg := resize.Resize(64, 64, img, resize.Lanczos3)
+	scaledImg := resize.Resize(320, 320, img, resize.Lanczos3)
 
 	var buf bytes.Buffer
 

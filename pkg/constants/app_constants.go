@@ -1,32 +1,30 @@
 package constants
 
 const (
-	RevenueEndPoint              = "/revenue"
-	BookingEndPoint              = "/bookings"
-	ShowEndPoint                 = "/shows"
+	// No Auth Routes
 	LoginEndPoint                = "/login"
-	SkyCustomerEndPoint          = "/customer"
 	SkyCustomerSignUpEndPoint    = "/customer/signup"
-	StaffEndPoint                = "/staff"
-	SlotEndPoint                 = "/slot"
-	SkyCustomerProfileEndPoint   = "/customer/profile"
-	ChangePasswordEndPoint       = "/change-password"
-	ResetPasswordEndPoint        = "/reset-password"
-	ViewBookingsCSV              = "/bookings/download-csv"
-	PaymentGatewayEndpoint       = "/payment"
-	EmailconfirmationEndPoint    = "/check-email"
-	PaymentAPI                   = "localhost:8082/payment"
-	SendOTPEndPoint              = "/send-otp"
-	VerifyOTPEndPoint            = "/verify-otp"
-	SecurityQuestions            = "/security-questions"
+	SecurityQuestionsEndPoint    = "/security-questions"
 	SecurityQuestionByEmail      = "/security-questions/by-email"
-	VerifySecurityAnswerEndpoint = "/verify-security-answer"
-	ForgotPasswordEndpoint       = "/forgot-password"
-	MoviesEndPoint               = "/movies"
-	CustomerProfileImage         = "/customer/profile-image"
+	VerifySecurityAnswerEndPoint = "/verify-security-answer"
+	ForgotPasswordEndPoint       = "/forgot-password"
+	// Shows Page
+	ShowEndPoint   = "/shows"
+	SlotEndPoint   = "/slot"
+	MoviesEndPoint = "/movies"
+	// Role Endpoints
+	CustomerEndPoint = "/customer"
+	AdminEndPoint    = "/admin"
+	StaffEndPoint    = "/staff"
+	// Profile Page
+	ChangePasswordEndPoint     = "/change-password"
+	ProfileImageEndPoint       = "/profile-image"
+	ProfileEndPoint            = "/profile"
+	UpdateProfileEndPoint      = "/update-profile"
+	UpdateProfileImageEndPoint = "/update-profile-image"
 )
 
 const (
 	TOTAL_NO_OF_SEATS           = 100
-	MAX_NO_OF_SEATS_PER_BOOKING = 15
+	MAX_NO_OF_SEATS_PER_BOOKING = 10
 )

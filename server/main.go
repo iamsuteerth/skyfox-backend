@@ -92,12 +92,12 @@ func main() {
 		noAuthAPIs.POST(constants.SkyCustomerSignUpEndPoint, skyCustomerController.Signup) // Customer Signup
 
 		// Security Questions
-		noAuthAPIs.GET(constants.SecurityQuestions, securityQuestionController.GetSecurityQuestions)             // Get all Security Questions
+		noAuthAPIs.GET(constants.SecurityQuestionsEndPoint, securityQuestionController.GetSecurityQuestions)     // Get all Security Questions
 		noAuthAPIs.GET(constants.SecurityQuestionByEmail, securityQuestionController.GetSecurityQuestionByEmail) // Get Security Question by Email
-		noAuthAPIs.POST(constants.VerifySecurityAnswerEndpoint, securityQuestionController.VerifySecurityAnswer) // Verify Security Answer
+		noAuthAPIs.POST(constants.VerifySecurityAnswerEndPoint, securityQuestionController.VerifySecurityAnswer) // Verify Security Answer
 
 		// Password Recovery
-		noAuthAPIs.POST(constants.ForgotPasswordEndpoint, forgotPasswordController.ForgotPassword) // Forgot Password
+		noAuthAPIs.POST(constants.ForgotPasswordEndPoint, forgotPasswordController.ForgotPassword) // Forgot Password
 	}
 
 	// Authenticated Routes
@@ -107,7 +107,7 @@ func main() {
 		authAPIs.GET(constants.ShowEndPoint, showController.GetShows) // Get Shows (RBAC-based)
 
 		// Customer Profile
-		authAPIs.GET(constants.CustomerProfileImage, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
+		authAPIs.GET(constants.CustomerEndPoint+constants.ProfileImageEndPoint, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
 	}
 
 	// Admin Routes
