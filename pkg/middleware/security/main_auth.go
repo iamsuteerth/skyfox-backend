@@ -97,7 +97,7 @@ func AdminMiddleware() gin.HandlerFunc {
 		if !ok || role != "admin" {
 			log.Debug().Str("role", role).Msg("Access denied for non-admin user")
 			utils.HandleErrorResponse(c,
-				utils.NewBadRequestError("FORBIDDEN", "Access denied. Admin role required", nil),
+				utils.NewForbiddenError("FORBIDDEN", "Access denied. Admin role required", nil),
 				requestID)
 			c.Abort()
 			return
@@ -107,7 +107,7 @@ func AdminMiddleware() gin.HandlerFunc {
 	}
 }
 
-func StaffMiddleware() gin.HandlerFunc {
+func AdminStaffMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestID := utils.GetRequestID(c)
 
@@ -122,15 +122,14 @@ func StaffMiddleware() gin.HandlerFunc {
 		}
 
 		role, ok := claims.(jwt.MapClaims)["role"].(string)
-		if !ok || (role != "staff") {
-			log.Debug().Str("role", role).Msg("Access denied for non-staff user")
+		if !ok || !(role == "admin" || role == "staff") {
+			log.Debug().Str("role", role).Msg("Access denied for non-admin or non-staff user")
 			utils.HandleErrorResponse(c,
-				utils.NewBadRequestError("FORBIDDEN", "Access denied. Staff or admin role required", nil),
+				utils.NewForbiddenError("FORBIDDEN", "Access denied. Admin or staff role required!", nil),
 				requestID)
 			c.Abort()
 			return
 		}
-
 		c.Next()
 	}
 }

@@ -4,7 +4,7 @@
 
 - **Name**: Must be 3-70 characters, max 4 words, letters only, no consecutive spaces
 - **Username**: Must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters
-- **Password**: Must be at least 8 characters with at least one uppercase letter and one special character
+- **Password**: Must be at least 8 characters with at least one uppercase letter and one special character. Cannot match the previous 3 passwords stored in the database.
 - **Phone Number**: Must be exactly 10 digits
 - **Email**: Must be in valid email format
 - **Security Answer**: Must be at least 3 characters long
@@ -15,6 +15,7 @@
 - **URL**: `/login`
 - **Method**: `POST`
 - **Authentication**: None
+- **Description**: Login and generate a JWT token with valid credentials.
 - **Request Body**:
   ```json
   {
@@ -62,6 +63,7 @@
 - **URL**: `/security-questions`
 - **Method**: `GET`
 - **Authentication**: None
+- **Description**: Get all security questions.
 - **Success Response (200 OK)**:
   ```json
   {
@@ -87,7 +89,8 @@
 - **Method**: `POST`
 - **Authentication**: None
 - **Query Parameters**:
-  - `email`: Validation performaned
+  - `email`: Validation performed
+- **Description**: Get the security question of a valid user's correct email.
 - **Success Response (200 OK)**:
   ```json
   {
@@ -110,10 +113,12 @@
     "request_id": "unique-request-id"
   }
   ```
+
 ### Verify Security Answer
 - **URL**: `/verify-security-answer`
 - **Method**: `POST`
 - **Authentication**: None
+- **Description**: Verify the answer to the security question of a user and return a reset-token which expires in 300 seconds back to the user which is used for forgot password request validation.
 - **Request Body**:
   ```json
   {
@@ -164,6 +169,7 @@
 - **URL**: `/customer/signup`
 - **Method**: `POST`
 - **Authentication**: None
+- **Description**: Create a user as customer.
 - **Request Body**:
   ```json
   {
@@ -215,6 +221,7 @@
 - **URL**: `/forgot-password`
 - **Method**: `POST`
 - **Authentication**: None
+- **Description**: Change the password of a user. Checks password history behind the scenes.
 - **Request Body**:
   ```json
   {
@@ -272,54 +279,6 @@
     "request_id": "unique-request-id"
   }
   ```
-## Customer Profile
-
-### Get Profile Image Presigned URL
-- **URL**: `/customer/profile-image`
-- **Method**: `GET`
-- **Authentication**: Required
-- **Notes**: 
-  - Generates a presigned URL for accessing the user's profile image
-  - URL expires after 24 hours (1440 minutes)
-- **Success Response (200 OK)**:
-  ```json
-  {
-    "message": "Presigned URL generated successfully",
-    "request_id": "unique-request-id",
-    "status": "SUCCESS",
-    "data": {
-      "presigned_url": "https://bucket-name.s3.region.amazonaws.com/profile-images/username_timestamp.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...",
-      "expires_at": "2025-04-08T00:17:00Z"
-    }
-  }
-  ```
-- **Error Response (401 Unauthorized)**:
-  ```json
-  {
-    "status": "ERROR",
-    "code": "UNAUTHORIZED",
-    "message": "Unable to verify credentials",
-    "request_id": "unique-request-id"
-  }
-  ```
-- **Error Response (401 Unauthorized)**:
-  ```json
-  {
-    "status": "ERROR",
-    "code": "INVALID_TOKEN",
-    "message": "Invalid token claims",
-    "request_id": "unique-request-id"
-  }
-  ```
-- **Error Response (404 Not Found)**:
-  ```json
-  {
-    "status": "ERROR",
-    "code": "PROFILE_IMAGE_NOT_FOUND",
-    "message": "No profile image found for this user",
-    "request_id": "unique-request-id"
-  }
-  ```
 
 ## Show Management
 
@@ -332,6 +291,7 @@
 - **Notes**: 
   - Admin and staff can view shows for any date
   - Customers can only view shows from today to the next 6 days
+- **Description**: Fetch all shows for a given day.
 - **Success Response (200 OK)**:
   ```json
   {
@@ -377,6 +337,7 @@
 - **URL**: `/shows/movies`
 - **Method**: `GET`
 - **Authentication**: Required (Admin only)
+- **Description**: Get all movies available via the movie service.
 - **Success Response (200 OK)**:
   ```json
   {
@@ -429,6 +390,7 @@
 - **URL**: `/shows`
 - **Method**: `POST`
 - **Authentication**: Required (Admin only)
+- **Description**: Schedule a show.
 - **Request Body**:
   ```json
   {
@@ -523,6 +485,7 @@
 - **Authentication**: Required (Admin only)
 - **Query Parameters**:
   - `date`: Date in YYYY-MM-DD format (optional, defaults to current date)
+- **Description**: Retrieves all available slots on the requested date.
 - **Success Response (200 OK)**:
   ```json
   {
@@ -570,7 +533,7 @@
 - **URL**: `/customer/profile`
 - **Method**: `GET`
 - **Authentication**: Required
-- **Description**: Retrieves all customer profile information except the profile image
+- **Description**: Retrieves all customer profile information except the profile image.
 - **Success Response (200 OK)**:
   ```json
   {
@@ -594,5 +557,129 @@
     "code": "INVALID_TOKEN",
     "message": "Unauthorized",
     "request_id": "unique-request-id"
+  }
+  ```
+
+### Get Profile Image Presigned URL
+- **URL**: `/customer/profile-image`
+- **Method**: `GET`
+- **Authentication**: Required
+- **Notes**: 
+  - Generates a presigned URL for accessing the user's profile image
+  - URL expires after 24 hours (1440 minutes)
+- **Description**: Retrieve the image url of a valid customer.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Presigned URL generated successfully",
+    "request_id": "unique-request-id",
+    "status": "SUCCESS",
+    "data": {
+      "presigned_url": "https://bucket-name.s3.region.amazonaws.com/profile-images/username_timestamp.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...",
+      "expires_at": "2025-04-08T00:17:00Z"
+    }
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "UNAUTHORIZED",
+    "message": "Unable to verify credentials",
+    "request_id": "unique-request-id"
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Invalid token claims",
+    "request_id": "unique-request-id"
+  }
+  ```
+- **Error Response (404 Not Found)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "PROFILE_IMAGE_NOT_FOUND",
+    "message": "No profile image found for this user",
+    "request_id": "unique-request-id"
+  }
+  ```
+
+### Get Admin Profile
+- **URL**:`/admin/profile`
+- **Method**: `GET`
+- **Authentication:** Required (Admin role only)
+- **Description:** Retrieves the profile information for an authenticated admin user.
+- **Success Response (200 OK)**:
+  ```json
+  {
+      "message": "Admin profile retrieved successfully",
+      "request_id": "64bea111-78e1-4e12-8c2b-8452463a86f4",
+      "status": "SUCCESS",
+      "data": {
+          "username": "seed-user-1",
+          "name": "Admin One",
+          "counter_no": 101,
+          "created_at": "2025-04-15T11:30:06+05:30"
+      }
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+      "status": "ERROR",
+      "code": "INVALID_TOKEN",
+      "message": "Unauthorized",
+      "request_id": "aed33148-d8a0-4657-9816-64b0e64c0467"
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+      "status": "ERROR",
+      "code": "FORBIDDEN",
+      "message": "Access denied. Admin or staff role required!",
+      "request_id": "938b985d-d729-4b67-9509-077d3a30ab74"
+  }
+  ```
+
+### Get Staff Profile
+- **URL**:`/staff/profile`
+- **Method**: `GET`
+- **Authentication:** Required (Staff role only)
+- **Description:** Retrieves the profile information for an authenticated staff user.
+- **Success Response (200 OK)**:
+  ```json
+  {
+      "message": "Staff profile retrieved successfully",
+      "request_id": "dad89523-8ba7-476d-bafe-1db1a0c0d05d",
+      "status": "SUCCESS",
+      "data": {
+          "username": "staff-1",
+          "name": "Staff One",
+          "counter_no": 501,
+          "created_at": "2025-04-15T11:30:07+05:30"
+      }
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+      "status": "ERROR",
+      "code": "INVALID_TOKEN",
+      "message": "Unauthorized",
+      "request_id": "e4a44212-1a2b-4c48-9be8-ec5e935b7ebe"
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+      "status": "ERROR",
+      "code": "FORBIDDEN",
+      "message": "Access denied. Admin or staff role required!",
+      "request_id": "938b985d-d729-4b67-9509-077d3a30ab74"
   }
   ```

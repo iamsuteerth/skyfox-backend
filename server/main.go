@@ -53,6 +53,7 @@ func main() {
 	forgotPasswordService := services.NewForgotPasswordService(resetTokenRepository, skyCustomerRepository, userRepository)
 	showService := services.NewShowService(showRepository, bookingRepository, movieService, slotRepository)
 	slotService := services.NewSlotService(slotRepository)
+	adminStaffProfileService := services.NewAdminStaffProfileService(userRepository, staffRepository)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -60,6 +61,7 @@ func main() {
 	forgotPasswordController := controllers.NewForgotPasswordController(forgotPasswordService)
 	showController := controllers.NewShowController(showService)
 	slotController := controllers.NewSlotController(slotService)
+	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -79,9 +81,9 @@ func main() {
 	adminRouter.Use(security.AuthMiddleware())
 	adminRouter.Use(security.AdminMiddleware())
 
-	staffRouter := router.Group("")
-	staffRouter.Use(security.AuthMiddleware())
-	staffRouter.Use(security.StaffMiddleware())
+	adminStaffRouter := router.Group("")
+	adminStaffRouter.Use(security.AuthMiddleware())
+	adminStaffRouter.Use(security.AdminStaffMiddleware())
 
 	noAuthAPIs := noAuthRouter.Group("")
 	{
@@ -125,6 +127,18 @@ func main() {
 		{
 			showCreation.GET(constants.MoviesEndPoint, showController.GetMovies) // Get Movies for Show creation
 			showCreation.POST("", showController.CreateShow)                     // Create a Show
+		}
+	}
+
+	adminStaffAPIs := adminStaffRouter.Group("")
+	{
+		admin := adminStaffAPIs.Group(constants.AdminEndPoint)
+		{
+			admin.GET(constants.ProfileEndPoint, adminStaffController.GetAdminProfile) // Get Admin Profile
+		}
+		staff := adminStaffAPIs.Group(constants.StaffEndPoint)
+		{
+			staff.GET(constants.ProfileEndPoint, adminStaffController.GetStaffProfile) // Get Staff Profile
 		}
 	}
 

@@ -84,6 +84,15 @@ func NewUnauthorizedError(code string, message string, err error) *AppError {
 	}
 }
 
+func NewForbiddenError(code string, message string, err error) *AppError {
+	return &AppError{
+		HTTPCode: http.StatusForbidden,
+		Code:     code,
+		Message:  message,
+		Err:      err,
+	}
+}
+
 func NewValidationError(validationErrors validator.ValidationErrors) *AppError {
 	errors := make([]ValidationError, 0)
 	for _, err := range validationErrors {
