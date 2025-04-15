@@ -20,8 +20,8 @@ force-migration:
 
 deploy:
 	@echo "Building and running the Go server..."
-	$(GO) build -o skyfox-backend .
-	./skyfox-backend
+	$(GO) build -o skyfox-backend ./server/main.go
+	GIN_MODE=release ./skyfox-backend
 
 seedData:
 	@echo "Seeding data..."

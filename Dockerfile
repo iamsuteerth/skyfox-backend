@@ -21,6 +21,8 @@ COPY supervisord.conf /etc/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+ENV GIN_MODE=release
+
 RUN mkdir -p /var/log/supervisor /var/run/supervisor /var/log/nginx /var/run/nginx /tmp/nginx
 
 RUN chmod 777 /var/log/supervisor /var/run/supervisor /var/log/nginx /var/run/nginx /tmp/nginx

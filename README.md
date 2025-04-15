@@ -196,16 +196,23 @@ The migration files are stored in the `supabase/migration` directory:
 - `000004_security_question_temp_tkn.down.sql` - Drops the password reset tokens table
 - `000005_add_unique_constraint_email_token.up.sql` - Adds a unique constraint on `(email, token)` for password reset tokens
 - `000005_add_unique_constraint_email_token.down.sql` - Removes the unique constraint on `(email, token)`
+- `000006_created_at_column.up.sql` - Adds a column created_at in usertable to have timestamps of account creation handled automatically by the database
+- `000006_created_at_column.down.sql` - Drops the created_at column in the usertable
 
 To apply these migrations to your Supabase project, use the Supabase SQL Editor or a migration tool.
 
 ## Running the Application
 
-To run the application:
+To run the application in debug mode:
 
 ```bash
 cd server
-go run main.go
+go run server/main.go
+```
+
+To run the application in release mode:
+```bash
+make deploy
 ```
 
 The server will start on the port specified in your `.env` file (default: 8080).
