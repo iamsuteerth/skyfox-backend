@@ -29,7 +29,7 @@ func NewUserRepository(db *pgxpool.Pool) UserRepository {
 }
 
 func (r *userRepository) FindByUsername(ctx context.Context, username string) (*models.User, error) {
-	query := `SELECT id, username, password, role FROM usertable WHERE username = $1`
+	query := `SELECT id, username, password, role, created_at FROM usertable WHERE username = $1`
 
 	var user models.User
 	err := r.db.QueryRow(ctx, query, username).Scan(
@@ -37,6 +37,7 @@ func (r *userRepository) FindByUsername(ctx context.Context, username string) (*
 		&user.Username,
 		&user.Password,
 		&user.Role,
+		&user.CreatedAt,
 	)
 
 	if err != nil {

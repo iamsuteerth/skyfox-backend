@@ -1,5 +1,14 @@
 # SkyFox Backend API Documentation
 
+## Field Validation Rules
+
+- **Name**: Must be 3-70 characters, max 4 words, letters only, no consecutive spaces
+- **Username**: Must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters
+- **Password**: Must be at least 8 characters with at least one uppercase letter and one special character
+- **Phone Number**: Must be exactly 10 digits
+- **Email**: Must be in valid email format
+- **Security Answer**: Must be at least 3 characters long
+
 ## Authentication
 
 ### Login
@@ -555,11 +564,35 @@
   }
   ```
 
-## Field Validation Rules
+## Profile Management
 
-- **Name**: Must be 3-70 characters, max 4 words, letters only, no consecutive spaces
-- **Username**: Must be 3-30 characters, lowercase, no spaces, cannot start with a number, no consecutive special characters
-- **Password**: Must be at least 8 characters with at least one uppercase letter and one special character
-- **Phone Number**: Must be exactly 10 digits
-- **Email**: Must be in valid email format
-- **Security Answer**: Must be at least 3 characters long
+### Get Customer Profile
+- **URL**: `/customer/profile`
+- **Method**: `GET`
+- **Authentication**: Required
+- **Description**: Retrieves all customer profile information except the profile image
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Customer profile retrieved successfully",
+    "request_id": "unique-request-id",
+    "status": "SUCCESS",
+    "data": {
+        "username": "string",
+        "name": "string",
+        "email": "string",
+        "phone_number": "string",
+        "security_question_exists": boolean,
+        "created_at": "ISO-8601 timestamp"
+    }
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "unique-request-id"
+  }
+  ```

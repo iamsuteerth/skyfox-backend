@@ -5,7 +5,7 @@ const (
 	LoginEndPoint                = "/login"
 	SkyCustomerSignUpEndPoint    = "/customer/signup"
 	SecurityQuestionsEndPoint    = "/security-questions"
-	SecurityQuestionByEmail      = "/security-questions/by-email"
+	ByEmailEndPoint              = "/by-email"
 	VerifySecurityAnswerEndPoint = "/verify-security-answer"
 	ForgotPasswordEndPoint       = "/forgot-password"
 	// Shows Page
@@ -13,9 +13,9 @@ const (
 	SlotEndPoint   = "/slot"
 	MoviesEndPoint = "/movies"
 	// Role Endpoints
-	CustomerEndPoint = "/customer"
-	AdminEndPoint    = "/admin"
-	StaffEndPoint    = "/staff"
+	SkyCustomerEndPoint = "/customer"
+	AdminEndPoint       = "/admin"
+	StaffEndPoint       = "/staff"
 	// Profile Page
 	ChangePasswordEndPoint     = "/change-password"
 	ProfileImageEndPoint       = "/profile-image"

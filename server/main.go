@@ -85,32 +85,36 @@ func main() {
 
 	noAuthAPIs := noAuthRouter.Group("")
 	{
-		// Authentication
-		noAuthAPIs.POST(constants.LoginEndPoint, authController.Login) // Login
-
-		// SkyCustomer - Public
-		noAuthAPIs.POST(constants.SkyCustomerSignUpEndPoint, skyCustomerController.Signup) // Customer Signup
-
-		// Security Questions
-		noAuthAPIs.GET(constants.SecurityQuestionsEndPoint, securityQuestionController.GetSecurityQuestions)     // Get all Security Questions
-		noAuthAPIs.GET(constants.SecurityQuestionByEmail, securityQuestionController.GetSecurityQuestionByEmail) // Get Security Question by Email
-		noAuthAPIs.POST(constants.VerifySecurityAnswerEndPoint, securityQuestionController.VerifySecurityAnswer) // Verify Security Answer
-
-		// Password Recovery
-		noAuthAPIs.POST(constants.ForgotPasswordEndPoint, forgotPasswordController.ForgotPassword) // Forgot Password
+		login := noAuthAPIs.Group("")
+		{
+			login.POST(constants.LoginEndPoint, authController.Login)                             // Login
+			login.POST(constants.ForgotPasswordEndPoint, forgotPasswordController.ForgotPassword) // Forgot Password
+		}
+		signup := noAuthAPIs.Group("")
+		{
+			signup.POST(constants.SkyCustomerSignUpEndPoint, skyCustomerController.Signup) // Customer Signup
+		}
+		securityQuestions := noAuthAPIs.Group(constants.SecurityQuestionsEndPoint)
+		{
+			securityQuestions.GET(constants.SecurityQuestionsEndPoint, securityQuestionController.GetSecurityQuestions)     // Get all Security Questions
+			securityQuestions.GET(constants.ByEmailEndPoint, securityQuestionController.GetSecurityQuestionByEmail)         // Get Security Question by Email
+			securityQuestions.POST(constants.VerifySecurityAnswerEndPoint, securityQuestionController.VerifySecurityAnswer) // Verify Security Answer
+		}
 	}
 
-	// Authenticated Routes
 	authAPIs := authRouter.Group("")
 	{
-		// Shows (for logged-in users with RBAC)
-		authAPIs.GET(constants.ShowEndPoint, showController.GetShows) // Get Shows (RBAC-based)
-
-		// Customer Profile
-		authAPIs.GET(constants.CustomerEndPoint+constants.ProfileImageEndPoint, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
+		shows := authAPIs.Group("")
+		{
+			shows.GET(constants.ShowEndPoint, showController.GetShows) // Get Shows (RBAC-based)
+		}
+		customer := authAPIs.Group(constants.SkyCustomerEndPoint)
+		{
+			customer.GET(constants.ProfileImageEndPoint, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
+			customer.GET(constants.ProfileEndPoint, skyCustomerController.GetCustomerProfile)               // Get customer profile details
+		}
 	}
 
-	// Admin Routes
 	adminAPIs := adminRouter.Group("")
 	{
 		// Slot Management

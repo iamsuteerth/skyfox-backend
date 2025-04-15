@@ -29,7 +29,7 @@ func NewSkyCustomerRepository(db *pgxpool.Pool) SkyCustomerRepository {
 }
 
 func (repo *skyCustomerRepository) FindByUsername(ctx context.Context, username string) (*models.SkyCustomer, error) {
-	query := `SELECT id, name, username, number, email, profile_img FROM customertable WHERE username = $1`
+	query := `SELECT id, name, username, number, email, profile_img, security_question_id, security_answer_hash FROM customertable WHERE username = $1`
 
 	var customer models.SkyCustomer
 	err := repo.db.QueryRow(ctx, query, username).Scan(
@@ -39,8 +39,8 @@ func (repo *skyCustomerRepository) FindByUsername(ctx context.Context, username 
 		&customer.Number,
 		&customer.Email,
 		&customer.ProfileImg,
-		&customer.SecurityAnswerHash,
 		&customer.SecurityQuestionID,
+		&customer.SecurityAnswerHash,
 	)
 
 	if err != nil {

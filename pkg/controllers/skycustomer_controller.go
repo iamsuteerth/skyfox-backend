@@ -97,6 +97,35 @@ func (sk *SkyCustomerController) Signup(c *gin.Context) {
 	})
 }
 
+func (sk *SkyCustomerController) GetCustomerProfile(c *gin.Context) {
+	requestID := utils.GetRequestID(c)
+	
+	claims, err := security.GetTokenClaims(c)
+	if err != nil {
+		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
+		return
+	}
+	
+	tokenUsername, ok := claims["username"].(string)
+	if !ok || tokenUsername == "" {
+		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
+		return
+	}
+	
+	profile, err := sk.skyCustomerService.GetCustomerProfile(c.Request.Context(), tokenUsername)
+	if err != nil {
+		utils.HandleErrorResponse(c, err, requestID)
+		return
+	}
+	
+	c.JSON(http.StatusOK, utils.SuccessResponse{
+		Message:   "Customer profile retrieved successfully",
+		RequestID: requestID,
+		Status:    "SUCCESS",
+		Data:      profile,
+	})
+}
+
 func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *request.SignupRequest) error {
 	contentType := c.Request.Header.Get("Content-Type")
 

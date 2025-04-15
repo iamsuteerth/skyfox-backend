@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/repositories"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
@@ -16,7 +17,7 @@ type SkyCustomerService interface {
 	ExistsByEmailOrMobile(ctx context.Context, email, mobileNumber string) (bool, string, error)
 	GetUsernameByEmail(ctx context.Context, email string) (string, error)
 	GetProfileImageURL(ctx context.Context, username string) (string, error)
-	CustomerDetails(ctx context.Context, username string) (*models.SkyCustomer, error)
+	GetCustomerProfile(ctx context.Context, username string) (*response.CustomerProfileResponse, error)
 	UpdateProfileImage(ctx context.Context, username string, imageBytes []byte, imageSHA string) error
 	GetProfileImagePresignedURL(ctx context.Context, username string) (string, time.Time, error)
 }
@@ -145,15 +146,61 @@ func (s *skyCustomerService) GetProfileImageURL(ctx context.Context, username st
 	return s.skyCustomerRepo.GetCustomerProfileImg(ctx, username)
 }
 
-func (s *skyCustomerService) CustomerDetails(ctx context.Context, username string) (*models.SkyCustomer, error) {
+func (s *skyCustomerService) GetCustomerProfile(ctx context.Context, username string) (*response.CustomerProfileResponse, error) {
 	customer, err := s.skyCustomerRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Error fetching customer details", err)
 	}
+
 	if customer == nil {
 		return nil, utils.NewNotFoundError("USER_NOT_FOUND", fmt.Sprintf("No customer found with username: %s", username), nil)
 	}
-	return customer, nil
+
+	user, err := s.userRepo.FindByUsername(ctx, username)
+	if err != nil {
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Error fetching user details", err)
+	}
+
+	if user == nil {
+		return nil, utils.NewNotFoundError("USER_NOT_FOUND", fmt.Sprintf("No user found with username: %s", username), nil)
+	}
+
+	createdAtStr := user.CreatedAt.Format(time.RFC3339)
+
+	profile := &response.CustomerProfileResponse{
+		Username:               customer.Username,
+		Name:                   customer.Name,
+		Email:                  customer.Email,
+		PhoneNumber:            customer.Number,
+		SecurityQuestionExists: customer.SecurityQuestionID > 0 && customer.SecurityAnswerHash != "",
+		CreatedAt:              createdAtStr,
+	}
+
+	return profile, nil
+}
+
+func (s *skyCustomerService) GetProfileImagePresignedURL(ctx context.Context, username string) (string, time.Time, error) {
+	durationMinutes := 1440
+
+	duration := time.Duration(durationMinutes) * time.Minute
+
+	rawURL, err := s.skyCustomerRepo.GetCustomerProfileImg(ctx, username)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	if rawURL == "" {
+		return "", time.Time{}, utils.NewNotFoundError("PROFILE_IMAGE_NOT_FOUND", "No profile image found for this user", nil)
+	}
+
+	presignedURL, err := s.s3Service.GeneratePresignedURL(ctx, rawURL, duration)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	expiresAt := time.Now().Add(duration)
+
+	return presignedURL, expiresAt, nil
 }
 
 func (s *skyCustomerService) UpdateProfileImage(ctx context.Context, username string, imageBytes []byte, imageSHA string) error {
@@ -186,28 +233,4 @@ func (s *skyCustomerService) UpdateProfileImage(ctx context.Context, username st
 	}
 
 	return nil
-}
-
-func (s *skyCustomerService) GetProfileImagePresignedURL(ctx context.Context, username string) (string, time.Time, error) {
-	durationMinutes := 1440
-
-	duration := time.Duration(durationMinutes) * time.Minute
-
-	rawURL, err := s.skyCustomerRepo.GetCustomerProfileImg(ctx, username)
-	if err != nil {
-		return "", time.Time{}, err
-	}
-
-	if rawURL == "" {
-		return "", time.Time{}, utils.NewNotFoundError("PROFILE_IMAGE_NOT_FOUND", "No profile image found for this user", nil)
-	}
-
-	presignedURL, err := s.s3Service.GeneratePresignedURL(ctx, rawURL, duration)
-	if err != nil {
-		return "", time.Time{}, err
-	}
-
-	expiresAt := time.Now().Add(duration)
-
-	return presignedURL, expiresAt, nil
 }
