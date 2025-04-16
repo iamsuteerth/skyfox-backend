@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -71,6 +72,7 @@ func main() {
 
 	router := gin.Default()
 	router.Use(cors.SetupCORS())
+	router.Use(security.APIKeyAuthMiddleware())
 
 	noAuthRouter := router.Group("")
 
@@ -88,6 +90,10 @@ func main() {
 	adminStaffRouter := router.Group("")
 	adminStaffRouter.Use(security.AuthMiddleware())
 	adminStaffRouter.Use(security.AdminStaffMiddleware())
+
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+	})
 
 	noAuthAPIs := noAuthRouter.Group("")
 	{
@@ -145,9 +151,17 @@ func main() {
 		}
 	}
 
+	router.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status":  "ERROR",
+			"code":    "ROUTE_NOT_FOUND",
+			"message": "This route does not exist",
+		})
+	})
+
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "5000"
 	}
 
 	log.Info().Str("port", port).Msg("Server starting")
