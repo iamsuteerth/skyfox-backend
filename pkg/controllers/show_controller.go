@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,20 +23,20 @@ func NewShowController(showService services.ShowService) *ShowController {
 	}
 }
 
-func (sh *ShowController) GetShows(c *gin.Context) {
-	requestID := utils.GetRequestID(c)
-	
-	dateStr := c.Query("date")
+func (sh *ShowController) GetShows(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
+
+	dateStr := ctx.Query("date")
 	requestDate, err := utils.GetDateFromDateStringDefaultToday(dateStr)
-	
+
 	if err != nil {
-		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_DATE", "Invalid date format. Use YYYY-MM-DD", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_DATE", "Invalid date format. Use YYYY-MM-DD", err), requestID)
 		return
 	}
 
-	claims, err := security.GetTokenClaims(c)
+	claims, err := security.GetTokenClaims(ctx)
 	if err != nil {
-		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify user credentials", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify user credentials", err), requestID)
 		return
 	}
 
@@ -53,7 +52,7 @@ func (sh *ShowController) GetShows(c *gin.Context) {
 				Time("requestedDate", requestDate).
 				Msg("Customer attempted to access shows outside allowed date range")
 
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewBadRequestError(
 					"DATE_OUT_OF_RANGE",
 					"Customers can only view shows from today to the next 6 days",
@@ -63,41 +62,36 @@ func (sh *ShowController) GetShows(c *gin.Context) {
 		}
 	}
 
-	shows, err := sh.showService.GetShows(c.Request.Context(), requestDate)
+	shows, err := sh.showService.GetShows(ctx.Request.Context(), requestDate)
 	if err != nil {
 		log.Error().Err(err).Str("date", dateStr).Msg("Failed to get shows")
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
 	var showResponses []response.ShowResponse
 	for _, show := range shows {
-		movie, err := sh.showService.GetMovieById(c.Request.Context(), show.MovieId)
+		movie, err := sh.showService.GetMovieById(ctx.Request.Context(), show.MovieId)
 		if err != nil {
 			log.Error().Err(err).Str("movieId", show.MovieId).Msg("Failed to get movie for show")
-			utils.HandleErrorResponse(c, err, requestID)
+			utils.HandleErrorResponse(ctx, err, requestID)
 			return
 		}
 
-		availableSeats := sh.showService.AvailableSeats(c.Request.Context(), show.Id)
+		availableSeats := sh.showService.AvailableSeats(ctx.Request.Context(), show.Id)
 		showResponse := response.NewShowResponse(*movie, show.Slot, show, availableSeats)
 		showResponses = append(showResponses, *showResponse)
 	}
 
-	c.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Shows retrieved successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      showResponses,
-	})
+	utils.SendOKResponse(ctx, "Shows retrieved successfully", requestID, showResponses)
 }
 
-func (sh *ShowController) GetMovies(c *gin.Context) {
-	requestID := utils.GetRequestID(c)
-	movies, err := sh.showService.GetMovies(c.Request.Context())
+func (sh *ShowController) GetMovies(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
+	movies, err := sh.showService.GetMovies(ctx.Request.Context())
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get movies")
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
@@ -106,43 +100,35 @@ func (sh *ShowController) GetMovies(c *gin.Context) {
 		movieResponses = append(movieResponses, response.NewMovieResponse(movie))
 	}
 
-	c.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Movies retrieved successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      movieResponses,
-	})
+	utils.SendOKResponse(ctx, "Movies retrieved successfully", requestID, movieResponses)
 }
 
-func (sh *ShowController) CreateShow(c *gin.Context) {
-	requestID := utils.GetRequestID(c)
+func (sh *ShowController) CreateShow(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
 	var showRequest request.ShowRequest
-	if err := c.ShouldBindJSON(&showRequest); err != nil {
+	if err := ctx.ShouldBindJSON(&showRequest); err != nil {
 		if validationErrs, ok := err.(validator.ValidationErrors); ok {
-			utils.HandleErrorResponse(c, utils.NewValidationError(validationErrs), requestID)
+			utils.HandleErrorResponse(ctx, utils.NewValidationError(validationErrs), requestID)
 			return
 		}
-		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
 		return
 	}
 
-	show, err := sh.showService.CreateShow(c.Request.Context(), showRequest)
+	show, err := sh.showService.CreateShow(ctx.Request.Context(), showRequest)
 	if err != nil {
 		log.Error().Err(err).Interface("request", showRequest).Msg("Failed to create show")
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
-	c.JSON(http.StatusCreated, utils.SuccessResponse{
-		Message:   "Show created successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data: response.NewShowConfirmationResponse(
-			show.Id,
-			show.MovieId,
-			show.Slot,
-			show.Date.Format("2006-01-02"),
-			show.Cost,
-		),
-	})
+	response := response.NewShowConfirmationResponse(
+		show.Id,
+		show.MovieId,
+		show.Slot,
+		show.Date.Format("2006-01-02"),
+		show.Cost,
+	)
+
+	utils.SendCreatedResponse(ctx, "Show created successfully", requestID, response)
 }

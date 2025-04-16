@@ -154,8 +154,8 @@ func GetValidationErrorMessage(tag string, param string) string {
 	return "Validation failed for field"
 }
 
-func HandleValidationErrors(c *gin.Context, err error) {
-	requestID := utils.GetRequestID(c)
+func HandleValidationErrors(ctx *gin.Context, err error) {
+	requestID := utils.GetRequestID(ctx)
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
 		errors := make([]utils.ValidationError, 0)
 
@@ -170,7 +170,7 @@ func HandleValidationErrors(c *gin.Context, err error) {
 			})
 		}
 
-		c.JSON(400, utils.StandardizedErrorResponse{
+		ctx.JSON(400, utils.StandardizedErrorResponse{
 			Errors:    errors,
 			RequestID: requestID,
 			Status:    "ERROR",
@@ -180,5 +180,5 @@ func HandleValidationErrors(c *gin.Context, err error) {
 		return
 	}
 
-	utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
+	utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
 }

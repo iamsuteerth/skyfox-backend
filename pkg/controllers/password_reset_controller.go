@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
@@ -51,11 +49,7 @@ func (c *PasswordResetController) ForgotPassword(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, utils.SuccessResponse{
-		Status:    "SUCCESS",
-		Message:   "Password has been reset successfully",
-		RequestID: requestID,
-	})
+	utils.SendOKResponse(ctx, "Password has been reset successfully", requestID, nil)
 }
 
 func (c *PasswordResetController) ChangePassword(ctx *gin.Context) {
@@ -96,9 +90,5 @@ func (c *PasswordResetController) ChangePassword(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Password updated successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-	})
+	utils.SendOKResponse(ctx, "Password updated successfully", requestID, nil)
 }

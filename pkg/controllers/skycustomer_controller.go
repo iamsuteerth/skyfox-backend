@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/base64"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -37,34 +36,34 @@ func NewSkyCustomerController(
 	}
 }
 
-func (sk *SkyCustomerController) Signup(c *gin.Context) {
-	requestID := utils.GetRequestID(c)
+func (sk *SkyCustomerController) Signup(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
 	var req request.SignupRequest
 
-	if err := sk.parseAndValidateRequest(c, &req); err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+	if err := sk.parseAndValidateRequest(ctx, &req); err != nil {
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
-	if err := sk.skyCustomerService.ValidateUserDetails(c.Request.Context(), req.Username, req.Email, req.PhoneNumber); err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+	if err := sk.skyCustomerService.ValidateUserDetails(ctx.Request.Context(), req.Username, req.Email, req.PhoneNumber); err != nil {
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
-	if err := sk.securityQuestionService.ValidateSecurityQuestionExists(c.Request.Context(), req.SecurityQuestionID); err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+	if err := sk.securityQuestionService.ValidateSecurityQuestionExists(ctx.Request.Context(), req.SecurityQuestionID); err != nil {
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
-		utils.HandleErrorResponse(c, utils.NewInternalServerError("PASSWORD_HASH_ERROR", "Failed to hash password", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewInternalServerError("PASSWORD_HASH_ERROR", "Failed to hash password", err), requestID)
 		return
 	}
 
 	imageBytes, err := base64.StdEncoding.DecodeString(req.ProfileImg)
 	if err != nil {
-		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_IMAGE", "Invalid base64 image data", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_IMAGE", "Invalid base64 image data", err), requestID)
 		return
 	}
 
@@ -73,7 +72,7 @@ func (sk *SkyCustomerController) Signup(c *gin.Context) {
 	skyCustomer := models.NewSkyCustomer(req.Name, req.Username, req.PhoneNumber, req.Email, imageBytes, 0, "")
 
 	if err := sk.skyCustomerService.CreateCustomer(
-		c.Request.Context(),
+		ctx.Request.Context(),
 		&skyCustomer,
 		&user,
 		&passwordHistory,
@@ -82,235 +81,215 @@ func (sk *SkyCustomerController) Signup(c *gin.Context) {
 		imageBytes,
 		req.ProfileImgSHA,
 	); err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
-	c.JSON(http.StatusCreated, utils.SuccessResponse{
-		Message:   "User registered successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data: response.SignupResponse{
-			Username: req.Username,
-			Name:     req.Name,
-		},
-	})
+	response := response.SignupResponse{
+		Username: req.Username,
+		Name:     req.Name,
+	}
+
+	utils.SendCreatedResponse(ctx, "User registered successfully", requestID, response)
 }
 
-func (sk *SkyCustomerController) GetCustomerProfile(c *gin.Context) {
-	requestID := utils.GetRequestID(c)
+func (sk *SkyCustomerController) GetCustomerProfile(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
 
-	claims, err := security.GetTokenClaims(c)
+	claims, err := security.GetTokenClaims(ctx)
 	if err != nil {
-		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
 		return
 	}
 
 	tokenUsername, ok := claims["username"].(string)
 	if !ok || tokenUsername == "" {
-		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
 		return
 	}
 
-	profile, err := sk.skyCustomerService.GetCustomerProfile(c.Request.Context(), tokenUsername)
+	profile, err := sk.skyCustomerService.GetCustomerProfile(ctx.Request.Context(), tokenUsername)
 	if err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
-	c.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Customer profile retrieved successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      profile,
-	})
+	utils.SendOKResponse(ctx, "Customer profile retrieved successfully", requestID, profile)
 }
 
-func (sk *SkyCustomerController) GetProfileImagePresignedURL(c *gin.Context) {
-	requestID := utils.GetRequestID(c)
+func (sk *SkyCustomerController) GetProfileImagePresignedURL(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
 
-	claims, err := security.GetTokenClaims(c)
+	claims, err := security.GetTokenClaims(ctx)
 	if err != nil {
-		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
 		return
 	}
 
 	username, ok := claims["username"].(string)
 	if !ok || username == "" {
-		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
 		return
 	}
 
-	presignedURL, expiresAt, err := sk.skyCustomerService.GetProfileImagePresignedURL(c.Request.Context(), username)
+	presignedURL, expiresAt, err := sk.skyCustomerService.GetProfileImagePresignedURL(ctx.Request.Context(), username)
 	if err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
-	c.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Presigned URL generated successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data: response.ProfileImageResponse{
-			PresignedURL: presignedURL,
-			ExpiresAt:    expiresAt.Format(time.RFC3339),
-		},
-	})
+	response := response.ProfileImageResponse{
+		PresignedURL: presignedURL,
+		ExpiresAt:    expiresAt.Format(time.RFC3339),
+	}
+
+	utils.SendOKResponse(ctx, "Presigned URL generated successfully", requestID, response)
 }
 
-func (sc *SkyCustomerController) UpdateCustomerProfile(c *gin.Context) {
-	requestID := utils.GetRequestID(c)
+func (sc *SkyCustomerController) UpdateCustomerProfile(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
 
-	claims, err := security.GetTokenClaims(c)
+	claims, err := security.GetTokenClaims(ctx)
 	if err != nil {
-		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
 		return
 	}
 
 	username, ok := claims["username"].(string)
 	if !ok || username == "" {
-		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
 		return
 	}
 
 	var updateRequest request.UpdateCustomerProfileRequest
-	if err := c.ShouldBindJSON(&updateRequest); err != nil {
+	if err := ctx.ShouldBindJSON(&updateRequest); err != nil {
 		if validationErrs, ok := err.(validator.ValidationErrors); ok {
-			utils.HandleErrorResponse(c, utils.NewValidationError(validationErrs), requestID)
+			utils.HandleErrorResponse(ctx, utils.NewValidationError(validationErrs), requestID)
 			return
 		}
-		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
 		return
 	}
 
-	customer, err := sc.skyCustomerService.GetCustomerProfile(c.Request.Context(), username)
+	customer, err := sc.skyCustomerService.GetCustomerProfile(ctx.Request.Context(), username)
 	if err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
 	verifyResponse, err := sc.securityQuestionService.VerifySecurityAnswer(
-		c.Request.Context(),
+		ctx.Request.Context(),
 		customer.Email,
 		updateRequest.SecurityAnswer,
 	)
 	if err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
 	if verifyResponse == nil || !verifyResponse.ValidAnswer {
-		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_SECURITY_ANSWER", "The security answer provided is incorrect", nil), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_SECURITY_ANSWER", "The security answer provided is incorrect", nil), requestID)
 		return
 	}
 
 	updatedProfile, err := sc.skyCustomerService.UpdateCustomerProfile(
-		c.Request.Context(),
+		ctx.Request.Context(),
 		username,
 		&updateRequest,
 	)
 	if err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
-	c.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Profile updated successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      updatedProfile,
-	})
+	utils.SendOKResponse(ctx, "Profile updated successfully", requestID, updatedProfile)
 }
 
-func (sc *SkyCustomerController) UpdateProfileImage(c *gin.Context) {
-	requestID := utils.GetRequestID(c)
+func (sc *SkyCustomerController) UpdateProfileImage(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
 
-	claims, err := security.GetTokenClaims(c)
+	claims, err := security.GetTokenClaims(ctx)
 	if err != nil {
-		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
 		return
 	}
 
 	username, ok := claims["username"].(string)
 	if !ok || username == "" {
-		utils.HandleErrorResponse(c, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
 		return
 	}
 
 	var updateRequest request.UpdateProfileImageRequest
-	if err := c.ShouldBindJSON(&updateRequest); err != nil {
+	if err := ctx.ShouldBindJSON(&updateRequest); err != nil {
 		if validationErrs, ok := err.(validator.ValidationErrors); ok {
-			utils.HandleErrorResponse(c, utils.NewValidationError(validationErrs), requestID)
+			utils.HandleErrorResponse(ctx, utils.NewValidationError(validationErrs), requestID)
 			return
 		}
-		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
 		return
 	}
 
-	customer, err := sc.skyCustomerService.GetCustomerProfile(c.Request.Context(), username)
+	customer, err := sc.skyCustomerService.GetCustomerProfile(ctx.Request.Context(), username)
 	if err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
 	verifyResponse, err := sc.securityQuestionService.VerifySecurityAnswer(
-		c.Request.Context(),
+		ctx.Request.Context(),
 		customer.Email,
 		updateRequest.SecurityAnswer,
 	)
 
 	if err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
 	if verifyResponse == nil || !verifyResponse.ValidAnswer {
-		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_SECURITY_ANSWER", "The security answer provided is incorrect", nil), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_SECURITY_ANSWER", "The security answer provided is incorrect", nil), requestID)
 		return
 	}
 
 	imageBytes, err := base64.StdEncoding.DecodeString(updateRequest.ProfileImg)
 	if err != nil {
-		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_IMAGE", "Invalid base64 image data", err), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_IMAGE", "Invalid base64 image data", err), requestID)
 		return
 	}
 
 	err = sc.skyCustomerService.UpdateProfileImage(
-		c.Request.Context(),
+		ctx.Request.Context(),
 		username,
 		imageBytes,
 		updateRequest.ProfileImgSHA,
 	)
 
 	if err != nil {
-		utils.HandleErrorResponse(c, err, requestID)
+		utils.HandleErrorResponse(ctx, err, requestID)
 		return
 	}
 
-	c.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Profile image updated successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-	})
+	utils.SendOKResponse(ctx, "Profile image updated successfully", requestID, nil)
 }
 
-func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *request.SignupRequest) error {
-	contentType := c.Request.Header.Get("Content-Type")
+func (sk *SkyCustomerController) parseAndValidateRequest(ctx *gin.Context, req *request.SignupRequest) error {
+	contentType := ctx.Request.Header.Get("Content-Type")
 
 	if strings.Contains(contentType, "multipart/form-data") {
-		if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
+		if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil {
 			return utils.NewBadRequestError("INVALID_FORM", "Failed to parse multipart form", err)
 		}
 
-		req.Name = c.Request.FormValue("name")
-		req.Username = c.Request.FormValue("username")
-		req.Email = c.Request.FormValue("email")
-		req.PhoneNumber = c.Request.FormValue("number")
-		req.Password = c.Request.FormValue("password")
-		req.SecurityAnswer = c.Request.FormValue("security_answer")
-		req.ProfileImgSHA = c.Request.FormValue("profile_img_sha")
+		req.Name = ctx.Request.FormValue("name")
+		req.Username = ctx.Request.FormValue("username")
+		req.Email = ctx.Request.FormValue("email")
+		req.PhoneNumber = ctx.Request.FormValue("number")
+		req.Password = ctx.Request.FormValue("password")
+		req.SecurityAnswer = ctx.Request.FormValue("security_answer")
+		req.ProfileImgSHA = ctx.Request.FormValue("profile_img_sha")
 
-		securityQuestionIDStr := c.Request.FormValue("security_question_id")
+		securityQuestionIDStr := ctx.Request.FormValue("security_question_id")
 		if securityQuestionIDStr != "" {
 			securityQuestionID, err := strconv.Atoi(securityQuestionIDStr)
 			if err != nil {
@@ -331,7 +310,7 @@ func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *re
 			}
 		}
 
-		file, header, err := c.Request.FormFile("profile_img")
+		file, header, err := ctx.Request.FormFile("profile_img")
 		if err == nil && header != nil {
 			defer file.Close()
 			if header.Size > 5<<20 {
@@ -345,7 +324,7 @@ func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *re
 
 			req.ProfileImg = base64.StdEncoding.EncodeToString(imageBytes)
 		} else {
-			req.ProfileImg = c.Request.FormValue("profile_img")
+			req.ProfileImg = ctx.Request.FormValue("profile_img")
 			if req.ProfileImg == "" {
 				return utils.NewBadRequestError("MISSING_PROFILE_IMAGE", "Profile image is required", nil)
 			}
@@ -355,7 +334,7 @@ func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *re
 			return utils.NewBadRequestError("MISSING_IMAGE_HASH", "Profile image hash is required", nil)
 		}
 	} else {
-		if err := c.ShouldBindJSON(req); err != nil {
+		if err := ctx.ShouldBindJSON(req); err != nil {
 			if validationErrs, ok := err.(validator.ValidationErrors); ok {
 				return utils.NewValidationError(validationErrs)
 			}

@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
@@ -43,10 +41,5 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		Token: token,
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Login successful",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      loginResponse,
-	})
+	utils.SendOKResponse(ctx, "Login successful", requestID, loginResponse)
 }

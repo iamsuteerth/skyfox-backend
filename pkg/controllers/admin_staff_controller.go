@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/security"
 	"github.com/iamsuteerth/skyfox-backend/pkg/services"
@@ -46,12 +44,7 @@ func (c *AdminStaffController) GetAdminProfile(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Admin profile retrieved successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      profile,
-	})
+	utils.SendOKResponse(ctx, "Admin profile retrieved successfully", requestID, profile)
 }
 
 func (c *AdminStaffController) GetStaffProfile(ctx *gin.Context) {
@@ -81,10 +74,5 @@ func (c *AdminStaffController) GetStaffProfile(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Staff profile retrieved successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      profile,
-	})
+	utils.SendOKResponse(ctx, "Staff profile retrieved successfully", requestID, profile)
 }

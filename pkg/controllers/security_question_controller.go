@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
@@ -29,12 +27,7 @@ func (c *SecurityQuestionController) GetSecurityQuestions(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Security questions retrieved successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      questions,
-	})
+	utils.SendOKResponse(ctx, "Security questions retrieved successfully", requestID, questions)
 }
 
 func (c *SecurityQuestionController) GetSecurityQuestionByEmail(ctx *gin.Context) {
@@ -56,12 +49,7 @@ func (c *SecurityQuestionController) GetSecurityQuestionByEmail(ctx *gin.Context
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Security question retrieved successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      question,
-	})
+	utils.SendOKResponse(ctx, "Security question retrieved successfully", requestID, question)
 }
 
 func (c *SecurityQuestionController) VerifySecurityAnswer(ctx *gin.Context) {
@@ -88,10 +76,5 @@ func (c *SecurityQuestionController) VerifySecurityAnswer(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse{
-		Message:   "Security answer verified successfully",
-		RequestID: requestID,
-		Status:    "SUCCESS",
-		Data:      tokenResponse,
-	})
+	utils.SendOKResponse(ctx, "Security answer verified successfully", requestID, tokenResponse)
 }

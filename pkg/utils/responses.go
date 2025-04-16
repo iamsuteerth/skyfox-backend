@@ -38,6 +38,23 @@ type AppError struct {
 	ValidationErrors []ValidationError
 }
 
+func SendCreatedResponse(ctx *gin.Context, message string, requestID string, data interface{}) {
+	sendSuccessResponse(ctx, http.StatusCreated, message, requestID, data)
+}
+
+func SendOKResponse(ctx *gin.Context, message string, requestID string, data interface{}) {
+	sendSuccessResponse(ctx, http.StatusOK, message, requestID, data)
+}
+
+func sendSuccessResponse(ctx *gin.Context, statusCode int, message string, requestID string, data interface{}) {
+	ctx.JSON(statusCode, SuccessResponse{
+		Message:   message,
+		RequestID: requestID,
+		Status:    "SUCCESS",
+		Data:      data,
+	})
+}
+
 func (ae AppError) Error() string {
 	if ae.Message != "" {
 		return ae.Message

@@ -12,36 +12,36 @@ import (
 )
 
 func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		requestID := utils.GetRequestID(c)
+	return func(ctx *gin.Context) {
+		requestID := utils.GetRequestID(ctx)
 
 		secretKey := os.Getenv("JWT_SECRET_KEY")
 		if secretKey == "" {
 			log.Error().Msg("JWT_SECRET_KEY is not set in environment variables")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewInternalServerError("SERVER_CONFIG_ERROR", "Server configuration error", fmt.Errorf("JWT_SECRET_KEY not set")),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
-		authHeader := c.GetHeader("Authorization")
+		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
 			log.Debug().Msg("Missing Authorization header")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewUnauthorizedError("MISSING_AUTH_HEADER", "Missing Authorization header", nil),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			log.Debug().Msg("Invalid Authorization header format")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewUnauthorizedError("INVALID_TOKEN_FORMAT", "Invalid token format", nil),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
@@ -56,114 +56,114 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if err != nil || !token.Valid {
 			log.Debug().Err(err).Msg("Invalid token")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewUnauthorizedError("INVALID_TOKEN", "Unauthorized", err),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			c.Set("claims", claims)
+			ctx.Set("claims", claims)
 			log.Debug().Interface("claims", claims).Msg("Token claims set in context")
 		} else {
 			log.Debug().Msg("Invalid token claims")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewUnauthorizedError("INVALID_TOKEN_CLAIMS", "Invalid token claims", nil),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
-		c.Next()
+		ctx.Next()
 	}
 }
 
 func CustomerMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		requestID := utils.GetRequestID(c)
+	return func(ctx *gin.Context) {
+		requestID := utils.GetRequestID(ctx)
 
-		claims, exists := c.Get("claims")
+		claims, exists := ctx.Get("claims")
 		if !exists {
 			log.Debug().Msg("No claims found in context")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewUnauthorizedError("NO_CLAIMS_FOUND", "No authentication claims found", nil),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
 		role, ok := claims.(jwt.MapClaims)["role"].(string)
 		if !ok || role != "customer" {
 			log.Debug().Str("role", role).Msg("Access denied for non-customers.")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewForbiddenError("FORBIDDEN", "Access denied. Customer role required", nil),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
-		c.Next()
+		ctx.Next()
 	}
 }
 
 func AdminMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		requestID := utils.GetRequestID(c)
+	return func(ctx *gin.Context) {
+		requestID := utils.GetRequestID(ctx)
 
-		claims, exists := c.Get("claims")
+		claims, exists := ctx.Get("claims")
 		if !exists {
 			log.Debug().Msg("No claims found in context")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewUnauthorizedError("NO_CLAIMS_FOUND", "No authentication claims found", nil),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
 		role, ok := claims.(jwt.MapClaims)["role"].(string)
 		if !ok || role != "admin" {
 			log.Debug().Str("role", role).Msg("Access denied for non-admin user")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewForbiddenError("FORBIDDEN", "Access denied. Admin role required", nil),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
-		c.Next()
+		ctx.Next()
 	}
 }
 
 func AdminStaffMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		requestID := utils.GetRequestID(c)
+	return func(ctx *gin.Context) {
+		requestID := utils.GetRequestID(ctx)
 
-		claims, exists := c.Get("claims")
+		claims, exists := ctx.Get("claims")
 		if !exists {
 			log.Debug().Msg("No claims found in context")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewUnauthorizedError("NO_CLAIMS_FOUND", "No authentication claims found", nil),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
 
 		role, ok := claims.(jwt.MapClaims)["role"].(string)
 		if !ok || !(role == "admin" || role == "staff") {
 			log.Debug().Str("role", role).Msg("Access denied for non-admin or non-staff user")
-			utils.HandleErrorResponse(c,
+			utils.HandleErrorResponse(ctx,
 				utils.NewForbiddenError("FORBIDDEN", "Access denied. Admin or staff role required!", nil),
 				requestID)
-			c.Abort()
+			ctx.Abort()
 			return
 		}
-		c.Next()
+		ctx.Next()
 	}
 }
 
-func GetTokenClaims(c *gin.Context) (jwt.MapClaims, error) {
-	claims, exists := c.Get("claims")
+func GetTokenClaims(ctx *gin.Context) (jwt.MapClaims, error) {
+	claims, exists := ctx.Get("claims")
 	if !exists {
 		return nil, fmt.Errorf("no token claims found in context")
 	}
