@@ -8,25 +8,25 @@ import (
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
 )
 
-type ForgotPasswordService interface {
+type PasswordResetService interface {
 	ForgotPassword(ctx context.Context, email, token, newPassword string) error
 }
 
-type forgotPasswordService struct {
+type passwordResetService struct {
 	resetTokenRepo  repositories.ResetTokenRepository
 	skyCustomerRepo repositories.SkyCustomerRepository
 	userRepo        repositories.UserRepository
 }
 
-func NewForgotPasswordService(resetTokenRepo repositories.ResetTokenRepository, skyCustomerRepo repositories.SkyCustomerRepository, userRepo repositories.UserRepository) ForgotPasswordService {
-	return &forgotPasswordService{
+func NewPasswordResetService(resetTokenRepo repositories.ResetTokenRepository, skyCustomerRepo repositories.SkyCustomerRepository, userRepo repositories.UserRepository) PasswordResetService {
+	return &passwordResetService{
 		resetTokenRepo:  resetTokenRepo,
 		skyCustomerRepo: skyCustomerRepo,
 		userRepo:        userRepo,
 	}
 }
 
-func (s *forgotPasswordService) ForgotPassword(ctx context.Context, email, token, newPassword string) error {
+func (s *passwordResetService) ForgotPassword(ctx context.Context, email, token, newPassword string) error {
 	customer, err := s.skyCustomerRepo.FindByEmail(ctx, email)
 	if err != nil {
 		return err

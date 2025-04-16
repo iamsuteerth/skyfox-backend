@@ -224,6 +224,79 @@ func (sc *SkyCustomerController) UpdateCustomerProfile(c *gin.Context) {
     })
 }
 
+func (sc *SkyCustomerController) UpdateProfileImage(c *gin.Context) {
+    requestID := utils.GetRequestID(c)
+    
+    claims, err := security.GetTokenClaims(c)
+    if err != nil {
+        utils.HandleErrorResponse(c, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify credentials", err), requestID)
+        return
+    }
+    
+    username, ok := claims["username"].(string)
+    if !ok || username == "" {
+        utils.HandleErrorResponse(c, utils.NewUnauthorizedError("INVALID_TOKEN", "Invalid token claims", nil), requestID)
+        return
+    }
+    
+    var updateRequest request.UpdateProfileImageRequest
+    if err := c.ShouldBindJSON(&updateRequest); err != nil {
+        if validationErrs, ok := err.(validator.ValidationErrors); ok {
+            utils.HandleErrorResponse(c, utils.NewValidationError(validationErrs), requestID)
+            return
+        }
+        utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
+        return
+    }
+    
+    customer, err := sc.skyCustomerService.GetCustomerProfile(c.Request.Context(), username)
+    if err != nil {
+        utils.HandleErrorResponse(c, err, requestID)
+        return
+    }
+    
+    verifyResponse, err := sc.securityQuestionService.VerifySecurityAnswer(
+        c.Request.Context(),
+        customer.Email,
+        updateRequest.SecurityAnswer,
+    )
+    if err != nil {
+        utils.HandleErrorResponse(c, err, requestID)
+        return
+    }
+    
+    if verifyResponse == nil || !verifyResponse.ValidAnswer {
+        utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_SECURITY_ANSWER", "The security answer provided is incorrect", nil), requestID)
+        return
+    }
+    
+    imageBytes, err := base64.StdEncoding.DecodeString(updateRequest.ProfileImg)
+    if err != nil {
+        utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_IMAGE", "Invalid base64 image data", err), requestID)
+        return
+    }
+    
+    err = sc.skyCustomerService.UpdateProfileImage(
+        c.Request.Context(),
+        username,
+        imageBytes,
+        updateRequest.ProfileImgSHA,
+    )
+    if err != nil {
+        utils.HandleErrorResponse(c, err, requestID)
+        return
+    }
+    
+    c.JSON(http.StatusOK, utils.SuccessResponse{
+        Message:   "Profile image updated successfully",
+        RequestID: requestID,
+        Status:    "SUCCESS",
+        Data:      response.UpdateProfileImageResponse{
+            Username: username,
+        },
+    })
+}
+
 func (sk *SkyCustomerController) parseAndValidateRequest(c *gin.Context, req *request.SignupRequest) error {
 	contentType := c.Request.Header.Get("Content-Type")
 

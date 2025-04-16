@@ -15,8 +15,8 @@ type SkyCustomerRepository interface {
 	FindByEmail(ctx context.Context, email string) (*models.SkyCustomer, error)
 	ExistsByEmailOrMobile(ctx context.Context, email, mobileNumber string) (bool, string, error)
 	Create(ctx context.Context, customer *models.SkyCustomer) error
-	UpdateCustomerDetails(ctx context.Context, username string, updates map[string]interface{}) error
 	GetCustomerProfileImg(ctx context.Context, username string) (string, error)
+	UpdateCustomerDetails(ctx context.Context, username string, updates map[string]interface{}) error
 	UpdateProfileImageURL(ctx context.Context, username string, profileImgURL string) error
 }
 

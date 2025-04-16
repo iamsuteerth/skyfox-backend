@@ -170,6 +170,8 @@
 - **Method**: `POST`
 - **Authentication**: None
 - **Description**: Create a user as customer.
+- **Notes**: 
+  - This endpoint cannot be easily tested through Postman. Please refer to the Python script [here](../manual_tests/signup_test.py)
 - **Request Body**:
   ```json
   {
@@ -737,6 +739,102 @@
     "code": "mobilenumber_EXISTS",
     "message": "Mobile number already exists",
     "request_id": "418e8e21-3ba6-4010-8449-15ce24a12da6"
+  }
+  ```
+
+### Update Profile Image
+- **URL**: `/customer/update-profile-image`
+- **Method**: `POST`
+- **Authentication**: Required (Customer only)
+- **Description**: Updates the customer's profile image with security question verification
+- **Notes**: 
+  - This endpoint cannot be easily tested through Postman. Please refer to the Python script [here](../manual_tests/update_prof_image_test.py)
+  - The old image in S3 is automatically deleted when a new one is uploaded
+- **Request Body**:
+  ```json
+  {
+    "security_answer": "string",
+    "profile_img": "base64 encoded image",
+    "profile_img_sha": "sha256 hash of image"
+  }
+  ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Profile image updated successfully",
+    "request_id": "37137e7d-549f-4644-9abd-f00516d76a4a",
+    "status": "SUCCESS",
+    "data": {
+        "username": "suteerth"
+    }
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Customer role required",
+    "request_id": "c7e82ff5-b9f6-4c61-b343-81af58d585fb"
+  }
+  ```
+- **Validation Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "60ff21e3-63a7-43b4-a1f7-80f1364b35f9",
+    "errors": [
+        {
+            "field": "SecurityAnswer",
+            "message": "This field is required"
+        },
+        {
+            "field": "ProfileImg",
+            "message": "This field is required"
+        },
+        {
+            "field": "ProfileImgSHA",
+            "message": "This field is required"
+        }
+    ]
+  }
+  ```
+- **Security Answer Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_SECURITY_ANSWER",
+    "message": "The security answer provided is incorrect",
+    "request_id": "e3c50ab1-6dd6-41a6-97ea-f49428ea3192"
+  }
+  ```
+- **Invalid Image Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_IMAGE",
+    "message": "Invalid base64 image data",
+    "request_id": "unique-request-id"
+  }
+  ```
+- **Invalid Image Hash Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_IMAGE_HASH",
+    "message": "The image hash does not match the provided image",
+    "request_id": "unique-request-id"
+  }
+  ```
+- **S3 Error Response (500 Internal Server Error)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "S3_DELETE_FAILED",
+    "message": "Failed to delete profile image",
+    "request_id": "unique-request-id"
   }
   ```
 

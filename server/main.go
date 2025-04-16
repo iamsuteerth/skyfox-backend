@@ -50,7 +50,7 @@ func main() {
 	userService := services.NewUserService(userRepository)
 	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepository, securityQuestionRepository, s3Service)
 	securityQuestionService := services.NewSecurityQuestionService(securityQuestionRepository, skyCustomerRepository, resetTokenRepository)
-	forgotPasswordService := services.NewForgotPasswordService(resetTokenRepository, skyCustomerRepository, userRepository)
+	passwordResetService := services.NewPasswordResetService(resetTokenRepository, skyCustomerRepository, userRepository)
 	showService := services.NewShowService(showRepository, bookingRepository, movieService, slotRepository)
 	slotService := services.NewSlotService(slotRepository)
 	adminStaffProfileService := services.NewAdminStaffProfileService(userRepository, staffRepository)
@@ -58,7 +58,7 @@ func main() {
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
 	securityQuestionController := controllers.NewSecurityQuestionController(securityQuestionService)
-	forgotPasswordController := controllers.NewForgotPasswordController(forgotPasswordService)
+	passwordResetController := controllers.NewPasswordResetController(passwordResetService)
 	showController := controllers.NewShowController(showService)
 	slotController := controllers.NewSlotController(slotService)
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
@@ -93,8 +93,8 @@ func main() {
 	{
 		login := noAuthAPIs.Group("")
 		{
-			login.POST(constants.LoginEndPoint, authController.Login)                             // Login
-			login.POST(constants.ForgotPasswordEndPoint, forgotPasswordController.ForgotPassword) // Forgot Password
+			login.POST(constants.LoginEndPoint, authController.Login)                            // Login
+			login.POST(constants.ForgotPasswordEndPoint, passwordResetController.ForgotPassword) // Forgot Password
 		}
 		signup := noAuthAPIs.Group("")
 		{
@@ -115,9 +115,10 @@ func main() {
 
 	customerAPIs := customeRouter.Group(constants.SkyCustomerEndPoint)
 	{
-		customerAPIs.GET(constants.ProfileImageEndPoint, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
 		customerAPIs.GET(constants.ProfileEndPoint, skyCustomerController.GetCustomerProfile)               // Get Customer Profile
+		customerAPIs.GET(constants.ProfileImageEndPoint, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
 		customerAPIs.POST(constants.UpdateProfileEndPoint, skyCustomerController.UpdateCustomerProfile)     // Update Customer Profile
+		customerAPIs.POST(constants.UpdateProfileImageEndPoint, skyCustomerController.UpdateProfileImage)   // Update Customer Profile Image
 	}
 
 	adminAPIs := adminRouter.Group("")

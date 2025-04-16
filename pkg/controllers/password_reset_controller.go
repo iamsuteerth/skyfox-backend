@@ -10,17 +10,17 @@ import (
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
 )
 
-type ForgotPasswordController struct {
-	forgotPasswordService services.ForgotPasswordService
+type PasswordResetController struct {
+	resetPasswordService services.PasswordResetService
 }
 
-func NewForgotPasswordController(forgotPasswordService services.ForgotPasswordService) *ForgotPasswordController {
-	return &ForgotPasswordController{
-		forgotPasswordService: forgotPasswordService,
+func NewPasswordResetController(passwordResetService services.PasswordResetService) *PasswordResetController {
+	return &PasswordResetController{
+		resetPasswordService: passwordResetService,
 	}
 }
 
-func (c *ForgotPasswordController) ForgotPassword(ctx *gin.Context) {
+func (c *PasswordResetController) ForgotPassword(ctx *gin.Context) {
 	requestID := utils.GetRequestID(ctx)
 
 	var resetRequest request.ResetPasswordRequest
@@ -34,7 +34,7 @@ func (c *ForgotPasswordController) ForgotPassword(ctx *gin.Context) {
 		return
 	}
 
-	err := c.forgotPasswordService.ForgotPassword(
+	err := c.resetPasswordService.ForgotPassword(
 		ctx.Request.Context(),
 		resetRequest.Email,
 		resetRequest.ResetToken,

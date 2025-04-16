@@ -237,10 +237,14 @@ func (s *skyCustomerService) UpdateProfileImage(ctx context.Context, username st
 	if customer == nil {
 		return utils.NewNotFoundError("USER_NOT_FOUND", fmt.Sprintf("No user found with username: %s", username), nil)
 	}
-
-	newImageURL, err := s.s3Service.UploadProfileImage(ctx, imageBytes, username, imageSHA)
-	if err != nil {
-		return err
+	var newImageURL string
+	if len(imageBytes) > 0 && imageSHA != "" {
+		newImageURL, err = s.s3Service.UploadProfileImage(ctx, imageBytes, customer.Username, imageSHA)
+		if err != nil {
+			return err
+		}
+	} else {
+		return utils.NewBadRequestError("INVALID_IMAGE_HASH", "The hash or the image bytes provided are invalid.", nil)
 	}
 
 	if err := s.skyCustomerRepo.UpdateProfileImageURL(ctx, username, newImageURL); err != nil {

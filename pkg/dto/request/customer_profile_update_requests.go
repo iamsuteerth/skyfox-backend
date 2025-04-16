@@ -6,3 +6,9 @@ type UpdateCustomerProfileRequest struct {
 	PhoneNumber    string `json:"phone_number" binding:"required,customPhone"`
 	SecurityAnswer string `json:"security_answer" binding:"required"`
 }
+
+type UpdateProfileImageRequest struct {
+    SecurityAnswer string `json:"security_answer" binding:"required"`
+    ProfileImg     string `json:"profile_img" binding:"required"`
+    ProfileImgSHA  string `json:"profile_img_sha" binding:"required"`
+}
