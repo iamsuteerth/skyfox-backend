@@ -58,7 +58,7 @@ func main() {
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
 	securityQuestionController := controllers.NewSecurityQuestionController(securityQuestionService)
-	passwordResetController := controllers.NewPasswordResetController(passwordResetService)
+	passwordResetController := controllers.NewPasswordResetController(passwordResetService, skyCustomerService)
 	showController := controllers.NewShowController(showService)
 	slotController := controllers.NewSlotController(slotService)
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
@@ -110,7 +110,8 @@ func main() {
 
 	authAPIs := authRouter.Group("")
 	{
-		authAPIs.GET(constants.ShowEndPoint, showController.GetShows) // Get Shows (RBAC-based)
+		authAPIs.GET(constants.ShowEndPoint, showController.GetShows)                           // Get Shows (RBAC-based)
+		authAPIs.POST(constants.ChangePasswordEndPoint, passwordResetController.ChangePassword) // Change Password for User
 	}
 
 	customerAPIs := customeRouter.Group(constants.SkyCustomerEndPoint)

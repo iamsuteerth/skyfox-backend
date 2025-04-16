@@ -282,6 +282,89 @@
   }
   ```
 
+### Change Password
+- **URL**: `/change-password`
+- **Method**: `POST`
+- **Authentication**: Required
+- **Description**: Changes the user's password with current password verification and checks against password history.
+- **Request Body**:
+  ```json
+  {
+    "current_password": "string",
+    "new_password": "string"
+  }
+  ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Password updated successfully",
+    "request_id": "4b16d5ca-6342-4c0f-ab18-3998bfb250c5",
+    "status": "SUCCESS"
+  }
+  ```
+- **Validation Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "0a55356a-906f-48b7-b8c6-4a43ddf959ef",
+    "errors": [
+        {
+            "field": "CurrentPassword",
+            "message": "This field is required"
+        },
+        {
+            "field": "NewPassword",
+            "message": "This field is required"
+        }
+    ]
+  }
+  ```
+- **Password Validation Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "6fe2ef94-36e4-4f1d-987e-60a0fa7e7338",
+    "errors": [
+        {
+            "field": "NewPassword",
+            "message": "Password must be at least 8 characters with at least one uppercase letter and one special character"
+        }
+    ]
+  }
+  ```
+- **Current Password Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INCORRECT PASSWORD",
+    "message": "Current password doesn't match user's password",
+    "request_id": "4350aaef-d290-4fdd-b7b4-c61baf220dfb"
+  }
+  ```
+- **Password Reuse Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "PASSWORD_REUSE",
+    "message": "New password cannot match any of your previous passwords",
+    "request_id": "503da576-f006-4bce-a1bb-55fa6f6d444a"
+  }
+  ```
+- **Unauthorized Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "92bce3e3-2719-42ca-8388-1ec46fb1f677"
+  }
+  ```
+
+
 ## Show Management
 
 ### Get Shows
@@ -764,9 +847,6 @@
     "message": "Profile image updated successfully",
     "request_id": "37137e7d-549f-4644-9abd-f00516d76a4a",
     "status": "SUCCESS",
-    "data": {
-        "username": "suteerth"
-    }
   }
   ```
 - **Error Response (403 Forbidden)**:
