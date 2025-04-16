@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
@@ -23,13 +22,10 @@ func NewSlotController(slotService services.SlotService) *SlotController {
 
 func (sc *SlotController) GetAvailableSlots(c *gin.Context) {
 	requestID := utils.GetRequestID(c)
+
 	dateStr := c.Query("date")
+	date, err := utils.GetDateFromDateStringDefaultToday(dateStr)
 
-	if dateStr == "" {
-		dateStr = time.Now().Format("2006-01-02")
-	}
-
-	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_DATE", "Invalid date format. Use YYYY-MM-DD", err), requestID)
 		return

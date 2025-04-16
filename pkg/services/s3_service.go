@@ -23,7 +23,6 @@ import (
 type S3Service interface {
 	UploadProfileImage(ctx context.Context, imageBytes []byte, username string, sha string) (string, error)
 	DeleteProfileImage(ctx context.Context, objectKey string) error
-	ValidateSHA(imageBytes []byte, providedSHA string) bool
 	GeneratePresignedURL(ctx context.Context, objectKey string, duration time.Duration) (string, error)
 }
 
@@ -57,7 +56,7 @@ func NewS3Service() S3Service {
 }
 
 func (s *s3Service) UploadProfileImage(ctx context.Context, imageBytes []byte, username string, providedSHA string) (string, error) {
-	if !s.ValidateSHA(imageBytes, providedSHA) {
+	if !validateSHA(imageBytes, providedSHA) {
 		return "", utils.NewBadRequestError("INVALID_IMAGE_HASH", "The image hash does not match", nil)
 	}
 
@@ -122,13 +121,6 @@ func (s *s3Service) DeleteProfileImage(ctx context.Context, objectKey string) er
 	return nil
 }
 
-func (s *s3Service) ValidateSHA(imageBytes []byte, providedSHA string) bool {
-	hash := sha256.Sum256(imageBytes)
-	calculatedSHA := hex.EncodeToString(hash[:])
-
-	return calculatedSHA == providedSHA
-}
-
 func (s *s3Service) GeneratePresignedURL(ctx context.Context, objectKey string, duration time.Duration) (string, error) {
 	if strings.HasPrefix(objectKey, "http") {
 		parts := strings.Split(objectKey, ".com/")
@@ -150,4 +142,11 @@ func (s *s3Service) GeneratePresignedURL(ctx context.Context, objectKey string, 
 	}
 
 	return presignedURL, nil
+}
+
+func validateSHA(imageBytes []byte, providedSHA string) bool {
+	hash := sha256.Sum256(imageBytes)
+	calculatedSHA := hex.EncodeToString(hash[:])
+
+	return calculatedSHA == providedSHA
 }

@@ -14,9 +14,6 @@ import (
 
 type UserService interface {
 	Login(ctx context.Context, username, password string) (*models.User, string, error)
-	FindByUsername(ctx context.Context, username string) (*models.User, error)
-	Create(ctx context.Context, user *models.User) error
-	SavePasswordHistory(ctx context.Context, passwordHistory *models.PasswordHistory) error
 }
 
 type userService struct {
@@ -65,16 +62,4 @@ func generateToken(user *models.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secretKey))
-}
-
-func (s *userService) FindByUsername(ctx context.Context, username string) (*models.User, error) {
-	return s.userRepo.FindByUsername(ctx, username)
-}
-
-func (s *userService) Create(ctx context.Context, user *models.User) error {
-	return s.userRepo.Create(ctx, user)
-}
-
-func (s *userService) SavePasswordHistory(ctx context.Context, passwordHistory *models.PasswordHistory) error {
-	return s.userRepo.SavePasswordHistory(ctx, passwordHistory)
 }

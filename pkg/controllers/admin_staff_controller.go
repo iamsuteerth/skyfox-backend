@@ -36,7 +36,7 @@ func (c *AdminStaffController) GetAdminProfile(ctx *gin.Context) {
 
 	role, ok := claims["role"].(string)
 	if !ok || role != "admin" {
-		utils.HandleErrorResponse(ctx, utils.NewForbiddenError("FORBIDDEN", "Access denied. Staff role required", nil), requestID)
+		utils.HandleErrorResponse(ctx, utils.NewForbiddenError("FORBIDDEN", "Access denied. Admin role required", nil), requestID)
 		return
 	}
 

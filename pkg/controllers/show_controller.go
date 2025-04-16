@@ -26,13 +26,10 @@ func NewShowController(showService services.ShowService) *ShowController {
 
 func (sh *ShowController) GetShows(c *gin.Context) {
 	requestID := utils.GetRequestID(c)
+	
 	dateStr := c.Query("date")
-
-	if dateStr == "" {
-		dateStr = time.Now().Format("2006-01-02")
-	}
-
-	requestDate, err := time.Parse("2006-01-02", dateStr)
+	requestDate, err := utils.GetDateFromDateStringDefaultToday(dateStr)
+	
 	if err != nil {
 		utils.HandleErrorResponse(c, utils.NewBadRequestError("INVALID_DATE", "Invalid date format. Use YYYY-MM-DD", err), requestID)
 		return

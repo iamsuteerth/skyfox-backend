@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +40,7 @@ func (c *SecurityQuestionController) GetSecurityQuestions(ctx *gin.Context) {
 func (c *SecurityQuestionController) GetSecurityQuestionByEmail(ctx *gin.Context) {
 	requestID := utils.GetRequestID(ctx)
 	email := ctx.Query("email")
-	fmt.Println(email)
+
 	if email == "" {
 		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("MISSING_EMAIL", "Email is required", nil), requestID)
 		return
