@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
@@ -65,7 +66,7 @@ func (s *skyCustomerService) ValidateUserDetails(ctx context.Context, username, 
 		default:
 			errorMessage = fmt.Sprintf("%s already exists", field)
 		}
-		return utils.NewBadRequestError(field+"_EXISTS", errorMessage, nil)
+		return utils.NewBadRequestError(strings.ToUpper(field)+"_EXISTS", errorMessage, nil)
 	}
 
 	return nil
@@ -193,32 +194,53 @@ func (s *skyCustomerService) UpdateCustomerProfile(ctx context.Context, username
 		return nil, utils.NewNotFoundError("USER_NOT_FOUND", fmt.Sprintf("No customer found with username: %s", username), nil)
 	}
 
-	exists, field, err := s.skyCustomerRepo.ExistsByEmailOrMobile(ctx, request.Email, request.PhoneNumber)
-	if err != nil {
-		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Error checking customer data", err)
+	updates := map[string]interface{}{}
+
+	updateName := true
+	updateEmail := true
+	updatePhone := true
+
+	if request.Name == customer.Name {
+		updateName = false
 	}
-	if exists {
-		var errorMessage string
-		switch field {
-		case "email":
-			errorMessage = "Email already exists"
-		case "mobilenumber":
-			errorMessage = "Mobile number already exists"
-		default:
-			errorMessage = fmt.Sprintf("%s already exists", field)
+	if request.Email == customer.Email {
+		updateEmail = false
+	}
+	if request.PhoneNumber == customer.Number {
+		updatePhone = false
+	}
+
+	if updateName {
+		updates["name"] = request.Name
+	}
+
+	if updateEmail {
+		exists, err := s.skyCustomerRepo.ExistsByEmail(ctx, request.Email)
+		if err != nil {
+			return nil, utils.NewInternalServerError("DATABASE_ERROR", "Error checking customer data", err)
 		}
-		return nil, utils.NewBadRequestError(field+"_EXISTS", errorMessage, nil)
+		if exists {
+			return nil, utils.NewBadRequestError("EMAIL_EXISTS", "Email already exists", nil)
+		}
+		updates["email"] = request.Email
 	}
 
-	updates := map[string]interface{}{
-		"name":   request.Name,
-		"email":  request.Email,
-		"number": request.PhoneNumber,
+	if updatePhone {
+		exists, err := s.skyCustomerRepo.ExistsByMobileNumber(ctx, request.PhoneNumber)
+		if err != nil {
+			return nil, utils.NewInternalServerError("DATABASE_ERROR", "Error checking customer data", err)
+		}
+		if exists {
+			return nil, utils.NewBadRequestError("NUMBER_EXISTS", "Phone Number already exists", nil)
+		}
+		updates["number"] = request.PhoneNumber
 	}
 
-	err = s.skyCustomerRepo.UpdateCustomerDetails(ctx, username, updates)
-	if err != nil {
-		return nil, err
+	if len(updates) > 0 {
+		err = s.skyCustomerRepo.UpdateCustomerDetails(ctx, username, updates)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &response.UpdateCustomerProfileResponse{

@@ -14,6 +14,8 @@ type SkyCustomerRepository interface {
 	FindByUsername(ctx context.Context, username string) (*models.SkyCustomer, error)
 	FindByEmail(ctx context.Context, email string) (*models.SkyCustomer, error)
 	ExistsByEmailOrMobile(ctx context.Context, email, mobileNumber string) (bool, string, error)
+	ExistsByEmail(ctx context.Context, email string) (bool, error)
+	ExistsByMobileNumber(ctx context.Context, mobileNumber string) (bool, error)
 	Create(ctx context.Context, customer *models.SkyCustomer) error
 	GetCustomerProfileImg(ctx context.Context, username string) (string, error)
 	UpdateCustomerDetails(ctx context.Context, username string, updates map[string]interface{}) error
@@ -102,6 +104,26 @@ func (repo *skyCustomerRepository) ExistsByEmailOrMobile(ctx context.Context, em
 	}
 
 	return field != "", field, nil
+}
+
+func (repo *skyCustomerRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM customertable WHERE email = $1)`
+	var exists bool
+	err := repo.db.QueryRow(ctx, query, email).Scan(&exists)
+	if err != nil {
+		return false, utils.NewInternalServerError("DATABASE_ERROR", "Error checking email existence", err)
+	}
+	return exists, nil
+}
+
+func (repo *skyCustomerRepository) ExistsByMobileNumber(ctx context.Context, mobileNumber string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM customertable WHERE number = $1)`
+	var exists bool
+	err := repo.db.QueryRow(ctx, query, mobileNumber).Scan(&exists)
+	if err != nil {
+		return false, utils.NewInternalServerError("DATABASE_ERROR", "Error checking mobile number existence", err)
+	}
+	return exists, nil
 }
 
 func (repo *skyCustomerRepository) Create(ctx context.Context, customer *models.SkyCustomer) error {
