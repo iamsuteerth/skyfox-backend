@@ -43,10 +43,15 @@ func (sh *ShowController) GetShows(ctx *gin.Context) {
 	role, _ := claims["role"].(string)
 	username, _ := claims["username"].(string)
 	if role != "admin" && role != "staff" {
-		today := time.Now().Truncate(24 * time.Hour)
-		maxAllowedDate := today.AddDate(0, 0, 6)
+		now := time.Now()
 
-		if requestDate.Before(today) || requestDate.After(maxAllowedDate) {
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		maxAllowedDate := time.Date(today.Year(), today.Month(), today.Day()+6, 23, 59, 59, 0, today.Location())
+
+		requestDateLocal := requestDate.In(today.Location())
+		requestDateMidnight := time.Date(requestDateLocal.Year(), requestDateLocal.Month(), requestDateLocal.Day(), 0, 0, 0, 0, today.Location())
+
+		if requestDateMidnight.Before(today) || requestDateMidnight.After(maxAllowedDate) {
 			log.Info().
 				Str("username", username).
 				Time("requestedDate", requestDate).
