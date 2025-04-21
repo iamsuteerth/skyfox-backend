@@ -993,3 +993,80 @@
       "request_id": "938b985d-d729-4b67-9509-077d3a30ab74"
   }
   ```
+
+## Booking Management
+
+### Get Seat Map
+- **URL**: `/shows/{show_id}/seat-map`
+- **Method**: `GET`
+- **Authentication**: Required
+- **Parameters**:
+  - `show_id`: ID of the show (must be a valid integer)
+- **Description**: Retrieves a complete seat map for a specific show, including seat availability status, seat type, and pricing information.
+- **Notes**: 
+  - Standard seats are priced at the show's base cost
+  - Deluxe seats have an additional price premium (currently 150.00)
+  - Rows A-E are Standard seats, rows F-J are Deluxe seats
+  - Each row has 10 seats numbered 1-10
+  - Occupied seats cannot be booked
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Seat map retrieved successfully",
+    "request_id": "c2b01fde-fbe5-4d85-830e-e8b84b798b34",
+    "status": "SUCCESS",
+    "data": {
+      "seat_map": {
+        "A": [
+          {
+            "column": "1",
+            "occupied": false,
+            "price": 208.97,
+            "seat_number": "A1",
+            "type": "Standard"
+          },
+          {
+            "column": "2",
+            "occupied": false,
+            "price": 208.97,
+            "seat_number": "A2",
+            "type": "Standard"
+          },
+          // Additional seats...
+        ],
+        // Additional rows B through J...
+      }
+    }
+  }
+  ```
+
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_SHOW_ID",
+    "message": "Show ID must be a valid integer",
+    "request_id": "2870e4f4-3918-42f6-b28a-304193ebc720"
+  }
+  ```
+
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "8c55aba3-fd1a-4ed5-9655-5dd28318d28e"
+  }
+  ```
+
+- **Error Response (404 Not Found)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "SHOW_NOT_FOUND",
+    "message": "Show not found for id: 1000",
+    "request_id": "fb8b880a-4d97-4e33-ad7a-5f137e205312"
+  }
+  ```

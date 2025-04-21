@@ -9,9 +9,10 @@ const (
 	VerifySecurityAnswerEndPoint = "/verify-security-answer"
 	ForgotPasswordEndPoint       = "/forgot-password"
 	// Shows Page
-	ShowEndPoint   = "/shows"
-	SlotEndPoint   = "/slot"
-	MoviesEndPoint = "/movies"
+	ShowEndPoint           = "/shows"
+	SlotEndPoint           = "/slot"
+	MoviesEndPoint         = "/movies"
+	BookingSeatMapEndPoint = "/:show_id/seat-map"
 	// Role Endpoints
 	SkyCustomerEndPoint = "/customer"
 	AdminEndPoint       = "/admin"
@@ -27,4 +28,5 @@ const (
 const (
 	TOTAL_NO_OF_SEATS           = 100
 	MAX_NO_OF_SEATS_PER_BOOKING = 10
+	DELUXE_OFFSET               = 150.0
 )

@@ -55,6 +55,7 @@ func main() {
 	showService := services.NewShowService(showRepository, bookingRepository, movieService, slotRepository)
 	slotService := services.NewSlotService(slotRepository)
 	adminStaffProfileService := services.NewAdminStaffProfileService(userRepository, staffRepository)
+	bookingService := services.NewBookingService(showRepository)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -63,6 +64,7 @@ func main() {
 	showController := controllers.NewShowController(showService)
 	slotController := controllers.NewSlotController(slotService)
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
+	bookingController := controllers.NewBookingController(bookingService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -116,8 +118,12 @@ func main() {
 
 	authAPIs := authRouter.Group("")
 	{
-		authAPIs.GET(constants.ShowEndPoint, showController.GetShows)                           // Get Shows (RBAC-based)
 		authAPIs.POST(constants.ChangePasswordEndPoint, passwordResetController.ChangePassword) // Change Password for User
+		showAPIs := authAPIs.Group(constants.ShowEndPoint)
+		{
+			showAPIs.GET("", showController.GetShows)                                    // Get Shows (RBAC-based)
+			showAPIs.GET(constants.BookingSeatMapEndPoint, bookingController.GetSeatMap) // Get Seat Map Data
+		}
 	}
 
 	customerAPIs := customeRouter.Group(constants.SkyCustomerEndPoint)

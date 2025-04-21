@@ -16,6 +16,7 @@ type ShowRepository interface {
 	Create(ctx context.Context, show *models.Show) error
 	GetAllShowsOn(ctx context.Context, date time.Time) ([]models.Show, error)
 	FindById(ctx context.Context, id int) (*models.Show, error)
+	GetSeatMapForShow(ctx context.Context, showID int) ([]models.SeatMapEntry, error)
 }
 
 type showRepository struct {
@@ -47,7 +48,6 @@ func (repo *showRepository) Create(ctx context.Context, show *models.Show) error
 
 	return nil
 }
-
 
 func (repo *showRepository) GetAllShowsOn(ctx context.Context, date time.Time) ([]models.Show, error) {
 	query := `
@@ -133,4 +133,64 @@ func (repo *showRepository) FindById(ctx context.Context, id int) (*models.Show,
 
 	show.Slot = slot
 	return &show, nil
+}
+
+func (repo *showRepository) GetSeatMapForShow(ctx context.Context, showID int) ([]models.SeatMapEntry, error) {
+	query := `
+        SELECT 
+            s.seat_number,
+            SUBSTRING(s.seat_number, 1, 1) AS seat_row,
+            SUBSTRING(s.seat_number, 2) AS seat_column,
+            s.seat_type,
+            0.0 AS price, -- We'll set the price at the service layer
+            EXISTS (
+                SELECT 1
+                FROM booking_seat_mapping bsm
+                JOIN booking b ON bsm.booking_id = b.id
+                WHERE b.show_id = $1 
+                AND bsm.seat_number = s.seat_number
+            ) AS occupied
+        FROM 
+            seat s
+        ORDER BY 
+            SUBSTRING(s.seat_number, 1, 1) ASC,
+            CAST(SUBSTRING(s.seat_number, 2) AS INTEGER) ASC
+    `
+
+	rows, err := repo.db.Query(ctx, query, showID)
+	if err != nil {
+		log.Error().Err(err).Int("show_id", showID).Msg("Failed to query seat map for show")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to retrieve seat map", err)
+	}
+	defer rows.Close()
+
+	var seatMap []models.SeatMapEntry
+	for rows.Next() {
+		var seat models.SeatMapEntry
+		err := rows.Scan(
+			&seat.SeatNumber,
+			&seat.SeatRow,
+			&seat.SeatColumn,
+			&seat.SeatType,
+			&seat.Price,
+			&seat.Occupied,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("Error scanning seat map row")
+			return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to scan seat data", err)
+		}
+		seatMap = append(seatMap, seat)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Error().Err(err).Msg("Error iterating over seat map rows")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to iterate over seat map", err)
+	}
+
+	if len(seatMap) == 0 {
+		log.Warn().Int("show_id", showID).Msg("No seats found for show")
+		return []models.SeatMapEntry{}, nil
+	}
+
+	return seatMap, nil
 }
