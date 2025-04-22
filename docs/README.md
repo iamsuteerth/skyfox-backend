@@ -1070,3 +1070,114 @@
     "request_id": "fb8b880a-4d97-4e33-ad7a-5f137e205312"
   }
   ```
+
+### Create Booking For Customer as Admin
+- **URL**: `/admin/create-customer-booking`
+- **Method**: `POST`
+- **Authentication**: Required (Admin only)
+- **Description**: Create a booking directly by an admin (offline booking).
+- **Notes**:
+  - Admin bookings are immediately confirmed with "Cash" payment type
+  - Amount paid can be provided or calculated automatically based on selected seats
+  - Booking cannot be created for shows that have already started
+  - Each admin booking creates a new admin_booked_customer record
+- **Request Body**:
+  ```json
+  {
+    "show_id": 22,
+    "customer_name": "John Doe",
+    "phone_number": "1234567890",
+    "seat_numbers": ["A1", "J1"],
+    "amount_paid": 553.30
+  }
+  ```
+- **Success Response (201 Created)**:
+  ```json
+  {
+    "message": "Booking created successfully",
+    "request_id": "6c3bcc3d-f146-4afc-b03e-60f218c379e8",
+    "status": "SUCCESS",
+    "data": {
+      "booking_id": 1,
+      "show_id": 22,
+      "customer_name": "John Doe",
+      "phone_number": "1234567890",
+      "seat_numbers": [
+        "A1",
+        "J1"
+      ],
+      "amount_paid": 553.3,
+      "payment_type": "Cash",
+      "booking_time": "2025-04-22T16:26:53.835139+05:30",
+      "status": "Confirmed"
+    }
+  }
+  ```
+- **Error Response (400 Bad Request) - Invalid Input**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "33749b29-e38f-4aa3-91f6-336ce9d8fc2a",
+    "errors": [
+      {
+        "field": "CustomerName",
+        "message": "Name must be 3-70 characters, max 4 words, letters only, no consecutive spaces"
+      },
+      {
+        "field": "PhoneNumber",
+        "message": "Phone number must be exactly 10 digits"
+      },
+      {
+        "field": "AmountPaid",
+        "message": "Invalid value"
+      }
+    ]
+  }
+  ```
+- **Error Response (400 Bad Request) - Price Mismatch**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_AMOUNT",
+    "message": "The amount paid does not match the expected price",
+    "request_id": "446ed540-c84f-4264-b1f6-f3958792cc90"
+  }
+  ```
+- **Error Response (400 Bad Request) - Show Started**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "SHOW_ALREADY_STARTED",
+    "message": "Cannot book tickets for a show that has already started",
+    "request_id": "5d3a483e-1489-4011-a5de-7192ba65a560"
+  }
+  ```
+- **Error Response (400 Bad Request) - Seats Unavailable**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "SEATS_UNAVAILABLE",
+    "message": "One or more selected seats are not available",
+    "request_id": "ea471ac4-072a-456e-b1d6-b757c9abbf9e"
+  }
+  ```
+- **Error Response (400 Bad Request) - Invalid Request**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_REQUEST",
+    "message": "Invalid request data",
+    "request_id": "2de78e1f-95a1-44c9-b6fa-7fa0ff1d9d60"
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Admin role required",
+    "request_id": "869a6343-051c-4063-8f01-524521e64cfb"
+  }
+  ```

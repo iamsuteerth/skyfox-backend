@@ -4,6 +4,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/services"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
@@ -11,12 +13,14 @@ import (
 )
 
 type BookingController struct {
-	bookingService services.BookingService
+	bookingService      services.BookingService
+	adminBookingService services.AdminBookingService
 }
 
-func NewBookingController(bookingService services.BookingService) *BookingController {
+func NewBookingController(bookingService services.BookingService, adminBookingService services.AdminBookingService) *BookingController {
 	return &BookingController{
-		bookingService: bookingService,
+		bookingService:      bookingService,
+		adminBookingService: adminBookingService,
 	}
 }
 
@@ -61,4 +65,27 @@ func organizeSeatsByRow(seatMap []models.SeatMapEntry) map[string]interface{} {
 	return map[string]interface{}{
 		"seat_map": seatsByRow,
 	}
+}
+
+func (bc *BookingController) CreateAdminBooking(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
+
+	var bookingRequest request.AdminBookingRequest
+	if err := ctx.ShouldBindJSON(&bookingRequest); err != nil {
+		if validationErrs, ok := err.(validator.ValidationErrors); ok {
+			utils.HandleErrorResponse(ctx, utils.NewValidationError(validationErrs), requestID)
+			return
+		}
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
+		return
+	}
+
+	booking, err := bc.adminBookingService.CreateAdminBooking(ctx.Request.Context(), bookingRequest)
+	if err != nil {
+		log.Error().Err(err).Interface("request", bookingRequest).Msg("Failed to create admin booking")
+		utils.HandleErrorResponse(ctx, err, requestID)
+		return
+	}
+
+	utils.SendCreatedResponse(ctx, "Booking created successfully", requestID, booking)
 }

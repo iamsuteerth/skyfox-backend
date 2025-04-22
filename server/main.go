@@ -45,6 +45,8 @@ func main() {
 	showRepository := repositories.NewShowRepository(db)
 	bookingRepository := repositories.NewBookingRepository(db)
 	slotRepository := repositories.NewSlotRepository(db)
+	bookingSeatMappingRepository := repositories.NewBookingSeatMappingRepository(db)
+	adminBookedCustomerRepository := repositories.NewAdminBookedCustomerRepository(db)
 
 	seed.SeedDB(userRepository, staffRepository)
 
@@ -56,6 +58,7 @@ func main() {
 	slotService := services.NewSlotService(slotRepository)
 	adminStaffProfileService := services.NewAdminStaffProfileService(userRepository, staffRepository)
 	bookingService := services.NewBookingService(showRepository)
+	adminBookingService := services.NewAdminBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, adminBookedCustomerRepository, slotRepository)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -64,7 +67,7 @@ func main() {
 	showController := controllers.NewShowController(showService)
 	slotController := controllers.NewSlotController(slotService)
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
-	bookingController := controllers.NewBookingController(bookingService)
+	bookingController := controllers.NewBookingController(bookingService, adminBookingService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -142,6 +145,10 @@ func main() {
 		{
 			showCreation.GET(constants.MoviesEndPoint, showController.GetMovies) // Get Movies for Show creation
 			showCreation.POST("", showController.CreateShow)                     // Create a Show
+		}
+		bookingAPIs := adminAPIs.Group(constants.AdminEndPoint)
+		{
+			bookingAPIs.POST(constants.CreateCustomerBookingEndpoint, bookingController.CreateAdminBooking) // Create Booking Through Admin
 		}
 	}
 

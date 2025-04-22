@@ -198,6 +198,14 @@ The migration files are stored in the `supabase/migration` directory:
 - `000005_add_unique_constraint_email_token.down.sql` - Removes the unique constraint on `(email, token)`
 - `000006_created_at_column.up.sql` - Adds a column created_at in usertable to have timestamps of account creation handled automatically by the database
 - `000006_created_at_column.down.sql` - Drops the created_at column in the usertable
+- `000007_booking_table_modifications.up.sql` - Adds customer_username to booking table
+- `000007_booking_table_modifications.down.sql` - Removes customer_username from booking table
+- `000008_payment_mode_enum.up.sql` - Creates payment_mode enum type
+- `000008_payment_mode_enum.down.sql` - Removes payment_mode enum type
+- `000009_booking_timestamp_update.up.sql` - Updates booking_time to use timezone
+- `000009_booking_timestamp_update.down.sql` - Reverts booking_time timezone change
+- `000010_relationship_btw_abc_booking.up.sql` - Sets up cascading delete from booking to admin_booked_customer
+- `000010_relationship_btw_abc_booking.down.sql` - Reverts the cascading delete relationship
 
 To apply these migrations to your Supabase project, use the Supabase SQL Editor or a migration tool.
 

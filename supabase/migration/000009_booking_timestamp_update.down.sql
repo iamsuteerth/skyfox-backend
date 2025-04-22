@@ -1,0 +1,7 @@
+BEGIN;
+
+ALTER TABLE booking 
+ALTER COLUMN booking_time TYPE TIMESTAMP,
+ALTER COLUMN booking_time SET DEFAULT NOW();
+
+COMMIT;
