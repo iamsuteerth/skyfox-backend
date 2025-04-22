@@ -18,6 +18,7 @@ import (
 	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/security"
 	customValidator "github.com/iamsuteerth/skyfox-backend/pkg/middleware/validator"
 	movieservice "github.com/iamsuteerth/skyfox-backend/pkg/movie-service"
+	paymentservice "github.com/iamsuteerth/skyfox-backend/pkg/payment-service"
 	"github.com/iamsuteerth/skyfox-backend/pkg/repositories"
 	"github.com/iamsuteerth/skyfox-backend/pkg/services"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
@@ -35,6 +36,8 @@ func main() {
 
 	movieServiceConfig := config.GetMovieServiceConfig()
 	movieService := movieservice.NewMovieService(movieServiceConfig)
+	paymentServiceConfig := config.GetPaymentServiceConfig()
+	paymentService := paymentservice.NewPaymentService(paymentServiceConfig)
 	s3Service := services.NewS3Service()
 
 	userRepository := repositories.NewUserRepository(db)
