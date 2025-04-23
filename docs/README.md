@@ -1181,3 +1181,267 @@
     "request_id": "869a6343-051c-4063-8f01-524521e64cfb"
   }
   ```
+
+### Initialize Customer Booking
+- **URL**: `/customer/booking/initialize`
+- **Method**: `POST`
+- **Authentication**: Required (Customer only)
+- **Description**: Creates a temporary booking with reserved seats and a 5-minute expiration time.
+- **Notes**:
+  - Seats are temporarily reserved for 5 minutes, allowing time for payment
+  - If payment is not completed before expiration, seats are automatically released
+  - Booking status is set to "Pending" until payment is processed
+- **Request Body**:
+  ```json
+  {
+    "show_id": 22,
+    "seat_numbers": ["A1", "J1"]
+  }
+  ```
+- **Success Response (201 Created)**:
+  ```json
+  {
+    "message": "Booking initialized successfully",
+    "request_id": "b4408a16-4fc7-4caf-88ff-b1340968947d",
+    "status": "SUCCESS",
+    "data": {
+      "booking_id": 7,
+      "show_id": 22,
+      "seat_numbers": [
+        "A1",
+        "J1"
+      ],
+      "amount_due": 553.3,
+      "expiration_time": "2025-04-23T16:32:07.831347491+05:30",
+      "time_remaining_ms": 300000
+    }
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Customer role required",
+    "request_id": "19c3079b-15c9-4671-aa0c-1f0ebdfdb436"
+  }
+  ```
+- **Error Response (400 Bad Request) - Invalid JSON**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_REQUEST",
+    "message": "Invalid request data",
+    "request_id": "bff152e2-3e9a-479f-949a-a184b72adc40"
+  }
+  ```
+- **Error Response (400 Bad Request) - Missing Fields**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "d0063421-5ff1-4f34-bacd-87daf76a7c6b",
+    "errors": [
+      {
+        "field": "SeatNumbers",
+        "message": "This field is required"
+      }
+    ]
+  }
+  ```
+- **Error Response (404 Not Found) - Show Not Found**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "SHOW_NOT_FOUND",
+    "message": "Show not found for id: 999",
+    "request_id": "249e34df-6f52-47c5-943d-0da4e4115197"
+  }
+  ```
+- **Error Response (400 Bad Request) - Show Already Started**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "SHOW_ALREADY_STARTED",
+    "message": "Cannot book tickets for a show that has already started",
+    "request_id": "3a212b2a-e47a-4cf5-9b86-8a2e8cf714da"
+  }
+  ```
+- **Error Response (400 Bad Request) - Seats Unavailable**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "SEATS_UNAVAILABLE",
+    "message": "One or more selected seats are not available",
+    "request_id": "03867a26-d12b-47b6-9d20-bdacd13ae466"
+  }
+  ```
+- **Error Response (400 Bad Request) - Invalid Seat Format**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "c13a7284-4b3e-44d8-aad4-1bc0eec404ef",
+    "errors": [
+      {
+        "field": "SeatNumbers[1]",
+        "message": "Must be at most 3 characters"
+      }
+    ]
+  }
+  ```
+
+### Process Payment for Booking
+- **URL**: `/customer/booking/:id/payment`
+- **Method**: `POST`
+- **Authentication**: Required (Customer only)
+- **Description**: Processes payment for a pending booking and confirms it.
+- **Notes**:
+  - Must be completed within the 5-minute expiration window
+  - Only the customer who created the booking can process payment
+  - Successfully processed bookings are set to "Confirmed" status
+  - Payment validation includes Luhn check for card number and expiry date validation
+- **Request Body**:
+  ```json
+  {
+    "booking_id": 10,
+    "card_number": "4111111111111111",
+    "cvv": "123",
+    "expiry_month": "12",
+    "expiry_year": "25",
+    "cardholder_name": "John Doe"
+  }
+  ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Payment processed successfully",
+    "request_id": "969a7924-f48e-4ee0-9b1a-f20b046f2adc",
+    "status": "SUCCESS",
+    "data": {
+      "booking_id": 10,
+      "show_id": 22,
+      "show_date": "2025-04-26",
+      "show_time": "13:00:00.000000",
+      "movie": {
+        "movieId": "tt7349950",
+        "name": "It Chapter Two",
+        "duration": "2h49m0s",
+        "plot": "Twenty-seven years after their first encounter with the terrifying Pennywise, the Losers Club have grown up and moved away, until a devastating phone call brings them back.",
+        "imdbRating": "6.6",
+        "moviePoster": "https://m.media-amazon.com/images/M/MV5BYTJlNjlkZTktNjEwOS00NzI5LTlkNDAtZmEwZDFmYmM2MjU2XkEyXkFqcGdeQXVyNjg2NjQwMDQ@._V1_SX300.jpg",
+        "genre": "Drama, Fantasy, Horror"
+      },
+      "seat_numbers": [
+        "B1",
+        "I1"
+      ],
+      "amount_paid": 553.3,
+      "payment_type": "Card",
+      "booking_time": "2025-04-23T16:46:18.154511+05:30",
+      "status": "Confirmed",
+      "transaction_id": "71d2b74c-4f79-49d1-9a6c-7eddaaf454a5"
+    }
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Customer role required",
+    "request_id": "19c3079b-15c9-4671-aa0c-1f0ebdfdb436"
+  }
+  ```
+- **Error Response (400 Bad Request) - Missing Fields**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "request_id": "d67c5c25-a9e6-4285-9467-be545283c18c",
+    "errors": [
+      {
+        "field": "CVV",
+        "message": "This field is required"
+      },
+      {
+        "field": "ExpiryMonth",
+        "message": "This field is required"
+      },
+      {
+        "field": "ExpiryYear",
+        "message": "This field is required"
+      },
+      {
+        "field": "CardholderName",
+        "message": "This field is required"
+      }
+    ]
+  }
+  ```
+- **Error Response (404 Not Found) - Booking Not Found**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "BOOKING_NOT_FOUND",
+    "message": "Booking not found",
+    "request_id": "40f12206-504b-49d1-97b2-11a89fc8ab37"
+  }
+  ```
+- **Error Response (400 Bad Request) - Booking Expired**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "BOOKING_EXPIRED",
+    "message": "This booking has expired. Please make a new booking",
+    "request_id": "da3b799e-e464-4d68-b8eb-c417234477ae"
+  }
+  ```
+- **Error Response (400 Bad Request) - Invalid Card Number**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "PAYMENT_VALIDATION_FAILED",
+    "message": "Payment validation failed: Card number failed Luhn check (card_number)",
+    "request_id": "67b0d312-c13c-41aa-adfe-8f5a5fd69e7a"
+  }
+  ```
+- **Error Response (400 Bad Request) - Invalid Expiry Format**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "PAYMENT_VALIDATION_FAILED",
+    "message": "Payment validation failed: Card number failed Luhn check (card_number), Expiry must be in MM/YY format with valid month (01-12) (expiry)",
+    "request_id": "71d9406d-bef1-4ffa-999e-658d78b95822"
+  }
+  ```
+- **Error Response (400 Bad Request) - Expired Card**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "PAYMENT_VALIDATION_FAILED",
+    "message": "Payment validation failed: Card number failed Luhn check (card_number), Card has expired (expiry)",
+    "request_id": "e86e6041-e979-462c-be73-28af37cb4b65"
+  }
+  ```
+- **Error Response (400 Bad Request) - Invalid Booking Status**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_BOOKING_STATUS",
+    "message": "Payment can only be processed for bookings in pending state",
+    "request_id": "1f3a7932-b416-4335-b178-383b6fa8d5d2"
+  }
+  ```
+- **Error Response (403 Forbidden) - Unauthorized Access**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "UNAUTHORIZED_ACCESS",
+    "message": "You don't have permission to access this booking",
+    "request_id": "896e64d8-cbba-4aed-acc2-ae17f1f8348f"
+  }
+  ```

@@ -21,6 +21,8 @@ SkyFox Backend is a modern, well-structured API service that provides authentica
 - Role-based content filtering (different views for customers vs. admins)
 - Available slot management for preventing double-booking
 - Secure profile image management with S3 and presigned URLs
+- **Sophisticated Booking System**: Two-phase booking process with temporary seat reservation, automated expiration, and integrated payment processing.
+- **Efficient Concurrency Handling**: Each booking gets its own dedicated monitor, allowing thousands of concurrent reservations with precise timing control.
 
 ## Project Structure
 
@@ -206,6 +208,15 @@ The migration files are stored in the `supabase/migration` directory:
 - `000009_booking_timestamp_update.down.sql` - Reverts booking_time timezone change
 - `000010_relationship_btw_abc_booking.up.sql` - Sets up cascading delete from booking to admin_booked_customer
 - `000010_relationship_btw_abc_booking.down.sql` - Reverts the cascading delete relationship
+- `000010_relationship_btw_abc_booking.down.sql` - Reverts the cascading delete relationship
+- `000011_payment_txd_table.up.sql` - Creates payment transaction table for online payments
+- `000011_payment_txd_table.down.sql` - Removes payment transaction table
+- `000012_pending_booking_tracker.up.sql` - Creates table to track pending bookings and their expiration times
+- `000012_pending_booking_tracker.down.sql` - Removes pending booking tracker
+- `000013_add_foreign_key_indices.up.sql` - Adds performance indices on foreign keys
+- `000013_add_foreign_key_indices.down.sql` - Removes foreign key indices
+- `000014_circular_dependency_fix.up.sql` - Fixes circular dependency between booking and admin_booked_customer
+- `000014_circular_dependency_fix.down.sql` - Reverts the circular dependency fix
 
 To apply these migrations to your Supabase project, use the Supabase SQL Editor or a migration tool.
 
@@ -350,6 +361,25 @@ The application uses standardized error responses:
 - `request_id`: Unique identifier for the request
 - `errors`: Array of field-specific validation errors (only present for validation failures)
 
+## Booking Management System
+
+The SkyFox platform provides a comprehensive booking management system with separate workflows for administrators and customers:
+
+### Admin Booking Workflow
+Administrators can create bookings directly through a simplified one-step process:
+- Create bookings on behalf of walk-in customers
+- Instantly confirm bookings with cash payments
+- Manage seating arrangements through an intuitive interface
+- No payment processing step required (all admin bookings use cash payment)
+
+### Customer Booking Workflow
+Customers follow a two-step booking process:
+1. Initialize booking with seat selection (seats reserved for 5 minutes)
+2. Complete payment within the reservation window to confirm booking
+3. Automatic seat release if payment is not completed in time
+
+This dual approach accommodates both in-person and online ticket purchases while maintaining consistent data structures.
+
 ## Database Schema
 
 ![Supabase Database Schema](./database_schema.png)
@@ -387,6 +417,10 @@ The database includes the following tables:
 11. **booking** - Ticket reservations
 
 12. **booking_seat_mapping** - Mapping between bookings and seats
+
+13. **payment_transaction**: Records payment details for online bookings
+
+14. **pending_booking_tracker**: Manages temporary seat reservations
 
 ## License
 

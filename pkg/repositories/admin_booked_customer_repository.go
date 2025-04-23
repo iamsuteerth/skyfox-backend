@@ -12,6 +12,8 @@ import (
 type AdminBookedCustomerRepository interface {
 	Create(ctx context.Context, customer *models.AdminBookedCustomer) error
 	FindById(ctx context.Context, id int) (*models.AdminBookedCustomer, error)
+	UpdateBookingId(ctx context.Context, customerId int, bookingId int) error
+	DeleteById(ctx context.Context, id int) error
 }
 
 type adminBookedCustomerRepository struct {
@@ -62,4 +64,36 @@ func (repo *adminBookedCustomerRepository) FindById(ctx context.Context, id int)
 	}
 
 	return &customer, nil
+}
+
+func (repo *adminBookedCustomerRepository) UpdateBookingId(ctx context.Context, customerId int, bookingId int) error {
+	query := `
+		UPDATE admin_booked_customer
+		SET booking_id = $1
+		WHERE id = $2
+	`
+
+	_, err := repo.db.Exec(ctx, query, bookingId, customerId)
+	if err != nil {
+		log.Error().Err(err).Int("customerId", customerId).Int("bookingId", bookingId).Msg("Failed to update admin booked customer booking ID")
+		return utils.NewInternalServerError("DATABASE_ERROR", "Failed to update customer record", err)
+	}
+
+	return nil
+}
+
+func (repo *adminBookedCustomerRepository) DeleteById(ctx context.Context, id int) error {
+
+	query := `
+		DELETE FROM admin_booked_customer
+		WHERE id = $1
+	`
+
+	_, err := repo.db.Exec(ctx, query, id)
+	if err != nil {
+		log.Error().Err(err).Interface("Id", id).Msg("Failed to delete admin booked customer record.")
+		return utils.NewInternalServerError("DATABASE_ERROR", "Failed to delete admin booked customer record", err)
+	}
+
+	return nil
 }

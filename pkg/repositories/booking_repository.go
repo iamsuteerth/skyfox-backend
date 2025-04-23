@@ -14,6 +14,11 @@ type BookingRepository interface {
 	CreateAdminBooking(ctx context.Context, booking *models.Booking) error
 	GetBookingById(ctx context.Context, id int) (*models.Booking, error)
 	BookedSeatsByShow(ctx context.Context, showId int) int
+	CreatePendingBooking(ctx context.Context, booking *models.Booking) error
+	UpdateBookingStatus(ctx context.Context, bookingID int, status string) error
+	// GetBookingsByUsername(ctx context.Context, username string) ([]models.Booking, error)
+	// GetLatestBookingByUsername(ctx context.Context, username string) (*models.Booking, error)
+	DeleteBookingsByIds(ctx context.Context, bookingIds []int) error
 }
 
 type bookingRepository struct {
@@ -104,4 +109,69 @@ func (repo *bookingRepository) BookedSeatsByShow(ctx context.Context, showId int
 	}
 
 	return count
+}
+
+func (repo *bookingRepository) CreatePendingBooking(ctx context.Context, booking *models.Booking) error {
+	query := `
+		INSERT INTO booking (
+			date, show_id, customer_username, no_of_seats, 
+			amount_paid, status, payment_type
+		)
+		VALUES (
+			$1, $2, $3, $4, $5, $6, $7
+		)
+		RETURNING id, booking_time
+	`
+
+	err := repo.db.QueryRow(ctx, query,
+		booking.Date,
+		booking.ShowId,
+		booking.CustomerUsername,
+		booking.NoOfSeats,
+		booking.AmountPaid,
+		booking.Status,
+		booking.PaymentType,
+	).Scan(&booking.Id, &booking.BookingTime)
+
+	if err != nil {
+		log.Error().Err(err).Str("username", *booking.CustomerUsername).Msg("Failed to create pending booking")
+		return utils.NewInternalServerError("DATABASE_ERROR", "Failed to create booking", err)
+	}
+
+	return nil
+}
+
+func (repo *bookingRepository) UpdateBookingStatus(ctx context.Context, bookingID int, status string) error {
+	query := `
+		UPDATE booking
+		SET status = $1
+		WHERE id = $2
+	`
+
+	_, err := repo.db.Exec(ctx, query, status, bookingID)
+	if err != nil {
+		log.Error().Err(err).Int("bookingID", bookingID).Str("status", status).Msg("Failed to update booking status")
+		return utils.NewInternalServerError("DATABASE_ERROR", "Failed to update booking status", err)
+	}
+
+	return nil
+}
+
+func (repo *bookingRepository) DeleteBookingsByIds(ctx context.Context, bookingIds []int) error {
+	if len(bookingIds) == 0 {
+		return nil
+	}
+
+	query := `
+		DELETE FROM booking
+		WHERE id = ANY($1)
+	`
+
+	_, err := repo.db.Exec(ctx, query, bookingIds)
+	if err != nil {
+		log.Error().Err(err).Interface("bookingIds", bookingIds).Msg("Failed to delete bookings")
+		return utils.NewInternalServerError("DATABASE_ERROR", "Failed to delete expired bookings", err)
+	}
+
+	return nil
 }

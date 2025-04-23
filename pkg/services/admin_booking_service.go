@@ -127,11 +127,19 @@ func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req reques
 
 	if err := s.bookingRepo.CreateAdminBooking(ctx, booking); err != nil {
 		log.Error().Err(err).Interface("booking", booking).Msg("Failed to create admin booking")
+		_ = s.adminBookedCustomerRepo.DeleteById(ctx, customer.Id)
+		return nil, err
+	}
+
+	if err := s.adminBookedCustomerRepo.UpdateBookingId(ctx, customer.Id, booking.Id); err != nil {
+		log.Error().Err(err).Int("customerId", customer.Id).Int("bookingId", booking.Id).Msg("Failed to update admin booked customer with booking ID")
 		return nil, err
 	}
 
 	if err := s.bookingSeatMappingRepo.CreateMappings(ctx, booking.Id, req.SeatNumbers); err != nil {
 		log.Error().Err(err).Int("bookingId", booking.Id).Strs("seatNumbers", req.SeatNumbers).Msg("Failed to create seat mappings")
+		_ = s.bookingRepo.DeleteBookingsByIds(ctx, []int{booking.Id})
+		_ = s.adminBookedCustomerRepo.DeleteById(ctx, customer.Id)
 		return nil, err
 	}
 

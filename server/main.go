@@ -50,6 +50,8 @@ func main() {
 	slotRepository := repositories.NewSlotRepository(db)
 	bookingSeatMappingRepository := repositories.NewBookingSeatMappingRepository(db)
 	adminBookedCustomerRepository := repositories.NewAdminBookedCustomerRepository(db)
+	pendingBookingRepository := repositories.NewPendingBookingRepository(db)
+	paymentTransactionRepository := repositories.NewPaymentTransactionRepository(db)
 
 	seed.SeedDB(userRepository, staffRepository)
 
@@ -62,6 +64,7 @@ func main() {
 	adminStaffProfileService := services.NewAdminStaffProfileService(userRepository, staffRepository)
 	bookingService := services.NewBookingService(showRepository)
 	adminBookingService := services.NewAdminBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, adminBookedCustomerRepository, slotRepository)
+	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, paymentService, movieService)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -70,7 +73,7 @@ func main() {
 	showController := controllers.NewShowController(showService)
 	slotController := controllers.NewSlotController(slotService)
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
-	bookingController := controllers.NewBookingController(bookingService, adminBookingService)
+	bookingController := controllers.NewBookingController(bookingService, adminBookingService, customerBookingService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -138,6 +141,12 @@ func main() {
 		customerAPIs.GET(constants.ProfileImageEndPoint, skyCustomerController.GetProfileImagePresignedURL) // Get Profile Image
 		customerAPIs.POST(constants.UpdateProfileEndPoint, skyCustomerController.UpdateCustomerProfile)     // Update Customer Profile
 		customerAPIs.POST(constants.UpdateProfileImageEndPoint, skyCustomerController.UpdateProfileImage)   // Update Customer Profile Image
+
+		booking := customerAPIs.Group(constants.BookingEndpoint)
+		{
+			booking.POST(constants.BookingInitializeEndpoint, bookingController.InitializeCustomerBooking) // Initialize Booking
+			booking.POST(constants.PaymentEndpoint, bookingController.ProcessPayment)                      // Handle Payment for Booking
+		}
 	}
 
 	adminAPIs := adminRouter.Group("")

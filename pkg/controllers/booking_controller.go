@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
+	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/security"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/services"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
@@ -13,14 +14,16 @@ import (
 )
 
 type BookingController struct {
-	bookingService      services.BookingService
-	adminBookingService services.AdminBookingService
+	bookingService         services.BookingService
+	adminBookingService    services.AdminBookingService
+	customerBookingService services.CustomerBookingService
 }
 
-func NewBookingController(bookingService services.BookingService, adminBookingService services.AdminBookingService) *BookingController {
+func NewBookingController(bookingService services.BookingService, adminBookingService services.AdminBookingService, customerBookingService services.CustomerBookingService) *BookingController {
 	return &BookingController{
-		bookingService:      bookingService,
-		adminBookingService: adminBookingService,
+		bookingService:         bookingService,
+		adminBookingService:    adminBookingService,
+		customerBookingService: customerBookingService,
 	}
 }
 
@@ -88,4 +91,66 @@ func (bc *BookingController) CreateAdminBooking(ctx *gin.Context) {
 	}
 
 	utils.SendCreatedResponse(ctx, "Booking created successfully", requestID, booking)
+}
+
+func (bc *BookingController) InitializeCustomerBooking(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
+
+	var bookingRequest request.InitializeBookingRequest
+	if err := ctx.ShouldBindJSON(&bookingRequest); err != nil {
+		if validationErrs, ok := err.(validator.ValidationErrors); ok {
+			utils.HandleErrorResponse(ctx, utils.NewValidationError(validationErrs), requestID)
+			return
+		}
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid request data", err), requestID)
+		return
+	}
+
+	claims, err := security.GetTokenClaims(ctx)
+	if err != nil {
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify user credentials", err), requestID)
+		return
+	}
+
+	username, _ := claims["username"].(string)
+
+	booking, err := bc.customerBookingService.InitializeBooking(ctx.Request.Context(), username, bookingRequest)
+	if err != nil {
+		log.Error().Err(err).Interface("request", bookingRequest).Msg("Failed to initialize booking")
+		utils.HandleErrorResponse(ctx, err, requestID)
+		return
+	}
+
+	utils.SendCreatedResponse(ctx, "Booking initialized successfully", requestID, booking)
+}
+
+func (bc *BookingController) ProcessPayment(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
+
+	var paymentRequest request.ProcessPaymentRequest
+	if err := ctx.ShouldBindJSON(&paymentRequest); err != nil {
+		if validationErrs, ok := err.(validator.ValidationErrors); ok {
+			utils.HandleErrorResponse(ctx, utils.NewValidationError(validationErrs), requestID)
+			return
+		}
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid payment data", err), requestID)
+		return
+	}
+
+	claims, err := security.GetTokenClaims(ctx)
+	if err != nil {
+		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify user credentials", err), requestID)
+		return
+	}
+
+	username, _ := claims["username"].(string)
+
+	confirmedBooking, err := bc.customerBookingService.ProcessPayment(ctx.Request.Context(), username, paymentRequest)
+	if err != nil {
+		log.Error().Err(err).Interface("request", paymentRequest).Msg("Failed to process payment")
+		utils.HandleErrorResponse(ctx, err, requestID)
+		return
+	}
+
+	utils.SendOKResponse(ctx, "Payment processed successfully", requestID, confirmedBooking)
 }

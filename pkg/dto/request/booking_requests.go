@@ -7,3 +7,17 @@ type AdminBookingRequest struct {
 	SeatNumbers  []string `json:"seat_numbers" binding:"required,min=1,dive,min=2,max=3"`
 	AmountPaid   float64  `json:"amount_paid" binding:"gt=0"`
 }
+
+type InitializeBookingRequest struct {
+	ShowID      int      `json:"show_id" binding:"required,numeric"`
+	SeatNumbers []string `json:"seat_numbers" binding:"required,min=1,dive,min=2,max=3"`
+}
+
+type ProcessPaymentRequest struct {
+	BookingID      int    `json:"booking_id" binding:"required,numeric"`
+	CardNumber     string `json:"card_number" binding:"required,len=16,numeric"`
+	CVV            string `json:"cvv" binding:"required,len=3,numeric"`
+	ExpiryMonth    string `json:"expiry_month" binding:"required,min=1,max=2,numeric"`
+	ExpiryYear     string `json:"expiry_year" binding:"required,len=2,numeric"`
+	CardholderName string `json:"cardholder_name" binding:"required,customName"`
+}
