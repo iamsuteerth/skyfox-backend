@@ -18,7 +18,7 @@ import (
 )
 
 type AdminBookingService interface {
-	CreateAdminBooking(ctx context.Context, req request.AdminBookingRequest) (*response.AdminBookingResponse, error)
+	CreateAdminBooking(ctx context.Context, req request.AdminBookingRequest) (*response.BookingResponse, error)
 }
 
 type adminBookingService struct {
@@ -45,7 +45,7 @@ func NewAdminBookingService(
 	}
 }
 
-func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req request.AdminBookingRequest) (*response.AdminBookingResponse, error) {
+func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req request.AdminBookingRequest) (*response.BookingResponse, error) {
 	show, err := s.showRepo.FindById(ctx, req.ShowID)
 	if err != nil {
 		log.Error().Err(err).Int("showID", req.ShowID).Msg("Show not found for admin booking")
@@ -143,9 +143,11 @@ func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req reques
 		return nil, err
 	}
 
-	bookingResponse := &response.AdminBookingResponse{
+	bookingResponse := &response.BookingResponse{
 		BookingID:    booking.Id,
 		ShowID:       booking.ShowId,
+		ShowDate:     show.Date.Format("2006-01-02"),
+		ShowTime:     slot.StartTime,
 		CustomerName: customer.Name,
 		PhoneNumber:  customer.Number,
 		SeatNumbers:  req.SeatNumbers,

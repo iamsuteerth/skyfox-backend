@@ -11,7 +11,6 @@ import (
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
-	movieservice "github.com/iamsuteerth/skyfox-backend/pkg/movie-service"
 	paymentservice "github.com/iamsuteerth/skyfox-backend/pkg/payment-service"
 	"github.com/iamsuteerth/skyfox-backend/pkg/repositories"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
@@ -20,7 +19,7 @@ import (
 
 type CustomerBookingService interface {
 	InitializeBooking(ctx context.Context, username string, req request.InitializeBookingRequest) (*response.InitializeBookingResponse, error)
-	ProcessPayment(ctx context.Context, username string, req request.ProcessPaymentRequest) (*response.CustomerBookingResponse, error)
+	ProcessPayment(ctx context.Context, username string, req request.ProcessPaymentRequest) (*response.BookingResponse, error)
 }
 
 type customerBookingService struct {
@@ -30,8 +29,8 @@ type customerBookingService struct {
 	pendingBookingRepo     repositories.PendingBookingRepository
 	paymentTransactionRepo repositories.PaymentTransactionRepository
 	slotRepo               repositories.SlotRepository
+	skyCustomerRepo        repositories.SkyCustomerRepository
 	paymentService         paymentservice.PaymentService
-	movieService           movieservice.MovieService
 }
 
 func NewCustomerBookingService(
@@ -41,8 +40,8 @@ func NewCustomerBookingService(
 	pendingBookingRepo repositories.PendingBookingRepository,
 	paymentTransactionRepo repositories.PaymentTransactionRepository,
 	slotRepo repositories.SlotRepository,
+	skyCustomerRepo repositories.SkyCustomerRepository,
 	paymentService paymentservice.PaymentService,
-	movieService movieservice.MovieService,
 ) CustomerBookingService {
 	return &customerBookingService{
 		showRepo:               showRepo,
@@ -51,8 +50,8 @@ func NewCustomerBookingService(
 		pendingBookingRepo:     pendingBookingRepo,
 		paymentTransactionRepo: paymentTransactionRepo,
 		slotRepo:               slotRepo,
+		skyCustomerRepo:        skyCustomerRepo,
 		paymentService:         paymentService,
-		movieService:           movieService,
 	}
 }
 
@@ -134,7 +133,7 @@ func (s *customerBookingService) InitializeBooking(ctx context.Context, username
 		NoOfSeats:        len(req.SeatNumbers),
 		AmountPaid:       totalPrice,
 		Status:           "Pending",
-		PaymentType:      "Card", 
+		PaymentType:      "Card",
 	}
 
 	if err := s.bookingRepo.CreatePendingBooking(ctx, booking); err != nil {
@@ -168,10 +167,16 @@ func (s *customerBookingService) InitializeBooking(ctx context.Context, username
 	}, nil
 }
 
-func (s *customerBookingService) ProcessPayment(ctx context.Context, username string, req request.ProcessPaymentRequest) (*response.CustomerBookingResponse, error) {
+func (s *customerBookingService) ProcessPayment(ctx context.Context, username string, req request.ProcessPaymentRequest) (*response.BookingResponse, error) {
 	booking, err := s.bookingRepo.GetBookingById(ctx, req.BookingID)
 	if err != nil {
 		log.Error().Err(err).Int("bookingID", req.BookingID).Msg("Failed to get booking")
+		return nil, err
+	}
+
+	customer, err := s.skyCustomerRepo.FindByUsername(ctx, username)
+	if err != nil {
+		log.Error().Err(err).Str("username", username).Msg("Failed to get customer details")
 		return nil, err
 	}
 
@@ -201,6 +206,18 @@ func (s *customerBookingService) ProcessPayment(ctx context.Context, username st
 	if time.Now().After(*expirationTime) {
 		_ = s.bookingRepo.DeleteBookingsByIds(ctx, []int{req.BookingID})
 		return nil, utils.NewBadRequestError("BOOKING_EXPIRED", "This booking has expired. Please make a new booking", nil)
+	}
+
+	show, err := s.showRepo.FindById(ctx, booking.ShowId)
+	if err != nil {
+		log.Error().Err(err).Int("showID", booking.ShowId).Msg("Failed to get show details")
+		return nil, err
+	}
+
+	slot, err := s.slotRepo.GetSlotById(ctx, show.SlotId)
+	if err != nil {
+		log.Error().Err(err).Int("slotId", show.SlotId).Msg("Failed to get slot details")
+		return nil, err
 	}
 
 	expiry := fmt.Sprintf("%s/%s", req.ExpiryMonth, req.ExpiryYear)
@@ -246,34 +263,13 @@ func (s *customerBookingService) ProcessPayment(ctx context.Context, username st
 		return nil, err
 	}
 
-	show, err := s.showRepo.FindById(ctx, booking.ShowId)
-	if err != nil {
-		log.Error().Err(err).Int("showID", booking.ShowId).Msg("Failed to get show details")
-		return nil, err
-	}
-
-	slot, err := s.slotRepo.GetSlotById(ctx, show.SlotId)
-	if err != nil {
-		log.Error().Err(err).Int("slotId", show.SlotId).Msg("Failed to get slot details")
-		return nil, err
-	}
-
-	movie, err := s.movieService.GetMovieById(ctx, show.MovieId)
-	if err != nil {
-		log.Error().Err(err).Str("movieId", show.MovieId).Msg("Failed to get movie details")
-		return nil, err
-	}
-
-	if movie == nil {
-		return nil, utils.NewInternalServerError("MOVIE_NOT_FOUND", "Movie information not found", nil)
-	}
-
-	response := &response.CustomerBookingResponse{
+	response := &response.BookingResponse{
 		BookingID:     booking.Id,
 		ShowID:        booking.ShowId,
 		ShowDate:      show.Date.Format("2006-01-02"),
 		ShowTime:      slot.StartTime,
-		Movie:         *movie,
+		CustomerName:  customer.Name,
+		PhoneNumber:   customer.Number,
 		SeatNumbers:   seatNumbers,
 		AmountPaid:    booking.AmountPaid,
 		PaymentType:   "Card",
@@ -284,7 +280,6 @@ func (s *customerBookingService) ProcessPayment(ctx context.Context, username st
 
 	return response, nil
 }
-
 
 func (s *customerBookingService) monitorBookingExpiration(bookingId int, expirationTime time.Time) {
 	ctx := context.Background()

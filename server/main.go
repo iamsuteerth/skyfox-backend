@@ -64,7 +64,7 @@ func main() {
 	adminStaffProfileService := services.NewAdminStaffProfileService(userRepository, staffRepository)
 	bookingService := services.NewBookingService(showRepository)
 	adminBookingService := services.NewAdminBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, adminBookedCustomerRepository, slotRepository)
-	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, paymentService, movieService)
+	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, skyCustomerRepository, paymentService)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
