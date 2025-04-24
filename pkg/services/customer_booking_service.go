@@ -56,6 +56,10 @@ func NewCustomerBookingService(
 }
 
 func (s *customerBookingService) InitializeBooking(ctx context.Context, username string, req request.InitializeBookingRequest) (*response.InitializeBookingResponse, error) {
+	if len(req.SeatNumbers) > constants.MAX_NO_OF_SEATS_PER_BOOKING {
+		return nil, utils.NewBadRequestError("TOO_MANY_SEATS", fmt.Sprintf("Maximum %d seats can be booked per booking", constants.MAX_NO_OF_SEATS_PER_BOOKING), nil)
+	}
+	
 	show, err := s.showRepo.FindById(ctx, req.ShowID)
 	if err != nil {
 		log.Error().Err(err).Int("showID", req.ShowID).Msg("Show not found for booking initialization")

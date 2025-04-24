@@ -1136,6 +1136,15 @@
     ]
   }
   ```
+- **Error Response (400 Bad Request) - Too Many Seats In a Booking**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "TOO_MANY_SEATS",
+    "message": "Maximum 10 seats can be booked per booking",
+    "request_id": "5fce2cc9-eb5e-4c01-8f4e-8c818431dbb7"
+  } 
+  ```
 - **Error Response (400 Bad Request) - Price Mismatch**:
   ```json
   {
@@ -1233,6 +1242,15 @@
     "code": "INVALID_REQUEST",
     "message": "Invalid request data",
     "request_id": "bff152e2-3e9a-479f-949a-a184b72adc40"
+  }
+  ```
+- **Error Response (400 Bad Request) - Too Many Seats In a Booking**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "TOO_MANY_SEATS",
+    "message": "Maximum 10 seats can be booked per booking",
+    "request_id": "22f9a1b5-75c5-4e49-88ff-bc10d033b933"
   }
   ```
 - **Error Response (400 Bad Request) - Missing Fields**:

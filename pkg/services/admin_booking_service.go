@@ -46,6 +46,10 @@ func NewAdminBookingService(
 }
 
 func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req request.AdminBookingRequest) (*response.BookingResponse, error) {
+	if len(req.SeatNumbers) > constants.MAX_NO_OF_SEATS_PER_BOOKING {
+		return nil, utils.NewBadRequestError("TOO_MANY_SEATS", fmt.Sprintf("Maximum %d seats can be booked per booking", constants.MAX_NO_OF_SEATS_PER_BOOKING), nil)
+	}
+
 	show, err := s.showRepo.FindById(ctx, req.ShowID)
 	if err != nil {
 		log.Error().Err(err).Int("showID", req.ShowID).Msg("Show not found for admin booking")
