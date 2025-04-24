@@ -154,3 +154,97 @@ func (bc *BookingController) ProcessPayment(ctx *gin.Context) {
 
 	utils.SendOKResponse(ctx, "Payment processed successfully", requestID, confirmedBooking)
 }
+
+func (bc *BookingController) GetQRCode(ctx *gin.Context) {
+    requestID := utils.GetRequestID(ctx)
+    
+    bookingIDStr := ctx.Param("id")
+    bookingID, err := strconv.Atoi(bookingIDStr)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_BOOKING_ID", "Invalid booking ID format", err), requestID)
+        return
+    }
+    
+    claims, err := security.GetTokenClaims(ctx)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify user credentials", err), requestID)
+        return
+    }
+    
+    role := claims["role"].(string)
+    username := claims["username"].(string)
+    
+    booking, err := bc.bookingService.GetBookingById(ctx.Request.Context(), bookingID)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, err, requestID)
+        return
+    }
+    
+    if role != "admin" && role != "staff" {
+        if booking.CustomerUsername == nil || *booking.CustomerUsername != username {
+            utils.HandleErrorResponse(ctx, utils.NewForbiddenError("FORBIDDEN", "Access denied to this booking", nil), requestID)
+            return
+        }
+    }
+    
+    qrCode, err := bc.bookingService.GenerateQRCode(ctx.Request.Context(), bookingID)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, err, requestID)
+        return
+    }
+    
+    response := map[string]interface{}{
+        "qr_code": qrCode,
+        "mime_type": "image/png",
+        "encoding": "base64",
+    }
+    
+    utils.SendOKResponse(ctx, "QR code generated successfully", requestID, response)
+}
+
+func (bc *BookingController) GetPDF(ctx *gin.Context) {
+    requestID := utils.GetRequestID(ctx)
+    
+    bookingIDStr := ctx.Param("id")
+    bookingID, err := strconv.Atoi(bookingIDStr)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_BOOKING_ID", "Invalid booking ID format", err), requestID)
+        return
+    }
+    
+    claims, err := security.GetTokenClaims(ctx)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify user credentials", err), requestID)
+        return
+    }
+    
+    role := claims["role"].(string)
+    username := claims["username"].(string)
+    
+    booking, err := bc.bookingService.GetBookingById(ctx.Request.Context(), bookingID)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, err, requestID)
+        return
+    }
+    
+    if role != "admin" && role != "staff" {
+        if booking.CustomerUsername == nil || *booking.CustomerUsername != username {
+            utils.HandleErrorResponse(ctx, utils.NewForbiddenError("FORBIDDEN", "Access denied to this booking", nil), requestID)
+            return
+        }
+    }
+    
+    pdf, err := bc.bookingService.GeneratePDF(ctx.Request.Context(), bookingID)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, err, requestID)
+        return
+    }
+    
+    response := map[string]interface{}{
+        "pdf": pdf,
+        "mime_type": "application/pdf",
+        "encoding": "base64",
+    }
+    
+    utils.SendOKResponse(ctx, "PDF ticket generated successfully", requestID, response)
+}

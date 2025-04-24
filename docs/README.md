@@ -1445,3 +1445,107 @@
     "request_id": "896e64d8-cbba-4aed-acc2-ae17f1f8348f"
   }
   ```
+
+### Get QR Code
+- **URL**: `/booking/:id/qr`
+- **Method**: `GET`
+- **Authentication**: Required
+- **Parameters**:
+  - `id`: Booking ID (must be a valid integer)
+- **Description**: Generates and returns a QR code for a booking.
+- **Notes**:
+  - Admin and staff can access QR codes for any booking
+  - Customers can only access QR codes for their own bookings
+  - QR code contains essential booking information for verification
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "QR code generated successfully",
+    "request_id": "f02b2ef2-e849-4d7a-b4fd-7c212048c56d",
+    "status": "SUCCESS",
+    "data": {
+        "encoding": "base64",
+        "mime_type": "image/png",
+        "qr_code": "Base64 Content"
+    }
+  }
+  ```
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_BOOKING_ID",
+    "message": "Invalid booking ID format",
+    "request_id": "413c5464-17b6-435f-b4f3-350525f0fac3"
+  }
+  ```
+- **Error Response (404 Not Found)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "BOOKING_NOT_FOUND",
+    "message": "Booking not found",
+    "request_id": "08e35df2-25a4-422b-b66e-2114e72aa288"
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied to this booking",
+    "request_id": "3987dfd9-7fca-4a0c-8a9a-847e1dc606ff"
+  }
+  ```
+
+### Get PDF Ticket
+- **URL**: `/booking/:id/pdf`
+- **Method**: `GET`
+- **Authentication**: Required
+- **Parameters**:
+  - `id`: Booking ID (must be a valid integer)
+- **Description**: Generates and returns a PDF ticket for a booking.
+- **Notes**:
+  - Admin and staff can access PDF tickets for any booking
+  - Customers can only access PDF tickets for their own bookings
+  - PDF includes booking details, QR code, and theater information
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "PDF ticket generated successfully",
+    "request_id": "e935191f-5883-492c-86b7-a6adb19008aa",
+    "status": "SUCCESS",
+    "data": {
+        "encoding": "base64",
+        "mime_type": "application/pdf",
+        "pdf": "Base64 Content"
+    }
+  }
+  ```
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_BOOKING_ID",
+    "message": "Invalid booking ID format",
+    "request_id": "413c5464-17b6-435f-b4f3-350525f0fac3"
+  }
+  ```
+- **Error Response (404 Not Found)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "BOOKING_NOT_FOUND",
+    "message": "Booking not found",
+    "request_id": "08e35df2-25a4-422b-b66e-2114e72aa288"
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied to this booking",
+    "request_id": "3987dfd9-7fca-4a0c-8a9a-847e1dc606ff"
+  }
+  ```

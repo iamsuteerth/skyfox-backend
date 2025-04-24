@@ -62,7 +62,7 @@ func main() {
 	showService := services.NewShowService(showRepository, bookingRepository, movieService, slotRepository)
 	slotService := services.NewSlotService(slotRepository)
 	adminStaffProfileService := services.NewAdminStaffProfileService(userRepository, staffRepository)
-	bookingService := services.NewBookingService(showRepository)
+	bookingService := services.NewBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, slotRepository, adminBookedCustomerRepository, skyCustomerRepository, movieService)
 	adminBookingService := services.NewAdminBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, adminBookedCustomerRepository, slotRepository)
 	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, skyCustomerRepository, paymentService)
 
@@ -132,6 +132,11 @@ func main() {
 		{
 			showAPIs.GET("", showController.GetShows)                                    // Get Shows (RBAC-based)
 			showAPIs.GET(constants.BookingSeatMapEndPoint, bookingController.GetSeatMap) // Get Seat Map Data
+		}
+		bookingHelpers := authAPIs.Group(constants.BookingIdEndpoint)
+		{
+			bookingHelpers.GET(constants.QREndpoint, bookingController.GetQRCode) // Get QR Code Image as Base64
+			bookingHelpers.GET(constants.PDFEndpoint, bookingController.GetPDF)   // // Get PDF as Base64
 		}
 	}
 

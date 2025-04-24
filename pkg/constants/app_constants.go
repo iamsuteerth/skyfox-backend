@@ -27,6 +27,9 @@ const (
 	GetBookingsEndpoint           = "/bookings"
 	CreateCustomerBookingEndpoint = "/create-customer-booking"
 	BookingEndpoint               = "/booking"
+	BookingIdEndpoint             = "/booking/:id"
+	QREndpoint                    = "/qr"
+	PDFEndpoint                   = "/pdf"
 	BookingInitializeEndpoint     = "/initialize"
 	PaymentEndpoint               = "/payment"
 )
