@@ -155,6 +155,37 @@ func (bc *BookingController) ProcessPayment(ctx *gin.Context) {
 	utils.SendOKResponse(ctx, "Payment processed successfully", requestID, confirmedBooking)
 }
 
+func (bc *BookingController) CancelBooking(ctx *gin.Context) {
+    requestID := utils.GetRequestID(ctx)
+    bookingIDStr := ctx.Param("id")
+    bookingID, err := strconv.Atoi(bookingIDStr)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, 
+            utils.NewBadRequestError("INVALID_BOOKING_ID", "Booking ID must be a valid integer", err),
+            requestID)
+        return
+    }
+    
+    claims, err := security.GetTokenClaims(ctx)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, 
+            utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify user credentials", err), 
+            requestID)
+        return
+    }
+    
+    username, _ := claims["username"].(string)
+    
+    err = bc.customerBookingService.CancelPendingBooking(ctx.Request.Context(), username, bookingID)
+    if err != nil {
+        log.Error().Err(err).Int("bookingID", bookingID).Str("username", username).Msg("Failed to cancel booking")
+        utils.HandleErrorResponse(ctx, err, requestID)
+        return
+    }
+    
+    utils.SendOKResponse(ctx, "Booking cancelled successfully", requestID, nil)
+} 
+
 func (bc *BookingController) GetQRCode(ctx *gin.Context) {
     requestID := utils.GetRequestID(ctx)
     

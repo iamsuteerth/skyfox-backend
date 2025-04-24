@@ -20,6 +20,7 @@ import (
 type CustomerBookingService interface {
 	InitializeBooking(ctx context.Context, username string, req request.InitializeBookingRequest) (*response.InitializeBookingResponse, error)
 	ProcessPayment(ctx context.Context, username string, req request.ProcessPaymentRequest) (*response.BookingResponse, error)
+	CancelPendingBooking(ctx context.Context, username string, bookingID int) error
 }
 
 type customerBookingService struct {
@@ -283,6 +284,39 @@ func (s *customerBookingService) ProcessPayment(ctx context.Context, username st
 	}
 
 	return response, nil
+}
+
+func (s *customerBookingService) CancelPendingBooking(ctx context.Context, username string, bookingID int) error {
+    booking, err := s.bookingRepo.GetBookingById(ctx, bookingID)
+    if err != nil {
+        log.Error().Err(err).Int("bookingID", bookingID).Msg("Failed to get booking for cancellation")
+        return err
+    }
+    
+    if booking == nil {
+        return utils.NewNotFoundError("BOOKING_NOT_FOUND", "Booking not found", nil)
+    }
+    
+    if booking.CustomerUsername == nil || *booking.CustomerUsername != username {
+        log.Warn().Str("requestedBy", username).Str("owner", *booking.CustomerUsername).Int("bookingID", bookingID).Msg("Unauthorized booking cancellation attempt")
+        return utils.NewForbiddenError("UNAUTHORIZED_ACCESS", "You don't have permission to access this booking", nil)
+    }
+    
+    if booking.Status != "Pending" {
+        return utils.NewBadRequestError("INVALID_BOOKING_STATUS", "Only pending bookings can be cancelled", nil)
+    }
+    
+    if err := s.bookingRepo.DeleteBookingsByIds(ctx, []int{bookingID}); err != nil {
+        log.Error().Err(err).Int("bookingID", bookingID).Msg("Failed to delete booking during cancellation")
+        return err
+    }
+    
+    if err := s.pendingBookingRepo.RemoveTracker(ctx, bookingID); err != nil {
+        log.Warn().Err(err).Int("bookingID", bookingID).Msg("Failed to remove pending tracker during cancellation")
+    }
+    
+    log.Info().Int("bookingID", bookingID).Str("username", username).Msg("Booking successfully cancelled")
+    return nil
 }
 
 func (s *customerBookingService) monitorBookingExpiration(bookingId int, expirationTime time.Time) {

@@ -1464,6 +1464,77 @@
   }
   ```
 
+### Cancel Pending Booking
+- **URL**: `/customer/booking/:id/cancel`
+- **Method**: `DELETE`
+- **Authentication**: Required (Customer only)
+- **Parameters**:
+  - `id`: Booking ID (must be a valid integer)
+- **Description**: Cancels a pending booking, releases reserved seats, and terminates the associated monitoring goroutine.
+- **Notes**:
+  - Only the customer who created the booking can cancel it
+  - Only bookings with "Pending" status can be cancelled
+  - The endpoint is typically triggered when a user refreshes the page, closes the dialog, or explicitly cancels a transaction
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Booking cancelled successfully",
+    "request_id": "95950d5d-2571-4ca8-adb2-a66a444415a8",
+    "status": "SUCCESS"
+  }
+  ```
+
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_BOOKING_ID",
+    "message": "Booking ID must be a valid integer",
+    "request_id": "66301062-8152-4a17-9093-3bde55d147c3"
+  }
+  ```
+
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "1290b3cd-edf0-474c-adae-3a0855f08795"
+  }
+  ```
+
+- **Error Response (403 Forbidden) - Role Restriction**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Customer role required",
+    "request_id": "6b9308b4-aff0-4aa3-bdfd-828b7ad1d3f8"
+  }
+  ```
+
+- **Error Response (403 Forbidden) - Unauthorized Access**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "UNAUTHORIZED_ACCESS",
+    "message": "You don't have permission to access this booking",
+    "request_id": "3e3668ea-3068-4bb3-a454-664783d1d55b"
+  }
+  ```
+
+- **Error Response (404 Not Found)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "BOOKING_NOT_FOUND",
+    "message": "Booking not found",
+    "request_id": "ec213609-f4ae-491c-a9f9-0b083a68fe2f"
+  }
+  ```
+
 ### Get QR Code
 - **URL**: `/booking/:id/qr`
 - **Method**: `GET`

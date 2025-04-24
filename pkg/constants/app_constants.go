@@ -31,6 +31,7 @@ const (
 	QREndpoint                    = "/qr"
 	PDFEndpoint                   = "/pdf"
 	BookingInitializeEndpoint     = "/initialize"
+	CancelBookingEndpoint         = "/:id/cancel"
 	PaymentEndpoint               = "/payment"
 )
 
