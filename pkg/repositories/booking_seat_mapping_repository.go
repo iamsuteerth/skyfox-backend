@@ -57,7 +57,9 @@ func (repo *bookingSeatMappingRepository) GetSeatsByBookingId(ctx context.Contex
 		SELECT seat_number
 		FROM booking_seat_mapping
 		WHERE booking_id = $1
-		ORDER BY seat_number
+		ORDER BY
+		  regexp_replace(seat_number, '[0-9]+', '', 'g'),
+		  CAST(regexp_replace(seat_number, '[^0-9]+', '', 'g') AS INTEGER)
 	`
 
 	rows, err := repo.db.Query(ctx, query, bookingId)
