@@ -97,7 +97,7 @@ func (repo *bookingRepository) BookedSeatsByShow(ctx context.Context, showId int
 	query := `
 		SELECT COALESCE(SUM(no_of_seats), 0)
 		FROM booking
-		WHERE show_id = $1 AND status IN ('Confirmed', 'CheckedIn')
+		WHERE show_id = $1 AND status IN ('Confirmed', 'CheckedIn', 'Pending')
 	`
 
 	var count int

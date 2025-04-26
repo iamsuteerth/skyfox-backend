@@ -7,7 +7,7 @@ type PaymentServiceConfig struct {
 
 func GetPaymentServiceConfig() PaymentServiceConfig {
 	return PaymentServiceConfig{
-		BaseURL: getEnvOrDefault("PAYMENT_SERVICE_URL", "http://localhost:8082"),
-		APIKey:  getEnvOrDefault("PAYMENT_SERVICE_API_KEY", ""),
+		BaseURL: getEnvOrDefault("PAYMENT_GATEWAY_URL", "http://localhost:8082"),
+		APIKey:  getEnvOrDefault("PAYMENT_GATEWAY_API_KEY", ""),
 	}
 }
