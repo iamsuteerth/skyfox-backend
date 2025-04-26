@@ -100,7 +100,6 @@ func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req reques
 		log.Error().Err(err).Int("showID", req.ShowID).Strs("seatNumbers", req.SeatNumbers).Msg("Failed to calculate expected price")
 		return nil, err
 	}
-	fmt.Printf("Expected Price %f Actual Price %f", expectedPrice, req.AmountPaid)
 
 	if math.Abs(req.AmountPaid-expectedPrice) > 0.01 {
 		log.Warn().Float64("submitted", req.AmountPaid).Float64("expected", expectedPrice).Msg("Amount mismatch")

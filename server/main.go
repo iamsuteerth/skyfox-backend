@@ -151,7 +151,7 @@ func main() {
 		{
 			booking.POST(constants.BookingInitializeEndpoint, bookingController.InitializeCustomerBooking) // Initialize Booking
 			booking.POST(constants.PaymentEndpoint, bookingController.ProcessPayment)                      // Handle Payment for Booking
-			booking.POST(constants.CancelBookingEndpoint, bookingController.CancelBooking)                 // Prematurely Cancel Pending Booking
+			booking.DELETE(constants.CancelBookingEndpoint, bookingController.CancelBooking)               // Prematurely Cancel Pending Booking
 		}
 	}
 
