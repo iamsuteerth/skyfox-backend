@@ -9,7 +9,8 @@ const (
 	VerifySecurityAnswerEndPoint = "/verify-security-answer"
 	ForgotPasswordEndPoint       = "/forgot-password"
 	// Shows Page
-	ShowEndPoint           = "/shows"
+	ShowsEndPoint          = "/shows"
+	ShowEndPoint           = "show"
 	SlotEndPoint           = "/slot"
 	MoviesEndPoint         = "/movies"
 	BookingSeatMapEndPoint = "/:show_id/seat-map"

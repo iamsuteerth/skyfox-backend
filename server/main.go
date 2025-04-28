@@ -130,11 +130,16 @@ func main() {
 	authAPIs := authRouter.Group("")
 	{
 		authAPIs.POST(constants.ChangePasswordEndPoint, passwordResetController.ChangePassword) // Change Password for User
-		
+
+		showsAPIs := authAPIs.Group(constants.ShowsEndPoint)
+		{
+			showsAPIs.GET("", showController.GetShows)                                    // Get Shows (RBAC-based)
+			showsAPIs.GET(constants.BookingSeatMapEndPoint, bookingController.GetSeatMap) // Get Seat Map Data
+		}
+
 		showAPIs := authAPIs.Group(constants.ShowEndPoint)
 		{
-			showAPIs.GET("", showController.GetShows)                                    // Get Shows (RBAC-based)
-			showAPIs.GET(constants.BookingSeatMapEndPoint, bookingController.GetSeatMap) // Get Seat Map Data
+			showAPIs.GET("", showController.GetShowById)
 		}
 
 		bookingHelpers := authAPIs.Group(constants.BookingIdEndpoint)
@@ -187,7 +192,7 @@ func main() {
 		{
 			admin.GET(constants.ProfileEndPoint, adminStaffController.GetAdminProfile) // Get Admin Profile
 		}
-		
+
 		staff := adminStaffAPIs.Group(constants.StaffEndPoint)
 		{
 			staff.GET(constants.ProfileEndPoint, adminStaffController.GetStaffProfile) // Get Staff Profile

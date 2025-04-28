@@ -418,6 +418,71 @@
   }
   ```
 
+### Get Show By ID
+
+- **URL**: `/show`
+- **Method**: `GET`
+- **Authentication**: Required
+- **Query Parameters**:
+  - `id`: Show ID (must be a valid integer)
+- **Description**: Retrieves detailed information for a specific show, including movie details, slot information, show cost, and available seats.
+- **Success Response (200 OK)**
+  ```json
+  {
+    "message": "Show fetched successfully",
+    "request_id": "1319fff8-1d27-46c3-a062-5fd3ae61da18",
+    "status": "SUCCESS",
+    "data": {
+      "movie": {
+        "movieId": "tt1833116",
+        "name": "The Informer",
+        "duration": "1h53m0s",
+        "plot": "An ex-convict working undercover intentionally gets himself incarcerated again in order to infiltrate the mob at a maximum security prison.",
+        "imdbRating": "6.5",
+        "moviePoster": "https://m.media-amazon.com/images/M/MV5BN2YyYTgxYmYtNjg3My00YzI4LWJlZWItYmZhZGEyYTYxNWY3XkEyXkFqcGdeQXVyMjAwNTYzNDg@._V1_SX300.jpg",
+        "genre": "Crime, Drama, Thriller"
+      },
+      "slot": {
+        "id": 3,
+        "name": "Evening",
+        "startTime": "17:00:00.000000",
+        "endTime": "20:00:00.000000"
+      },
+      "id": 27,
+      "date": "2025-04-27T00:00:00Z",
+      "cost": 245.21,
+      "availableseats": 99
+    }
+  }
+  ```
+- **Error Response (400 Bad Request)**
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_SHOW_ID",
+    "message": "Show id must be a valid integer",
+    "request_id": "b327950f-ba86-432d-802f-c21256111cda"
+  }
+  ```
+- **Error Response (401 Unauthorized)**
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "4dc04dae-fb48-4eaf-9499-9d75e1fdbd35"
+  }
+  ```
+- **Error Response (404 Not Found)**
+  ```json
+  {
+    "status": "ERROR",
+    "code": "SHOW_NOT_FOUND",
+    "message": "Show not found for id: 100",
+    "request_id": "1e9fa455-17a0-4541-af8d-8d71ab33229b"
+  }
+  ```
+
 ### Get Movies
 - **URL**: `/shows/movies`
 - **Method**: `GET`

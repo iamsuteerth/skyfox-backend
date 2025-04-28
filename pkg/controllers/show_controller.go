@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -89,6 +90,43 @@ func (sh *ShowController) GetShows(ctx *gin.Context) {
 	}
 
 	utils.SendOKResponse(ctx, "Shows retrieved successfully", requestID, showResponses)
+}
+
+func (sh *ShowController) GetShowById(ctx *gin.Context) {
+    requestID := utils.GetRequestID(ctx)
+    showIDStr := ctx.Query("id")
+    showID, err := strconv.Atoi(showIDStr)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, utils.NewBadRequestError(
+            "INVALID_SHOW_ID", "Show id must be a valid integer", err), requestID)
+        return
+    }
+
+    show, err := sh.showService.GetShowById(ctx.Request.Context(), showID)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, err, requestID)
+        return
+    }
+
+    movie, err := sh.showService.GetMovieById(ctx.Request.Context(), show.MovieId)
+    if err != nil || movie == nil {
+        utils.HandleErrorResponse(ctx, utils.NewInternalServerError(
+            "MOVIE_NOT_FOUND", "Movie not found for this show", err), requestID)
+        return
+    }
+
+    availableSeats := sh.showService.AvailableSeats(ctx.Request.Context(), show.Id)
+
+    showResponse := response.ShowResponse{
+        Movie:          *movie,
+        Slot:           show.Slot,
+        Id:             show.Id,
+        Date:           show.Date,
+        Cost:           show.Cost,
+        AvailableSeats: availableSeats,
+    }
+
+    utils.SendOKResponse(ctx, "Show fetched successfully", requestID, showResponse)
 }
 
 func (sh *ShowController) GetMovies(ctx *gin.Context) {

@@ -18,6 +18,7 @@ import (
 
 type ShowService interface {
 	GetShows(ctx context.Context, date time.Time) ([]models.Show, error)
+	GetShowById(ctx context.Context, id int) (*models.Show, error)
 	GetMovieById(ctx context.Context, id string) (*models.Movie, error)
 	GetMovies(ctx context.Context) ([]*models.Movie, error)
 	CreateShow(ctx context.Context, showRequest request.ShowRequest) (*models.Show, error)
@@ -52,6 +53,15 @@ func (s *showService) GetShows(ctx context.Context, date time.Time) ([]models.Sh
 		return nil, err
 	}
 	return shows, nil
+}
+
+func (s *showService) GetShowById(ctx context.Context, id int) (*models.Show, error) {
+	show, err := s.showRepo.FindById(ctx, id)
+	if err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("Failed to get shows for id : %d", id))
+		return nil, err
+	}
+	return show, nil
 }
 
 func (s *showService) GetMovies(ctx context.Context) ([]*models.Movie, error) {
