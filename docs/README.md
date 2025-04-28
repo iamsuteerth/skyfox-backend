@@ -1638,3 +1638,121 @@
     "request_id": "3987dfd9-7fca-4a0c-8a9a-847e1dc606ff"
   }
   ```
+
+### Get All Bookings for Customer
+- **URL**: `/customer/bookings`
+- **Method**: `GET`
+- **Authentication**: Required (Customer role only)
+- **Description**: Retrieves all bookings made by the authenticated customer, ordered by booking time (latest first).
+- **Success Response (200 OK) - Multiple Bookings**
+  ```json
+  {
+      "message": "Bookings fetched successfully",
+      "request_id": "a727277a-b0bc-4fb3-bf84-d8b65b8542b6",
+      "status": "SUCCESS",
+      "data": [
+          {
+              "booking_id": 54,
+              "show_id": 25,
+              "show_date": "2025-04-27",
+              "show_time": "09:00:00.000000",
+              "seat_numbers": ["E6"],
+              "amount_paid": 297.34,
+              "payment_type": "Card",
+              "booking_time": "2025-04-26T23:56:20.062442+05:30",
+              "status": "Confirmed"
+          },
+          {
+              "booking_id": 11,
+              "show_id": 22,
+              "show_date": "2025-04-26",
+              "show_time": "13:00:00.000000",
+              "seat_numbers": ["A1","J1"],
+              "amount_paid": 553.3,
+              "payment_type": "Card",
+              "booking_time": "2025-04-23T16:57:41.680409+05:30",
+              "status": "Confirmed"
+          }
+          // ...more bookings
+      ]
+  }
+  ```
+- **Success Response (200 OK) – No Bookings**
+  ```json
+  {
+      "message": "Bookings fetched successfully",
+      "request_id": "54959558-4f68-49a0-998e-d0077b723638",
+      "status": "SUCCESS",
+      "data": []
+  }
+  ```
+- **Error Response (401 Unauthorized)**
+  ```json
+  {
+      "status": "ERROR",
+      "code": "INVALID_TOKEN",
+      "message": "Unauthorized",
+      "request_id": "74153dac-fb26-4370-b718-bcf01df71b1b"
+  }
+  ```
+- **Error Response (403 Forbidden)**
+  ```json
+  {
+      "status": "ERROR",
+      "code": "FORBIDDEN",
+      "message": "Access denied. Customer role required",
+      "request_id": "e9b5a26f-6bf1-4a5d-a04d-2a64ab837374"
+  }
+  ```
+
+### Get Latest Booking for Customer
+- **URL**: `/customer/bookings/latest`
+- **Method**: `GET`
+- **Authentication**: Required (Customer role only)
+- **Description**: Retrieves the most recent booking made by the authenticated customer.
+- **Success Response (200 OK) – With Booking**
+  ```json
+  {
+      "message": "Latest booking fetched successfully",
+      "request_id": "a69b2734-0222-4f5d-9688-6fa125208cb5",
+      "status": "SUCCESS",
+      "data": {
+          "booking_id": 48,
+          "show_id": 25,
+          "show_date": "2025-04-27",
+          "show_time": "09:00:00.000000",
+          "seat_numbers": ["F4"],
+          "amount_paid": 447.34,
+          "payment_type": "Card",
+          "booking_time": "2025-04-26T23:34:44.643438+05:30",
+          "status": "Confirmed"
+      }
+  }
+  ```
+- **Success Response (200 OK) – No Booking Found**
+  ```json
+  {
+      "message": "Latest booking fetched successfully",
+      "request_id": "77fb3ba2-33e1-4fbb-bb3b-8cfdf112a4b5",
+      "status": "SUCCESS",
+      "data": null
+  }
+  ```
+- **Error Response (401 Unauthorized)**
+  ```json
+  {
+      "status": "ERROR",
+      "code": "INVALID_TOKEN",
+      "message": "Unauthorized",
+      "request_id": "9f3ec42d-480a-4693-977d-97ba4332969b"
+  }
+  ```
+- **Error Response (403 Forbidden)**
+  ```json
+  {
+      "status": "ERROR",
+      "code": "FORBIDDEN",
+      "message": "Access denied. Customer role required",
+      "request_id": "e9b5a26f-6bf1-4a5d-a04d-2a64ab837374"
+  }
+  ```

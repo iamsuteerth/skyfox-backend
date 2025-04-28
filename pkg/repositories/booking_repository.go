@@ -16,9 +16,9 @@ type BookingRepository interface {
 	BookedSeatsByShow(ctx context.Context, showId int) int
 	CreatePendingBooking(ctx context.Context, booking *models.Booking) error
 	UpdateBookingStatus(ctx context.Context, bookingID int, status string) error
-	// GetBookingsByUsername(ctx context.Context, username string) ([]models.Booking, error)
-	// GetLatestBookingByUsername(ctx context.Context, username string) (*models.Booking, error)
 	DeleteBookingsByIds(ctx context.Context, bookingIds []int) error
+	FindByCustomerUsername(ctx context.Context, username string) ([]*models.Booking, error)
+    FindLatestByCustomerUsername(ctx context.Context, username string) (*models.Booking, error)
 }
 
 type bookingRepository struct {
@@ -174,4 +174,75 @@ func (repo *bookingRepository) DeleteBookingsByIds(ctx context.Context, bookingI
 	}
 
 	return nil
+}
+
+func (repo *bookingRepository) FindByCustomerUsername(ctx context.Context, username string) ([]*models.Booking, error) {
+    const query = `
+        SELECT id, show_id, customer_id, customer_username, amount_paid, payment_type, status, booking_time
+        FROM booking
+        WHERE customer_username = $1
+        ORDER BY booking_time DESC
+    `
+    rows, err := repo.db.Query(ctx, query, username)
+    if err != nil {
+        log.Error().Err(err).Msg("Failed to query bookings for given username")
+        return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to retrieve bookings", err)
+    }
+    defer rows.Close()
+
+    var bookings []*models.Booking
+    for rows.Next() {
+        var booking models.Booking
+        err := rows.Scan(
+            &booking.Id,
+            &booking.ShowId,
+            &booking.CustomerId,
+            &booking.CustomerUsername,
+            &booking.AmountPaid,
+            &booking.PaymentType,
+            &booking.Status,
+            &booking.BookingTime,
+        )
+        if err != nil {
+            log.Error().Err(err).Msg("Error scanning booking row")
+            return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to scan booking data", err)
+        }
+        bookings = append(bookings, &booking)
+    }
+
+    if err := rows.Err(); err != nil {
+        log.Error().Err(err).Msg("Error iterating over booking rows")
+        return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to iterate over bookings", err)
+    }
+
+    return bookings, nil
+}
+
+func (repo *bookingRepository) FindLatestByCustomerUsername(ctx context.Context, username string) (*models.Booking, error) {
+    const query = `
+        SELECT id, show_id, customer_id, customer_username, amount_paid, payment_type, status, booking_time
+        FROM booking
+        WHERE customer_username = $1
+        ORDER BY booking_time DESC
+        LIMIT 1
+    `
+    var booking models.Booking
+    err := repo.db.QueryRow(ctx, query, username).Scan(
+        &booking.Id,
+        &booking.ShowId,
+        &booking.CustomerId,
+        &booking.CustomerUsername,
+        &booking.AmountPaid,
+        &booking.PaymentType,
+        &booking.Status,
+        &booking.BookingTime,
+    )
+    if err == pgx.ErrNoRows {
+        return nil, nil
+    }
+    if err != nil {
+        log.Error().Err(err).Msg("Failed to query latest booking for given username")
+        return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to retrieve latest booking", err)
+    }
+    return &booking, nil
 }

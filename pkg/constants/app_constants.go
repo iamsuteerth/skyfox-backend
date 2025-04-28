@@ -24,7 +24,8 @@ const (
 	UpdateProfileEndPoint      = "/update-profile"
 	UpdateProfileImageEndPoint = "/update-profile-image"
 	// Booking Related Endpoints
-	GetBookingsEndpoint           = "/bookings"
+	BookingsEndpoint              = "/bookings"
+	LatestBookingsEndpoint        = "/latest"
 	CreateCustomerBookingEndpoint = "/create-customer-booking"
 	BookingEndpoint               = "/booking"
 	BookingIdEndpoint             = "/booking/:id"

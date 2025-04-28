@@ -113,10 +113,12 @@ func main() {
 			login.POST(constants.LoginEndPoint, authController.Login)                            // Login
 			login.POST(constants.ForgotPasswordEndPoint, passwordResetController.ForgotPassword) // Forgot Password
 		}
+
 		signup := noAuthAPIs.Group("")
 		{
 			signup.POST(constants.SkyCustomerSignUpEndPoint, skyCustomerController.Signup) // Customer Signup
 		}
+
 		securityQuestions := noAuthAPIs.Group(constants.SecurityQuestionsEndPoint)
 		{
 			securityQuestions.GET("", securityQuestionController.GetSecurityQuestions)                                      // Get all Security Questions
@@ -128,11 +130,13 @@ func main() {
 	authAPIs := authRouter.Group("")
 	{
 		authAPIs.POST(constants.ChangePasswordEndPoint, passwordResetController.ChangePassword) // Change Password for User
+		
 		showAPIs := authAPIs.Group(constants.ShowEndPoint)
 		{
 			showAPIs.GET("", showController.GetShows)                                    // Get Shows (RBAC-based)
 			showAPIs.GET(constants.BookingSeatMapEndPoint, bookingController.GetSeatMap) // Get Seat Map Data
 		}
+
 		bookingHelpers := authAPIs.Group(constants.BookingIdEndpoint)
 		{
 			bookingHelpers.GET(constants.QREndpoint, bookingController.GetQRCode) // Get QR Code Image as Base64
@@ -153,6 +157,12 @@ func main() {
 			booking.POST(constants.PaymentEndpoint, bookingController.ProcessPayment)                      // Handle Payment for Booking
 			booking.DELETE(constants.CancelBookingEndpoint, bookingController.CancelBooking)               // Prematurely Cancel Pending Booking
 		}
+
+		bookings := customerAPIs.Group(constants.BookingsEndpoint)
+		{
+			bookings.GET("", bookingController.GetCustomerBookings)                                    // Get all customer bookings
+			bookings.GET(constants.LatestBookingsEndpoint, bookingController.GetCustomerLatestBooking) // Get latest customer booking
+		}
 	}
 
 	adminAPIs := adminRouter.Group("")
@@ -164,6 +174,7 @@ func main() {
 			showCreation.GET(constants.MoviesEndPoint, showController.GetMovies) // Get Movies for Show creation
 			showCreation.POST("", showController.CreateShow)                     // Create a Show
 		}
+
 		bookingAPIs := adminAPIs.Group(constants.AdminEndPoint)
 		{
 			bookingAPIs.POST(constants.CreateCustomerBookingEndpoint, bookingController.CreateAdminBooking) // Create Booking Through Admin
@@ -176,6 +187,7 @@ func main() {
 		{
 			admin.GET(constants.ProfileEndPoint, adminStaffController.GetAdminProfile) // Get Admin Profile
 		}
+		
 		staff := adminStaffAPIs.Group(constants.StaffEndPoint)
 		{
 			staff.GET(constants.ProfileEndPoint, adminStaffController.GetStaffProfile) // Get Staff Profile

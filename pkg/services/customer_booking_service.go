@@ -21,6 +21,8 @@ type CustomerBookingService interface {
 	InitializeBooking(ctx context.Context, username string, req request.InitializeBookingRequest) (*response.InitializeBookingResponse, error)
 	ProcessPayment(ctx context.Context, username string, req request.ProcessPaymentRequest) (*response.BookingResponse, error)
 	CancelPendingBooking(ctx context.Context, username string, bookingID int) error
+	GetBookingsForCustomer(ctx context.Context, username string) ([]response.CustomerBookingInfo, error)
+    GetLatestBookingForCustomer(ctx context.Context, username string) (*response.CustomerBookingInfo, error)
 }
 
 type customerBookingService struct {
@@ -356,4 +358,78 @@ func (s *customerBookingService) monitorBookingExpiration(bookingId int, expirat
 			log.Info().Int("bookingId", bookingId).Msg("Successfully deleted expired booking")
 		}
 	}
+}
+
+func (s *customerBookingService) GetBookingsForCustomer(ctx context.Context, username string) ([]response.CustomerBookingInfo, error) {
+    bookings, err := s.bookingRepo.FindByCustomerUsername(ctx, username)
+    if err != nil {
+        return nil, err
+    }
+
+    result := make([]response.CustomerBookingInfo, 0, len(bookings))
+    for _, booking := range bookings {
+        show, err := s.showRepo.FindById(ctx, booking.ShowId)
+        if err != nil || show == nil {
+            log.Warn().Int("booking_id", booking.Id).Msg("Skipping booking due to missing show data")
+            continue
+        }
+        slot, err := s.slotRepo.GetSlotById(ctx, show.SlotId)
+        if err != nil || slot == nil {
+            log.Warn().Int("booking_id", booking.Id).Msg("Skipping booking due to missing slot data")
+            continue
+        }
+        seats, err := s.bookingSeatMappingRepo.GetSeatsByBookingId(ctx, booking.Id)
+        if err != nil {
+            log.Warn().Int("booking_id", booking.Id).Msg("Failed to fetch seats, using empty list")
+            seats = []string{}
+        }
+        result = append(result, response.CustomerBookingInfo{
+            BookingID:   booking.Id,
+            ShowID:      booking.ShowId,
+            ShowDate:    show.Date.Format("2006-01-02"),
+            ShowTime:    slot.StartTime,
+            SeatNumbers: seats,
+            AmountPaid:  booking.AmountPaid,
+            PaymentType: booking.PaymentType,
+            BookingTime: booking.BookingTime,
+            Status:      booking.Status,
+        })
+    }
+    return result, nil
+}
+
+func (s *customerBookingService) GetLatestBookingForCustomer(ctx context.Context, username string) (*response.CustomerBookingInfo, error) {
+    booking, err := s.bookingRepo.FindLatestByCustomerUsername(ctx, username)
+    if err != nil {
+        return nil, err
+    }
+    if booking == nil {
+        return nil, nil 
+    }
+    show, err := s.showRepo.FindById(ctx, booking.ShowId)
+    if err != nil || show == nil {
+        log.Warn().Int("booking_id", booking.Id).Msg("No show found for booking, returning nil")
+        return nil, nil
+    }
+    slot, err := s.slotRepo.GetSlotById(ctx, show.SlotId)
+    if err != nil || slot == nil {
+        log.Warn().Int("booking_id", booking.Id).Msg("No slot found for booking, returning nil")
+        return nil, nil
+    }
+    seats, err := s.bookingSeatMappingRepo.GetSeatsByBookingId(ctx, booking.Id)
+    if err != nil {
+        log.Warn().Int("booking_id", booking.Id).Msg("Failed to fetch seats, using empty list")
+        seats = []string{}
+    }
+    return &response.CustomerBookingInfo{
+        BookingID:   booking.Id,
+        ShowID:      booking.ShowId,
+        ShowDate:    show.Date.Format("2006-01-02"),
+        ShowTime:    slot.StartTime,
+        SeatNumbers: seats,
+        AmountPaid:  booking.AmountPaid,
+        PaymentType: booking.PaymentType,
+        BookingTime: booking.BookingTime,
+        Status:      booking.Status,
+    }, nil
 }
