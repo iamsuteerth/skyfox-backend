@@ -1821,3 +1821,127 @@
       "request_id": "e9b5a26f-6bf1-4a5d-a04d-2a64ab837374"
   }
   ```
+
+### Get All Bookings Requiring Check-in 
+- **URL:** `/check-in/bookings`  
+- **Method:** `GET`  
+- **Authentication:** Required (Admin/Staff role)  
+- **Description:** Returns all bookings in "Confirmed" status awaiting check-in.
+- **Success Response (200)**
+  ```json
+  {
+      "message": "Confirmed bookings fetched successfully",
+      "request_id": "4ee5868f-299b-4fb8-9b62-cab29b4677fe",
+      "status": "SUCCESS",
+      "data": [
+          {
+              "id": 63,
+              "date": "2025-04-28T00:00:00Z",
+              "show_id": 32,
+              "customer_id": null,
+              "customer_username": "venkat",
+              "no_of_seats": 1,
+              "amount_paid": 224.29,
+              "status": "Confirmed",
+              "booking_time": "2025-04-28T16:52:41.215358+05:30",
+              "payment_type": "Card"
+          }
+          // ... more bookings
+      ]
+  }
+  ```
+- **Forbidden (403)**
+  ```json
+  {
+      "status": "ERROR",
+      "code": "FORBIDDEN",
+      "message": "Access denied. Admin or staff role required!",
+      "request_id": "79fc1d07-2235-4ba2-a43e-f63ac7adf779"
+  }
+  ```
+
+### Bulk Check-In Bookings (Admin/Staff only)
+- **URL:** `/check-in/bookings`  
+- **Method:** `POST`  
+- **Authentication:** Required (Admin/Staff role)  
+- **Description:** Attempts to check in the list of booking IDs. Already checked-in, invalid, or expired bookings are skipped, and the response details which bookings were checked in, already done, or invalid.
+- **Request Body**
+  ```json
+  {
+      "booking_ids": [65, 64, 66]
+  }
+  ```
+- **Success Response (200)**
+  ```json
+  {
+      "message": "Bulk check-in attempted",
+      "request_id": "a98d74ce-b903-4ef8-a1fb-3cc4cc5c26a8",
+      "status": "SUCCESS",
+      "data": {
+          "checked_in": [65, 64],
+          "already_done": [],
+          "invalid": [66]
+      }
+  }
+  ```
+- **Invalid Input (400)**
+  ```json
+  {
+      "status": "ERROR",
+      "code": "INVALID_INPUT",
+      "message": "Invalid input",
+      "request_id": "c376b8fa-ea53-45aa-8067-cc2aa7407980"
+  }
+  ```
+- **Forbidden (403)**
+  ```json
+  {
+      "status": "ERROR",
+      "code": "FORBIDDEN",
+      "message": "Access denied. Admin or staff role required!",
+      "request_id": "79fc1d07-2235-4ba2-a43e-f63ac7adf779"
+  }
+  ```
+
+### Single Booking Check-In (Admin/Staff only)
+- **URL:** `/check-in/booking`  
+- **Method:** `POST`  
+- **Authentication:** Required (Admin/Staff role)  
+- **Description:** Attempts to check in a single booking by ID. Returns which category the booking falls into (`checked_in`, `already_done`, or `invalid`)
+- **Request Body:**
+  ```json
+  {
+      "booking_id": 68
+  }
+  ```
+- **Success Response (200) – Valid, Already Done, or Invalid**
+  ```json
+  {
+      "message": "Check-in failed: invalid booking (already expired/invalid status/or show ended)",
+      "request_id": "6ba3026d-e175-46bd-bbe7-8121055df759",
+      "status": "SUCCESS",
+      "data": {
+          "checked_in": [],
+          "already_done": [],
+          "invalid": [68]
+      }
+  }
+  ```
+- **Invalid Input (400)**
+  ```json
+  {
+      "status": "ERROR",
+      "code": "INVALID_INPUT",
+      "message": "Invalid input",
+      "request_id": "c376b8fa-ea53-45aa-8067-cc2aa7407980"
+  }
+  ```
+- **Forbidden (403)**
+  ```json
+  {
+      "status": "ERROR",
+      "code": "FORBIDDEN",
+      "message": "Access denied. Admin or staff role required!",
+      "request_id": "79fc1d07-2235-4ba2-a43e-f63ac7adf779"
+  }
+  ```

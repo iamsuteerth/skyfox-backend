@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
+	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/security"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/services"
@@ -17,13 +18,15 @@ type BookingController struct {
 	bookingService         services.BookingService
 	adminBookingService    services.AdminBookingService
 	customerBookingService services.CustomerBookingService
+	checkInService services.CheckInService
 }
 
-func NewBookingController(bookingService services.BookingService, adminBookingService services.AdminBookingService, customerBookingService services.CustomerBookingService) *BookingController {
+func NewBookingController(bookingService services.BookingService, adminBookingService services.AdminBookingService, customerBookingService services.CustomerBookingService, checkInService services.CheckInService) *BookingController {
 	return &BookingController{
 		bookingService:         bookingService,
 		adminBookingService:    adminBookingService,
 		customerBookingService: customerBookingService,
+		checkInService: checkInService,
 	}
 }
 
@@ -295,6 +298,7 @@ func (c *BookingController) GetCustomerBookings(ctx *gin.Context) {
 	}
 	utils.SendOKResponse(ctx, "Bookings fetched successfully", utils.GetRequestID(ctx), bookings)
 }
+
 func (c *BookingController) GetCustomerLatestBooking(ctx *gin.Context) {
 	claims, err := security.GetTokenClaims(ctx)
 	if err != nil {
@@ -309,4 +313,61 @@ func (c *BookingController) GetCustomerLatestBooking(ctx *gin.Context) {
 		return
 	}
 	utils.SendOKResponse(ctx, "Latest booking fetched successfully", utils.GetRequestID(ctx), booking)
+}
+
+func (c *BookingController) GetCheckInBookings(ctx *gin.Context) {
+    bookings, err := c.checkInService.FindConfirmedBookings(ctx)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, err, utils.GetRequestID(ctx))
+        return
+    }
+    utils.SendOKResponse(ctx, "Confirmed bookings fetched successfully", utils.GetRequestID(ctx), bookings)
+}
+
+func (c *BookingController) BulkCheckInBookings(ctx *gin.Context) {
+    var req request.BulkCheckInRequest
+    if err := ctx.ShouldBindJSON(&req); err != nil {
+        utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_INPUT", "Invalid input", err), utils.GetRequestID(ctx))
+        return
+    }
+
+    checkedIn, alreadyDone, invalid, err := c.checkInService.MarkBookingsCheckedIn(ctx, req.BookingIDs)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, err, utils.GetRequestID(ctx))
+        return
+    }
+
+    resp := response.BulkCheckInResponse{
+        CheckedIn:   checkedIn,
+        AlreadyDone: alreadyDone,
+        Invalid:     invalid,
+    }
+    utils.SendOKResponse(ctx, "Bulk check-in attempted", utils.GetRequestID(ctx), resp)
+}
+
+func (c *BookingController) SingleCheckInBooking(ctx *gin.Context) {
+    var req request.SingleCheckInRequest
+    if err := ctx.ShouldBindJSON(&req); err != nil {
+        utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_INPUT", "Invalid input", err), utils.GetRequestID(ctx))
+        return
+    }
+
+    checkedIn, alreadyDone, invalid, err := c.checkInService.MarkBookingsCheckedIn(ctx, []int{req.BookingID})
+    if err != nil {
+        utils.HandleErrorResponse(ctx, err, utils.GetRequestID(ctx))
+        return
+    }
+
+    resp := response.BulkCheckInResponse{
+        CheckedIn:   checkedIn,
+        AlreadyDone: alreadyDone,
+        Invalid:     invalid,
+    }
+    msg := "Booking checked in successfully"
+    if len(alreadyDone) > 0 {
+        msg = "Booking was already checked in"
+    } else if len(invalid) > 0 {
+        msg = "Check-in failed: invalid booking (already expired/invalid status/or show ended)"
+    }
+    utils.SendOKResponse(ctx, msg, utils.GetRequestID(ctx), resp)
 }

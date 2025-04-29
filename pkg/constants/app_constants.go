@@ -35,6 +35,8 @@ const (
 	BookingInitializeEndpoint     = "/initialize"
 	CancelBookingEndpoint         = "/:id/cancel"
 	PaymentEndpoint               = "/payment"
+	// Checkin Related Endpoints
+	CheckinEndpoint = "/check-in"
 )
 
 const (

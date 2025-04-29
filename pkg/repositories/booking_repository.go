@@ -19,6 +19,10 @@ type BookingRepository interface {
 	DeleteBookingsByIds(ctx context.Context, bookingIds []int) error
 	FindByCustomerUsername(ctx context.Context, username string) ([]*models.Booking, error)
     FindLatestByCustomerUsername(ctx context.Context, username string) (*models.Booking, error)
+	FindConfirmedBookings(ctx context.Context) ([]*models.Booking, error)
+	MarkBookingsCheckedIn(ctx context.Context, bookingIDs []int) (int, error)
+	MarkBookingCheckedIn(ctx context.Context, bookingID int) (bool, error)
+	FindBookingsByIds(ctx context.Context, bookingIDs []int) ([]*models.Booking, error)
 }
 
 type bookingRepository struct {
@@ -245,4 +249,124 @@ func (repo *bookingRepository) FindLatestByCustomerUsername(ctx context.Context,
         return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to retrieve latest booking", err)
     }
     return &booking, nil
+}
+
+func (repo *bookingRepository) FindConfirmedBookings(ctx context.Context) ([]*models.Booking, error) {
+	const query = `
+		SELECT 
+			id, date, show_id, customer_id, customer_username, no_of_seats, amount_paid, status, booking_time, payment_type
+		FROM booking
+		WHERE status = 'Confirmed'
+		ORDER BY booking_time DESC
+	`
+	rows, err := repo.db.Query(ctx, query)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to fetch confirmed bookings")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to retrieve confirmed bookings", err)
+	}
+	defer rows.Close()
+
+	var bookings []*models.Booking
+	for rows.Next() {
+		var booking models.Booking
+		err := rows.Scan(
+			&booking.Id,
+			&booking.Date,
+			&booking.ShowId,
+			&booking.CustomerId,
+			&booking.CustomerUsername,
+			&booking.NoOfSeats,
+			&booking.AmountPaid,
+			&booking.Status,
+			&booking.BookingTime,
+			&booking.PaymentType,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("Error scanning confirmed booking row")
+			return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to scan confirmed booking data", err)
+		}
+		bookings = append(bookings, &booking)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Error().Err(err).Msg("Error iterating over confirmed bookings")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to iterate over confirmed bookings", err)
+	}
+
+	return bookings, nil
+}
+
+func (repo *bookingRepository) MarkBookingsCheckedIn(ctx context.Context, bookingIDs []int) (int, error) {
+	if len(bookingIDs) == 0 {
+		return 0, nil
+	}
+	query := `
+		UPDATE booking
+		SET status = 'CheckedIn'
+		WHERE id = ANY($1) AND status = 'Confirmed'
+	`
+	cmdTag, err := repo.db.Exec(ctx, query, bookingIDs)
+	if err != nil {
+		log.Error().Err(err).Interface("bookingIDs", bookingIDs).Msg("Failed to bulk update bookings to CheckedIn")
+		return 0, utils.NewInternalServerError("DATABASE_ERROR", "Failed to update booking statuses", err)
+	}
+	return int(cmdTag.RowsAffected()), nil
+}
+
+func (repo *bookingRepository) MarkBookingCheckedIn(ctx context.Context, bookingID int) (bool, error) {
+	query := `
+		UPDATE booking
+		SET status = 'CheckedIn'
+		WHERE id = $1 AND status = 'Confirmed'
+	`
+	cmdTag, err := repo.db.Exec(ctx, query, bookingID)
+	if err != nil {
+		log.Error().Err(err).Int("bookingID", bookingID).Msg("Failed to update booking to CheckedIn")
+		return false, utils.NewInternalServerError("DATABASE_ERROR", "Failed to update booking status", err)
+	}
+	return cmdTag.RowsAffected() == 1, nil
+}
+
+func (repo *bookingRepository) FindBookingsByIds(ctx context.Context, bookingIDs []int) ([]*models.Booking, error) {
+	if len(bookingIDs) == 0 {
+		return []*models.Booking{}, nil
+	}
+	query := `
+		SELECT id, date, show_id, customer_id, customer_username, no_of_seats, amount_paid, status, booking_time, payment_type
+		FROM booking
+		WHERE id = ANY($1)
+	`
+	rows, err := repo.db.Query(ctx, query, bookingIDs)
+	if err != nil {
+		log.Error().Err(err).Interface("bookingIDs", bookingIDs).Msg("Failed to fetch bookings by IDs")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to fetch bookings by IDs", err)
+	}
+	defer rows.Close()
+
+	var bookings []*models.Booking
+	for rows.Next() {
+		var booking models.Booking
+		err := rows.Scan(
+			&booking.Id,
+			&booking.Date,
+			&booking.ShowId,
+			&booking.CustomerId,
+			&booking.CustomerUsername,
+			&booking.NoOfSeats,
+			&booking.AmountPaid,
+			&booking.Status,
+			&booking.BookingTime,
+			&booking.PaymentType,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("Error scanning bulk booking row")
+			return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to scan bookings data", err)
+		}
+		bookings = append(bookings, &booking)
+	}
+	if err := rows.Err(); err != nil {
+		log.Error().Err(err).Msg("Error iterating over bookings by IDs")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to iterate over bookings by IDs", err)
+	}
+	return bookings, nil
 }

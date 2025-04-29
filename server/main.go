@@ -65,6 +65,7 @@ func main() {
 	bookingService := services.NewBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, slotRepository, adminBookedCustomerRepository, skyCustomerRepository, movieService)
 	adminBookingService := services.NewAdminBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, adminBookedCustomerRepository, slotRepository)
 	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, skyCustomerRepository, paymentService)
+	checkInService := services.NewCheckInService(bookingRepository, showRepository)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -73,7 +74,7 @@ func main() {
 	showController := controllers.NewShowController(showService)
 	slotController := controllers.NewSlotController(slotService)
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
-	bookingController := controllers.NewBookingController(bookingService, adminBookingService, customerBookingService)
+	bookingController := controllers.NewBookingController(bookingService, adminBookingService, customerBookingService, checkInService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -196,6 +197,13 @@ func main() {
 		staff := adminStaffAPIs.Group(constants.StaffEndPoint)
 		{
 			staff.GET(constants.ProfileEndPoint, adminStaffController.GetStaffProfile) // Get Staff Profile
+		}
+
+		checkin := adminStaffAPIs.Group(constants.CheckinEndpoint)
+		{
+			checkin.GET(constants.BookingsEndpoint, bookingController.GetCheckInBookings)   // Get all confirmed bookings
+			checkin.POST(constants.BookingsEndpoint, bookingController.BulkCheckInBookings) // Mark bookings as checked-in in bulk
+			checkin.POST(constants.BookingEndpoint, bookingController.SingleCheckInBooking) // Mark a booking as checked-in
 		}
 	}
 
