@@ -37,6 +37,9 @@ const (
 	PaymentEndpoint               = "/payment"
 	// Checkin Related Endpoints
 	CheckinEndpoint = "/check-in"
+	// Admin Dashboard Related Endpoints
+	RevenueEndpoint    = "/revenue"
+	BookingCSVEndpoint = "/booking-csv"
 )
 
 const (

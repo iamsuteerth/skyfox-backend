@@ -66,6 +66,7 @@ func main() {
 	adminBookingService := services.NewAdminBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, adminBookedCustomerRepository, slotRepository)
 	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, skyCustomerRepository, paymentService)
 	checkInService := services.NewCheckInService(bookingRepository, showRepository)
+	revenueService := services.NewRevenueService(bookingRepository, showRepository, slotRepository, movieService)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -75,6 +76,7 @@ func main() {
 	slotController := controllers.NewSlotController(slotService)
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
 	bookingController := controllers.NewBookingController(bookingService, adminBookingService, customerBookingService, checkInService)
+	revenueController := controllers.NewDashboardRevenueController(revenueService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -184,6 +186,11 @@ func main() {
 		bookingAPIs := adminAPIs.Group(constants.AdminEndPoint)
 		{
 			bookingAPIs.POST(constants.CreateCustomerBookingEndpoint, bookingController.CreateAdminBooking) // Create Booking Through Admin
+		}
+
+		revenueAPIs := adminAPIs.Group(constants.RevenueEndpoint)
+		{
+			revenueAPIs.GET("", revenueController.GetRevenue) // Revenue API with necessary query params
 		}
 	}
 

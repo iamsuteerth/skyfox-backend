@@ -1,16 +1,15 @@
 {
-    "AWSEBDockerrunVersion": "1",
-    "Image": {
-      "Name": "[YOURPROFILEID].dkr.ecr.ap-south-1.amazonaws.com/skyfox-backend:latest",
-      "Update": "true"
-    },
-    "Ports": [
-      {
-        "ContainerPort": 80,
-        "HostPort": 80
-      }
-    ],
-    "Volumes": [],
-    "Logging": "/var/log"
-  }
-  
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "[YOURPROFILEID].dkr.ecr.ap-south-1.amazonaws.com/skyfox-backend:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": 8080,
+      "HostPort": 80
+    }
+  ],
+  "Volumes": [],
+  "Logging": "/var/log"
+}
