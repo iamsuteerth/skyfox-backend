@@ -190,7 +190,7 @@ func main() {
 
 		revenueAPIs := adminAPIs.Group(constants.RevenueEndpoint)
 		{
-			revenueAPIs.GET("", revenueController.GetRevenue) // Revenue API with necessary query params
+			revenueAPIs.GET("", revenueController.GetRevenue) // Revenue API with query param filtering
 		}
 	}
 

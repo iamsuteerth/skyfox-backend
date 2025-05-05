@@ -1945,3 +1945,564 @@
       "request_id": "79fc1d07-2235-4ba2-a43e-f63ac7adf779"
   }
   ```
+
+## Dashboard - Revenue
+
+The Revenue Dashboard API provides a powerful way to analyze booking revenue data across various dimensions. This API supports dynamic filtering, grouping, and aggregation to help you understand booking patterns and revenue trends.
+
+### How to Use Query Parameters
+
+The Revenue API uses query parameters to filter and group data:
+
+- **Timeframe Parameters**: Group data by time periods (`timeframe=daily|weekly|monthly|yearly`)
+- **Period Filters**: Filter by specific time periods (`month=1-12`, `year=YYYY`)
+- **Dimension Filters**: Filter by booking properties (`movie_id`, `slot_id`, `genre`)
+
+### Important Rules
+
+1. **Parameter Order Matters**: The order of parameters in your query determines the order of components in the response labels (separated by semicolons)
+2. **Mutual Exclusivity**: `timeframe` parameter cannot be combined with `month` or `year` parameters
+3. **Authentication**: This API requires admin authentication
+4. **Empty Results**: When no data matches your filters, the API returns empty arrays (not null)
+
+### Suggested Usage
+
+For the best frontend experience, implement the API with dropdown filters that dynamically build the query URL:
+
+1. Start with overall revenue statistics (no filters)
+2. Add dropdown selectors for:
+   - Timeframe (daily/weekly/monthly/yearly)
+   - Movie selection
+   - Slot selection
+   - Genre selection
+   - Month/year selection (when timeframe isn't used)
+3. Update the URL and fetch data when filters change
+4. Display aggregated stats in cards and grouped data in charts
+
+### Revenue - All Data (No Filters)
+
+- **URL**: `/revenue`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns aggregated revenue statistics across all bookings with "Confirmed" or "CheckedIn" status.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "7823a569-c8dd-4a54-813a-84eb5ece9ae3",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 8271.09,
+      "mean_revenue": 689.2575,
+      "median_revenue": 447.34,
+      "total_bookings": 12,
+      "total_seats_booked": 25,
+      "groups": [
+        {
+          "label": "All",
+          "total_revenue": 8271.09,
+          "mean_revenue": 689.2575,
+          "median_revenue": 447.34,
+          "total_bookings": 12,
+          "total_seats_booked": 25
+        }
+      ]
+    }
+  }
+  ```
+
+- **Unauthorized Response (401)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "761234df-ff53-4bbb-882a-039925807c74"
+  }
+  ```
+
+- **Forbidden Response (403)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Admin role required",
+    "request_id": "4ccefb6e-f3bd-464b-8ce4-2f30ee4055f0"
+  }
+  ```
+
+### Revenue - Timeframe Grouping
+
+- **URL**: `/revenue?timeframe=daily|weekly|monthly|yearly`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Groups revenue data by the specified timeframe (daily, weekly, monthly, or yearly).
+
+- **Success Response (200 OK) - Daily Timeframe**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "8dfb6e11-0a2b-47e2-98b5-1e05c6f3bda9",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 8271.09,
+      "mean_revenue": 689.2575,
+      "median_revenue": 447.34,
+      "total_bookings": 12,
+      "total_seats_booked": 25,
+      "groups": [
+        {
+          "label": "2025-04-28",
+          "total_revenue": 4425.23,
+          "mean_revenue": 885.046,
+          "median_revenue": 447.34,
+          "total_bookings": 5,
+          "total_seats_booked": 10
+        },
+        {
+          "label": "2025-04-29",
+          "total_revenue": 3845.86,
+          "mean_revenue": 549.4085714285714,
+          "median_revenue": 489.525,
+          "total_bookings": 7,
+          "total_seats_booked": 15
+        }
+      ]
+    }
+  }
+  ```
+
+- **Success Response (200 OK) - Monthly Timeframe**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "5a3f8c9d-73d1-4bcc-9e6d-f89c4f1e3708",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 8271.09,
+      "mean_revenue": 689.2575,
+      "median_revenue": 447.34,
+      "total_bookings": 12,
+      "total_seats_booked": 25,
+      "groups": [
+        {
+          "label": "2025-04",
+          "total_revenue": 8271.09,
+          "mean_revenue": 689.2575,
+          "median_revenue": 447.34,
+          "total_bookings": 12,
+          "total_seats_booked": 25
+        }
+      ]
+    }
+  }
+  ```
+
+### Revenue - Movie Filtering
+
+- **URL**: `/revenue?movie_id=tt6823368`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns revenue data filtered by the specified movie ID.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "3e7b2c1d-e8a9-4f5b-9c6d-2e1d3f4c5b6a",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 8271.09,
+      "mean_revenue": 919.01,
+      "median_revenue": 447.34,
+      "total_bookings": 9,
+      "total_seats_booked": 21,
+      "groups": [
+        {
+          "label": "Glass",
+          "total_revenue": 8271.09,
+          "mean_revenue": 919.01,
+          "median_revenue": 447.34,
+          "total_bookings": 9,
+          "total_seats_booked": 21
+        }
+      ]
+    }
+  }
+  ```
+
+### Revenue - Slot Filtering
+
+- **URL**: `/revenue?slot_id=3`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns revenue data filtered by the specified slot ID.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "1c2d3e4f-5a6b-7c8d-9e0f-1a2b3c4d5e6f",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 6599.68,
+      "mean_revenue": 1099.9466666666667,
+      "median_revenue": 489.52500000000003,
+      "total_bookings": 6,
+      "total_seats_booked": 17,
+      "groups": [
+        {
+          "label": "Evening",
+          "total_revenue": 6599.68,
+          "mean_revenue": 1099.9466666666667,
+          "median_revenue": 489.52500000000003,
+          "total_bookings": 6,
+          "total_seats_booked": 17
+        }
+      ]
+    }
+  }
+  ```
+
+### Revenue - Genre Filtering
+
+- **URL**: `/revenue?genre=Crime`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns revenue data filtered by the specified genre.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "9a8b7c6d-5e4f-3g2h-1i0j-9k8l7m6n5o4p",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 245.21,
+      "mean_revenue": 245.21,
+      "median_revenue": 245.21,
+      "total_bookings": 1,
+      "total_seats_booked": 1,
+      "groups": [
+        {
+          "label": "Crime",
+          "total_revenue": 245.21,
+          "mean_revenue": 245.21,
+          "median_revenue": 245.21,
+          "total_bookings": 1,
+          "total_seats_booked": 1
+        }
+      ]
+    }
+  }
+  ```
+
+### Revenue - Month and Year Filtering
+
+- **URL**: `/revenue?month=4`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns revenue data filtered by the specified month (1-12).
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "2d3e4f5g-6h7i-8j9k-0l1m-2n3o4p5q6r7s",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 8271.09,
+      "mean_revenue": 689.2575,
+      "median_revenue": 447.34,
+      "total_bookings": 12,
+      "total_seats_booked": 25,
+      "groups": [
+        {
+          "label": "April",
+          "total_revenue": 8271.09,
+          "mean_revenue": 689.2575,
+          "median_revenue": 447.34,
+          "total_bookings": 12,
+          "total_seats_booked": 25
+        }
+      ]
+    }
+  }
+  ```
+
+- **URL**: `/revenue?year=2025`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns revenue data filtered by the specified year.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "3e4f5g6h-7i8j-9k0l-1m2n-3o4p5q6r7s8t",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 8271.09,
+      "mean_revenue": 689.2575,
+      "median_revenue": 447.34,
+      "total_bookings": 12,
+      "total_seats_booked": 25,
+      "groups": [
+        {
+          "label": "2025",
+          "total_revenue": 8271.09,
+          "mean_revenue": 689.2575,
+          "median_revenue": 447.34,
+          "total_bookings": 12,
+          "total_seats_booked": 25
+        }
+      ]
+    }
+  }
+  ```
+
+- **URL**: `/revenue?month=4&year=2025`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns revenue data filtered by both month and year.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "4f5g6h7i-8j9k-0l1m-2n3o-4p5q6r7s8t9u",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 8271.09,
+      "mean_revenue": 689.2575,
+      "median_revenue": 447.34,
+      "total_bookings": 12,
+      "total_seats_booked": 25,
+      "groups": [
+        {
+          "label": "April;2025",
+          "total_revenue": 8271.09,
+          "mean_revenue": 689.2575,
+          "median_revenue": 447.34,
+          "total_bookings": 12,
+          "total_seats_booked": 25
+        }
+      ]
+    }
+  }
+  ```
+
+### Revenue - Combined Filters (Movie and Timeframe)
+
+- **URL**: `/revenue?movie_id=tt6823368&timeframe=monthly`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns revenue data for a specific movie, grouped by month.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "b43fe9b8-328a-4f57-a4a5-a219b2a6c239",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 8271.09,
+      "mean_revenue": 919.01,
+      "median_revenue": 447.34,
+      "total_bookings": 9,
+      "total_seats_booked": 21,
+      "groups": [
+        {
+          "label": "Glass;2025-04",
+          "total_revenue": 8271.09,
+          "mean_revenue": 919.01,
+          "median_revenue": 447.34,
+          "total_bookings": 9,
+          "total_seats_booked": 21
+        }
+      ]
+    }
+  }
+  ```
+
+### Revenue - Combined Filters (Slot and Timeframe)
+
+- **URL**: `/revenue?slot_id=3&timeframe=monthly`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns revenue data for a specific slot, grouped by month.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "c4d03d87-d388-4b70-9f56-7da3705d2c8e",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 6599.68,
+      "mean_revenue": 1099.9466666666667,
+      "median_revenue": 489.52500000000003,
+      "total_bookings": 6,
+      "total_seats_booked": 17,
+      "groups": [
+        {
+          "label": "Evening;2025-04",
+          "total_revenue": 6599.68,
+          "mean_revenue": 1099.9466666666667,
+          "median_revenue": 489.52500000000003,
+          "total_bookings": 6,
+          "total_seats_booked": 17
+        }
+      ]
+    }
+  }
+  ```
+
+### Revenue - Parameter Order Variation
+
+- **URL**: `/revenue?timeframe=monthly&slot_id=3`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Same filters as previous example but in different order, affecting the response label order.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "1eabcde0-e42a-4043-b33b-7a8358a3d775",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 6599.68,
+      "mean_revenue": 1099.9466666666667,
+      "median_revenue": 489.52500000000003,
+      "total_bookings": 6,
+      "total_seats_booked": 17,
+      "groups": [
+        {
+          "label": "2025-04;Evening",
+          "total_revenue": 6599.68,
+          "mean_revenue": 1099.9466666666667,
+          "median_revenue": 489.52500000000003,
+          "total_bookings": 6,
+          "total_seats_booked": 17
+        }
+      ]
+    }
+  }
+  ```
+
+### Revenue - Combined Filters (Genre and Timeframe)
+
+- **URL**: `/revenue?genre=Crime&timeframe=yearly`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns revenue data for a specific genre, grouped by year.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "6feb3104-5182-45af-add3-d7127925a94b",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 245.21,
+      "mean_revenue": 245.21,
+      "median_revenue": 245.21,
+      "total_bookings": 1,
+      "total_seats_booked": 1,
+      "groups": [
+        {
+          "label": "Crime;2025",
+          "total_revenue": 245.21,
+          "mean_revenue": 245.21,
+          "median_revenue": 245.21,
+          "total_bookings": 1,
+          "total_seats_booked": 1
+        }
+      ]
+    }
+  }
+  ```
+
+### Revenue - No Matching Data
+
+- **URL**: `/revenue?movie_id=nonexistent`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns empty results when no data matches the filter criteria.
+
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Revenue data fetched successfully",
+    "request_id": "5f6g7h8i-9j0k-1l2m-3n4o-5p6q7r8s9t0u",
+    "status": "SUCCESS",
+    "data": {
+      "total_revenue": 0,
+      "mean_revenue": 0,
+      "median_revenue": 0,
+      "total_bookings": 0,
+      "total_seats_booked": 0,
+      "groups": []
+    }
+  }
+  ```
+
+### Revenue - Mutually Exclusive Parameters (Error)
+
+- **URL**: `/revenue?timeframe=daily&month=4`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns an error when mutually exclusive parameters are combined.
+
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_PARAMS",
+    "message": "Timeframe cannot be combined with month or year filters",
+    "request_id": "6g7h8i9j-0k1l-2m3n-4o5p-6q7r8s9t0u1v"
+  }
+  ```
+
+### Revenue - Invalid Parameter Values (Error)
+
+- **URL**: `/revenue?timeframe=invalid`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns an error for invalid parameter values.
+
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_PARAMS",
+    "message": "Invalid query parameters",
+    "request_id": "7h8i9j0k-1l2m-3n4o-5p6q-7r8s9t0u1v2w"
+  }
+  ```
+
+- **URL**: `/revenue?month=13`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Description**: Returns an error for month value outside valid range.
+
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_PARAMS",
+    "message": "Invalid query parameters",
+    "request_id": "8i9j0k1l-2m3n-4o5p-6q7r-8s9t0u1v2w3x"
+  }
+  ```
+
+### Additional Notes
+
+- The API always returns an aggregate view of statistics (`total_revenue`, `mean_revenue`, `median_revenue`, etc.) regardless of filter combinations.
+- The `groups` array contains breakdowns according to your filter and grouping choices.
+- When using multiple filter dimensions (e.g., movie + slot + timeframe), data is aggregated according to all filters.
+- Label components are always separated by semicolons (`;`) and ordered according to the query parameter order.
+- All revenue calculations consider only bookings with `Confirmed` or `CheckedIn` status.
+

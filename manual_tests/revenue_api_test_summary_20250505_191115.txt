@@ -1,0 +1,18 @@
+REVENUE API TEST SUMMARY
+========================
+
+Total tests: 76
+Successful tests (200): 66
+Error responses: 10
+
+Error details:
+  - Test #59: Invalid timeframe (Status: 400)
+  - Test #60: Invalid month (too high) (Status: 400)
+  - Test #61: Invalid month (zero) (Status: 400)
+  - Test #62: Non-numeric month (Status: 400)
+  - Test #63: Timeframe + month (Status: 400)
+  - Test #64: Timeframe + year (Status: 400)
+  - Test #65: Timeframe + month + year (Status: 400)
+  - Test #66: Timeframe + month + movie (Status: 400)
+  - Test #67: Timeframe + year + slot (Status: 400)
+  - Test #68: Timeframe + month + genre (Status: 400)
