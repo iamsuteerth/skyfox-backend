@@ -1955,6 +1955,10 @@ The Revenue Dashboard API provides a powerful way to analyze booking revenue dat
 The Revenue API uses query parameters to filter and group data:
 
 - **Timeframe Parameters**: Group data by time periods (`timeframe=daily|weekly|monthly|yearly`)
+  - `daily`: Past 30 days
+  - `weekly`: Past 16 weeks
+  - `monthly`: Past 12 months
+  - `yearly`: No soft limit
 - **Period Filters**: Filter by specific time periods (`month=1-12`, `year=YYYY`)
 - **Dimension Filters**: Filter by booking properties (`movie_id`, `slot_id`, `genre`)
 
