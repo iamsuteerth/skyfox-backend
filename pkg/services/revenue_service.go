@@ -75,12 +75,32 @@ func (s *revenueService) GetRevenue(ctx context.Context, req request.RevenueDash
 func (s *revenueService) filterBookings(ctx context.Context, bookings []*models.Booking, req request.RevenueDashboardRequest) []*models.Booking {
 	var filtered []*models.Booking
 
+	var startLimit time.Time
+	now := time.Now()
+
+	if req.Timeframe != "" {
+		switch req.Timeframe {
+		case "daily":
+			startLimit = now.AddDate(0, 0, -30)
+		case "weekly":
+			startLimit = now.AddDate(0, 0, -16*7)
+		case "monthly":
+			startLimit = now.AddDate(0, -12, 0)
+		}
+	}
+
 	for _, booking := range bookings {
 		if booking.Status != "Confirmed" && booking.Status != "CheckedIn" {
 			continue
 		}
 
 		include := true
+
+		if req.Timeframe != "" && !startLimit.IsZero() {
+			if booking.BookingTime.Before(startLimit) {
+				include = false
+			}
+		}
 
 		if req.Month != nil {
 			bookingMonth := int(booking.BookingTime.Month())
@@ -171,33 +191,33 @@ func calculateMedian(values []float64) float64 {
 
 func (s *revenueService) groupBookingData(ctx context.Context, bookings []*models.Booking, req request.RevenueDashboardRequest) ([]response.RevenueGroupStats, error) {
 	result := []response.RevenueGroupStats{}
-	
+
 	filterMap := make(map[string]struct {
 		name  string
 		value string
 	})
-	
+
 	if req.Genre != nil {
 		filterMap["genre"] = struct {
 			name  string
 			value string
 		}{name: "genre", value: *req.Genre}
 	}
-	
+
 	if req.MovieID != nil {
 		filterMap["movie_id"] = struct {
 			name  string
 			value string
-		}{name: "movie", value: ""}  
+		}{name: "movie", value: ""}
 	}
-	
+
 	if req.SlotID != nil {
 		filterMap["slot_id"] = struct {
 			name  string
 			value string
-		}{name: "slot", value: ""} 
+		}{name: "slot", value: ""}
 	}
-	
+
 	if req.Timeframe != "" {
 		filterMap["timeframe"] = struct {
 			name  string
@@ -211,7 +231,7 @@ func (s *revenueService) groupBookingData(ctx context.Context, bookings []*model
 				value string
 			}{name: "month", value: monthName}
 		}
-		
+
 		if req.Year != nil {
 			yearStr := strconv.Itoa(*req.Year)
 			filterMap["year"] = struct {
@@ -220,7 +240,7 @@ func (s *revenueService) groupBookingData(ctx context.Context, bookings []*model
 			}{name: "year", value: yearStr}
 		}
 	}
-	
+
 	if len(filterMap) == 0 {
 		filterMap["all"] = struct {
 			name  string
@@ -230,33 +250,33 @@ func (s *revenueService) groupBookingData(ctx context.Context, bookings []*model
 			req.ParamOrder = []string{"all"}
 		}
 	}
-	
+
 	groups := make(map[string][]*models.Booking)
-	
+
 	showCache := make(map[int]*models.Show)
 	movieCache := make(map[string]*models.Movie)
 	slotCache := make(map[int]*models.Slot)
-	
+
 	showIDs := make(map[int]bool)
 	for _, booking := range bookings {
 		showIDs[booking.ShowId] = true
 	}
-	
+
 	for showID := range showIDs {
 		show, err := s.showRepo.FindById(ctx, showID)
 		if err != nil || show == nil {
 			continue
 		}
-		
+
 		showCache[showID] = show
-		
+
 		if req.SlotID != nil || contains(req.ParamOrder, "slot_id") {
 			slot, err := s.slotRepo.GetSlotById(ctx, show.SlotId)
 			if err == nil && slot != nil {
 				slotCache[show.SlotId] = slot
 			}
 		}
-		
+
 		if req.MovieID != nil || req.Genre != nil || contains(req.ParamOrder, "movie_id") {
 			movie, err := s.movieService.GetMovieById(ctx, show.MovieId)
 			if err == nil && movie != nil {
@@ -264,40 +284,40 @@ func (s *revenueService) groupBookingData(ctx context.Context, bookings []*model
 			}
 		}
 	}
-	
+
 	for _, booking := range bookings {
 		show, exists := showCache[booking.ShowId]
 		if !exists {
 			continue
 		}
-		
+
 		var keyParts []string
-		
+
 		for _, paramName := range req.ParamOrder {
 			filter, exists := filterMap[paramName]
 			if !exists {
 				continue
 			}
-			
+
 			var labelValue string
 			switch filter.name {
 			case "genre":
 				labelValue = filter.value
-				
+
 			case "movie":
 				movie, exists := movieCache[show.MovieId]
 				if !exists {
 					continue
 				}
 				labelValue = movie.Name
-				
+
 			case "slot":
 				slot, exists := slotCache[show.SlotId]
 				if !exists {
-					continue 
+					continue
 				}
 				labelValue = slot.Name
-				
+
 			case "timeframe":
 				switch filter.value {
 				case "daily":
@@ -312,31 +332,31 @@ func (s *revenueService) groupBookingData(ctx context.Context, bookings []*model
 				default:
 					labelValue = "All"
 				}
-				
+
 			case "month":
 				labelValue = filter.value
-				
+
 			case "year":
 				labelValue = filter.value
-				
+
 			case "all":
 				labelValue = "All"
 			}
-			
+
 			keyParts = append(keyParts, labelValue)
 		}
-		
+
 		if len(keyParts) == 0 {
 			keyParts = append(keyParts, "All")
 		}
-		
+
 		key := strings.Join(keyParts, ";")
 		groups[key] = append(groups[key], booking)
 	}
-	
+
 	for label, groupBookings := range groups {
 		totalRev, meanRev, medianRev, totalBook, totalSeats := s.calculateOverallStats(groupBookings)
-		
+
 		result = append(result, response.RevenueGroupStats{
 			Label:            label,
 			TotalRevenue:     totalRev,
@@ -346,11 +366,11 @@ func (s *revenueService) groupBookingData(ctx context.Context, bookings []*model
 			TotalSeatsBooked: totalSeats,
 		})
 	}
-	
+
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Label < result[j].Label
 	})
-	
+
 	return result, nil
 }
 
