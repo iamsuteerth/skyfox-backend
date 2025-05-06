@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	"github.com/iamsuteerth/skyfox-backend/pkg/utils"
@@ -24,6 +25,7 @@ type BookingRepository interface {
 	MarkBookingCheckedIn(ctx context.Context, bookingID int) (bool, error)
 	FindBookingsByIds(ctx context.Context, bookingIDs []int) ([]*models.Booking, error)
 	FindBookingsByStatus(ctx context.Context, statuses []string) ([]*models.Booking, error)
+	FindBookingsByStatusAndDate(ctx context.Context, statuses []string, month *int, year *int) ([]*models.Booking, error)
 }
 
 type bookingRepository struct {
@@ -420,5 +422,72 @@ func (repo *bookingRepository) FindBookingsByIds(ctx context.Context, bookingIDs
 		log.Error().Err(err).Msg("Error iterating over bookings by IDs")
 		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to iterate over bookings by IDs", err)
 	}
+	return bookings, nil
+}
+
+func (repo *bookingRepository) FindBookingsByStatusAndDate(ctx context.Context, statuses []string, month *int, year *int) ([]*models.Booking, error) {
+	if len(statuses) == 0 {
+		return []*models.Booking{}, nil
+	}
+
+	query := `
+        SELECT 
+            id, date, show_id, customer_id, customer_username, 
+            no_of_seats, amount_paid, status, booking_time, payment_type
+        FROM booking
+        WHERE status = ANY($1)
+    `
+
+	args := []interface{}{statuses}
+	argCount := 2
+
+	if month != nil {
+		query += fmt.Sprintf(" AND EXTRACT(MONTH FROM booking_time) = $%d", argCount)
+		args = append(args, *month)
+		argCount++
+	}
+
+	if year != nil {
+		query += fmt.Sprintf(" AND EXTRACT(YEAR FROM booking_time) = $%d", argCount)
+		args = append(args, *year)
+	}
+
+	query += " ORDER BY booking_time DESC"
+
+	rows, err := repo.db.Query(ctx, query, args...)
+
+	if err != nil {
+		log.Error().Err(err).Strs("statuses", statuses).Msg("Failed to query bookings by status")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to retrieve bookings", err)
+	}
+	defer rows.Close()
+
+	var bookings []*models.Booking
+	for rows.Next() {
+		var booking models.Booking
+		err := rows.Scan(
+			&booking.Id,
+			&booking.Date,
+			&booking.ShowId,
+			&booking.CustomerId,
+			&booking.CustomerUsername,
+			&booking.NoOfSeats,
+			&booking.AmountPaid,
+			&booking.Status,
+			&booking.BookingTime,
+			&booking.PaymentType,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("Error scanning booking row")
+			return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to scan booking data", err)
+		}
+		bookings = append(bookings, &booking)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Error().Err(err).Msg("Error iterating over booking rows")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to iterate over bookings", err)
+	}
+
 	return bookings, nil
 }

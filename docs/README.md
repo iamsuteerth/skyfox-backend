@@ -2506,3 +2506,124 @@ For the best frontend experience, implement the API with dropdown filters that d
 - Label components are always separated by semicolons (`;`) and ordered according to the query parameter order.
 - All revenue calculations consider only bookings with `Confirmed` or `CheckedIn` status.
 
+## Dashboard - Booking Data as CSV
+
+The Booking CSV API provides a way to export booking data for analysis or record-keeping purposes. This endpoint allows administrators to download booking information as a CSV file, with optional filtering by month and year.
+
+### How to Use Query Parameters
+
+The Booking CSV API supports the following optional query parameters for filtering:
+
+- **Month Filter**: Filter by specific month (`month=1-12`)
+- **Year Filter**: Filter by specific year (`year=YYYY`)
+
+When no parameters are provided, all booking data is exported.
+
+### Important Notes
+
+1. **Authentication**: This API requires admin authentication
+2. **Content Type**: Unlike other APIs that return JSON, this endpoint returns a CSV file with appropriate headers
+3. **Response Format**: The response is a downloadable CSV file, not a JSON object
+4. **Data Scope**: Only "Confirmed" and "CheckedIn" bookings are included in the export
+
+### Download Bookings as CSV
+
+- **URL**: `/booking-csv`
+- **Method**: `GET`
+- **Authentication**: Required (Admin role)
+- **Query Parameters**:
+  - `month` (1-12, optional) - Filter by month
+  - `year` (e.g., 2025, optional) - Filter by year
+- **Description**: Download a CSV file containing booking data filtered by the specified month and/or year.
+
+#### Response Headers
+
+```
+Content-Type: text/csv
+Content-Disposition: attachment; filename="bookings.csv"
+```
+
+The filename varies based on filters:
+- All bookings: `bookings.csv`
+- Month filter: `bookings_April.csv`
+- Year filter: `bookings_2025.csv`
+- Month and year filter: `bookings_April_2025.csv`
+
+#### CSV Content
+
+The CSV file contains the following columns:
+```
+Booking ID, Show ID, Show Date, Customer Name, Phone Number, Number of Seats, Amount Paid, Payment Type, Booking Time, Status
+```
+
+#### Example CSV Content
+
+```csv
+Booking ID,Show ID,Show Date,Customer Name,Phone Number,Number of Seats,Amount Paid,Payment Type,Booking Time,Status
+54,25,2025-04-27,John Smith,9876543210,2,297.34,Card,2025-04-26 23:56:20,Confirmed
+11,22,2025-04-26,Jane Doe,8765432109,3,553.30,Card,2025-04-23 16:57:41,Confirmed
+```
+
+#### Error Responses
+
+- **Unauthorized (401)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "761234df-ff53-4bbb-882a-039925807c74"
+  }
+  ```
+
+- **Forbidden (403)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Admin role required",
+    "request_id": "4ccefb6e-f3bd-464b-8ce4-2f30ee4055f0"
+  }
+  ```
+
+- **Invalid Month (400)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_MONTH",
+    "message": "Month must be a number between 1 and 12",
+    "request_id": "33749b29-e38f-4aa3-91f6-336ce9d8fc2a"
+  }
+  ```
+
+- **Invalid Year (400)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_YEAR",
+    "message": "Year must be a valid number",
+    "request_id": "446ed540-c84f-4264-b1f6-f3958792cc90"
+  }
+  ```
+
+### Example Usage
+
+#### Download All Bookings
+```
+GET /booking-csv
+```
+
+#### Download Bookings for April 2025
+```
+GET /booking-csv?month=4&year=2025
+```
+
+#### Download Bookings for 2025
+```
+GET /booking-csv?year=2025
+```
+
+#### Download Bookings for April (All Years)
+```
+GET /booking-csv?month=4
+```

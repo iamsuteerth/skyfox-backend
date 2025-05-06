@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -18,15 +20,17 @@ type BookingController struct {
 	bookingService         services.BookingService
 	adminBookingService    services.AdminBookingService
 	customerBookingService services.CustomerBookingService
-	checkInService services.CheckInService
+	checkInService         services.CheckInService
+	bookingCSVService      services.BookingCSVService
 }
 
-func NewBookingController(bookingService services.BookingService, adminBookingService services.AdminBookingService, customerBookingService services.CustomerBookingService, checkInService services.CheckInService) *BookingController {
+func NewBookingController(bookingService services.BookingService, adminBookingService services.AdminBookingService, customerBookingService services.CustomerBookingService, checkInService services.CheckInService, bookingCSVService services.BookingCSVService) *BookingController {
 	return &BookingController{
 		bookingService:         bookingService,
 		adminBookingService:    adminBookingService,
 		customerBookingService: customerBookingService,
-		checkInService: checkInService,
+		checkInService:         checkInService,
+		bookingCSVService:      bookingCSVService,
 	}
 }
 
@@ -316,58 +320,104 @@ func (c *BookingController) GetCustomerLatestBooking(ctx *gin.Context) {
 }
 
 func (c *BookingController) GetCheckInBookings(ctx *gin.Context) {
-    bookings, err := c.checkInService.FindConfirmedBookings(ctx)
-    if err != nil {
-        utils.HandleErrorResponse(ctx, err, utils.GetRequestID(ctx))
-        return
-    }
-    utils.SendOKResponse(ctx, "Confirmed bookings fetched successfully", utils.GetRequestID(ctx), bookings)
+	bookings, err := c.checkInService.FindConfirmedBookings(ctx)
+	if err != nil {
+		utils.HandleErrorResponse(ctx, err, utils.GetRequestID(ctx))
+		return
+	}
+	utils.SendOKResponse(ctx, "Confirmed bookings fetched successfully", utils.GetRequestID(ctx), bookings)
 }
 
 func (c *BookingController) BulkCheckInBookings(ctx *gin.Context) {
-    var req request.BulkCheckInRequest
-    if err := ctx.ShouldBindJSON(&req); err != nil {
-        utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_INPUT", "Invalid input", err), utils.GetRequestID(ctx))
-        return
-    }
+	var req request.BulkCheckInRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_INPUT", "Invalid input", err), utils.GetRequestID(ctx))
+		return
+	}
 
-    checkedIn, alreadyDone, invalid, err := c.checkInService.MarkBookingsCheckedIn(ctx, req.BookingIDs)
-    if err != nil {
-        utils.HandleErrorResponse(ctx, err, utils.GetRequestID(ctx))
-        return
-    }
+	checkedIn, alreadyDone, invalid, err := c.checkInService.MarkBookingsCheckedIn(ctx, req.BookingIDs)
+	if err != nil {
+		utils.HandleErrorResponse(ctx, err, utils.GetRequestID(ctx))
+		return
+	}
 
-    resp := response.BulkCheckInResponse{
-        CheckedIn:   checkedIn,
-        AlreadyDone: alreadyDone,
-        Invalid:     invalid,
-    }
-    utils.SendOKResponse(ctx, "Bulk check-in attempted", utils.GetRequestID(ctx), resp)
+	resp := response.BulkCheckInResponse{
+		CheckedIn:   checkedIn,
+		AlreadyDone: alreadyDone,
+		Invalid:     invalid,
+	}
+	utils.SendOKResponse(ctx, "Bulk check-in attempted", utils.GetRequestID(ctx), resp)
 }
 
 func (c *BookingController) SingleCheckInBooking(ctx *gin.Context) {
-    var req request.SingleCheckInRequest
-    if err := ctx.ShouldBindJSON(&req); err != nil {
-        utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_INPUT", "Invalid input", err), utils.GetRequestID(ctx))
-        return
-    }
+	var req request.SingleCheckInRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_INPUT", "Invalid input", err), utils.GetRequestID(ctx))
+		return
+	}
 
-    checkedIn, alreadyDone, invalid, err := c.checkInService.MarkBookingsCheckedIn(ctx, []int{req.BookingID})
-    if err != nil {
-        utils.HandleErrorResponse(ctx, err, utils.GetRequestID(ctx))
-        return
-    }
+	checkedIn, alreadyDone, invalid, err := c.checkInService.MarkBookingsCheckedIn(ctx, []int{req.BookingID})
+	if err != nil {
+		utils.HandleErrorResponse(ctx, err, utils.GetRequestID(ctx))
+		return
+	}
 
-    resp := response.BulkCheckInResponse{
-        CheckedIn:   checkedIn,
-        AlreadyDone: alreadyDone,
-        Invalid:     invalid,
-    }
-    msg := "Booking checked in successfully"
-    if len(alreadyDone) > 0 {
-        msg = "Booking was already checked in"
-    } else if len(invalid) > 0 {
-        msg = "Check-in failed: invalid booking (already expired/invalid status/or show ended)"
-    }
-    utils.SendOKResponse(ctx, msg, utils.GetRequestID(ctx), resp)
+	resp := response.BulkCheckInResponse{
+		CheckedIn:   checkedIn,
+		AlreadyDone: alreadyDone,
+		Invalid:     invalid,
+	}
+	msg := "Booking checked in successfully"
+	if len(alreadyDone) > 0 {
+		msg = "Booking was already checked in"
+	} else if len(invalid) > 0 {
+		msg = "Check-in failed: invalid booking (already expired/invalid status/or show ended)"
+	}
+	utils.SendOKResponse(ctx, msg, utils.GetRequestID(ctx), resp)
+}
+
+func (bc *BookingController) DownloadBookingsCSV(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
+
+	var month, year *int
+
+	monthStr := ctx.Query("month")
+	if monthStr != "" {
+		mVal, err := strconv.Atoi(monthStr)
+		if err != nil || mVal < 1 || mVal > 12 {
+			utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_MONTH", "Month must be a number between 1 and 12", err), requestID)
+			return
+		}
+		month = &mVal
+	}
+
+	yearStr := ctx.Query("year")
+	if yearStr != "" {
+		yVal, err := strconv.Atoi(yearStr)
+		if err != nil {
+			utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_YEAR", "Year must be a valid number", err), requestID)
+			return
+		}
+		year = &yVal
+	}
+
+	filename := "bookings.csv"
+	if month != nil && year != nil {
+		monthName := time.Month(*month).String()
+		filename = fmt.Sprintf("bookings_%s_%d.csv", monthName, *year)
+	} else if month != nil {
+		monthName := time.Month(*month).String()
+		filename = fmt.Sprintf("bookings_%s.csv", monthName)
+	} else if year != nil {
+		filename = fmt.Sprintf("bookings_%d.csv", *year)
+	}
+
+	ctx.Header("Content-Type", "text/csv")
+	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+
+	if err := bc.bookingCSVService.WriteBookingsCSV(ctx, ctx.Writer, month, year); err != nil {
+		ctx.Status(500)
+		log.Error().Err(err).Msg("Failed to write bookings CSV")
+		return
+	}
 }

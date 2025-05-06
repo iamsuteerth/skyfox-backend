@@ -93,7 +93,7 @@ func (s *checkInService) MarkBookingsCheckedIn(ctx context.Context, bookingIDs [
         if ok {
             checkedIn = append(checkedIn, id)
         } else {
-            alreadyDone = append(alreadyDone, id) // e.g. race
+            alreadyDone = append(alreadyDone, id)
         }
     }
     return checkedIn, alreadyDone, invalid, nil

@@ -67,6 +67,7 @@ func main() {
 	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, skyCustomerRepository, paymentService)
 	checkInService := services.NewCheckInService(bookingRepository, showRepository)
 	revenueService := services.NewRevenueService(bookingRepository, showRepository, slotRepository, movieService)
+	bookingCSVService := services.NewBookingCSVService(bookingRepository, showRepository, adminBookedCustomerRepository, skyCustomerRepository)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -75,7 +76,7 @@ func main() {
 	showController := controllers.NewShowController(showService)
 	slotController := controllers.NewSlotController(slotService)
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
-	bookingController := controllers.NewBookingController(bookingService, adminBookingService, customerBookingService, checkInService)
+	bookingController := controllers.NewBookingController(bookingService, adminBookingService, customerBookingService, checkInService, bookingCSVService)
 	revenueController := controllers.NewDashboardRevenueController(revenueService)
 
 	binding.Validator = new(customValidator.DtoValidator)
@@ -192,6 +193,8 @@ func main() {
 		{
 			revenueAPIs.GET("", revenueController.GetRevenue) // Revenue API with query param filtering
 		}
+
+		adminAPIs.GET(constants.BookingCSVEndpoint, bookingController.DownloadBookingsCSV) // Download booking data as csv with query param filters
 	}
 
 	adminStaffAPIs := adminStaffRouter.Group("")
