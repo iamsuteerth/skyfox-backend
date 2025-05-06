@@ -677,6 +677,53 @@
   }
   ```
 
+### Get All Slots
+- **URL**: `/slot-all`
+- **Method**: `GET`
+- **Authentication**: Required (Admin only)
+- **Description**: Retrieves all available slots.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Available slots retrieved successfully",
+    "request_id": "unique-request-id",
+    "status": "SUCCESS",
+    "data": [
+      {
+        "id": 1,
+        "name": "Morning",
+        "startTime": "09:00:00.000000",
+        "endTime": "12:00:00.000000"
+      },
+      {
+        "id": 2,
+        "name": "Afternoon",
+        "startTime": "13:00:00.000000",
+        "endTime": "16:00:00.000000"
+      }
+      ...
+    ]
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "UNAUTHORIZED",
+    "message": "Missing Authorization header",
+    "request_id": "unique-request-id"
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Admin role required",
+    "request_id": "unique-request-id"
+  }
+  ```
+
 ## Profile Management
 
 ### Get Customer Profile

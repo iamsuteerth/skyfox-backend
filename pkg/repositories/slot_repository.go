@@ -15,6 +15,7 @@ type SlotRepository interface {
 	GetAvailableSlotsForDate(ctx context.Context, date time.Time) ([]models.Slot, error)
 	GetSlotById(ctx context.Context, slotId int) (*models.Slot, error)
 	IsSlotAvailableForDate(ctx context.Context, slotId int, date time.Time) (bool, error)
+	GetAllSlots(ctx context.Context) ([]models.Slot, error)
 }
 
 type slotRepository struct {
@@ -41,6 +42,37 @@ func (repo *slotRepository) GetAvailableSlotsForDate(ctx context.Context, date t
 	if err != nil {
 		log.Error().Err(err).Time("date", date).Msg("Failed to query available slots for date")
 		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to retrieve available slots", err)
+	}
+	defer rows.Close()
+
+	var slots []models.Slot
+	for rows.Next() {
+		var slot models.Slot
+		if err := rows.Scan(&slot.Id, &slot.Name, &slot.StartTime, &slot.EndTime); err != nil {
+			log.Error().Err(err).Msg("Error scanning available slot row")
+			return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to scan slot data", err)
+		}
+		slots = append(slots, slot)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Error().Err(err).Msg("Error iterating over available slot rows")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to iterate over available slots", err)
+	}
+
+	return slots, nil
+}
+
+func (repo *slotRepository) GetAllSlots(ctx context.Context) ([]models.Slot, error) {
+	query := `
+		SELECT s.id, s.name, s.start_time, s.end_time
+		FROM slot s
+		ORDER BY s.id
+	`
+	rows, err := repo.db.Query(ctx, query)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to query slots")
+		return nil, utils.NewInternalServerError("DATABASE_ERROR", "Failed to retrieve slots", err)
 	}
 	defer rows.Close()
 

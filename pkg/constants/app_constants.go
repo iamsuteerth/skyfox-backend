@@ -12,6 +12,7 @@ const (
 	ShowsEndPoint          = "/shows"
 	ShowEndPoint           = "show"
 	SlotEndPoint           = "/slot"
+	AllSlotEndPoint        = "/slot-all"
 	MoviesEndPoint         = "/movies"
 	BookingSeatMapEndPoint = "/:show_id/seat-map"
 	// Role Endpoints

@@ -178,6 +178,8 @@ func main() {
 	{
 		adminAPIs.GET(constants.SlotEndPoint, slotController.GetAvailableSlots) // Get Available Slots
 
+		adminAPIs.GET(constants.AllSlotEndPoint, slotController.GetAllSlots) // Get All Slots
+
 		showCreation := adminAPIs.Group(constants.ShowEndPoint)
 		{
 			showCreation.GET(constants.MoviesEndPoint, showController.GetMovies) // Get Movies for Show creation
