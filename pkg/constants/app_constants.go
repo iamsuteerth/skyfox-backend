@@ -12,6 +12,7 @@ const (
 	ShowsEndPoint          = "/shows"
 	ShowEndPoint           = "show"
 	SlotEndPoint           = "/slot"
+	AllSlotEndPoint        = "/slot-all"
 	MoviesEndPoint         = "/movies"
 	BookingSeatMapEndPoint = "/:show_id/seat-map"
 	// Role Endpoints
@@ -35,6 +36,11 @@ const (
 	BookingInitializeEndpoint     = "/initialize"
 	CancelBookingEndpoint         = "/:id/cancel"
 	PaymentEndpoint               = "/payment"
+	// Checkin Related Endpoints
+	CheckinEndpoint = "/check-in"
+	// Admin Dashboard Related Endpoints
+	RevenueEndpoint    = "/revenue"
+	BookingCSVEndpoint = "/booking-csv"
 )
 
 const (

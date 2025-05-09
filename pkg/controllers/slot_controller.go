@@ -43,3 +43,21 @@ func (sc *SlotController) GetAvailableSlots(ctx *gin.Context) {
 
 	utils.SendOKResponse(ctx, "Available slots retrieved successfully", requestID, slotResponses)
 }
+
+func (sc *SlotController) GetAllSlots(ctx *gin.Context) {
+	requestID := utils.GetRequestID(ctx)
+
+	slots, err := sc.slotService.GetAllSlots(ctx.Request.Context())
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get all slots")
+		utils.HandleErrorResponse(ctx, err, requestID)
+		return
+	}
+
+	var slotResponses []response.SlotResponse
+	for _, slot := range slots {
+		slotResponses = append(slotResponses, response.NewSlotResponse(slot))
+	}
+
+	utils.SendOKResponse(ctx, "Slots retrieved successfully", requestID, slotResponses)
+}

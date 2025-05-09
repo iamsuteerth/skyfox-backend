@@ -6,27 +6,19 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o server ./server
 
-FROM nginx:alpine
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /app/skyfox ./server/main.go
+
+FROM alpine:3.18
 
 WORKDIR /app
 
-RUN apk add --no-cache bash gettext supervisor
+COPY --from=builder /app/skyfox /app/skyfox
 
-COPY --from=builder /app/server .
+COPY --from=builder /app/assets /app/assets
 
-COPY nginx.conf.template /etc/nginx/nginx.conf.template
-COPY supervisord.conf /etc/supervisord.conf
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /app/skyfox
 
-ENV GIN_MODE=release
+EXPOSE 8080
 
-RUN mkdir -p /var/log/supervisor /var/run/supervisor /var/log/nginx /var/run/nginx /tmp/nginx
-
-RUN chmod 777 /var/log/supervisor /var/run/supervisor /var/log/nginx /var/run/nginx /tmp/nginx
-
-EXPOSE 80
-
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/app/skyfox"]

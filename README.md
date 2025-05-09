@@ -217,6 +217,8 @@ The migration files are stored in the `supabase/migration` directory:
 - `000013_add_foreign_key_indices.down.sql` - Removes foreign key indices
 - `000014_circular_dependency_fix.up.sql` - Fixes circular dependency between booking and admin_booked_customer
 - `000014_circular_dependency_fix.down.sql` - Reverts the circular dependency fix
+- `000015_performance_idices.up.sql` - Add performance indices on revenue related fields
+- `000015_performance_idices.dowb.sql` - Removes the indices on revenue related fields
 
 To apply these migrations to your Supabase project, use the Supabase SQL Editor or a migration tool.
 

@@ -65,6 +65,9 @@ func main() {
 	bookingService := services.NewBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, slotRepository, adminBookedCustomerRepository, skyCustomerRepository, movieService)
 	adminBookingService := services.NewAdminBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, adminBookedCustomerRepository, slotRepository)
 	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, skyCustomerRepository, paymentService)
+	checkInService := services.NewCheckInService(bookingRepository, showRepository)
+	revenueService := services.NewRevenueService(bookingRepository, showRepository, slotRepository, movieService)
+	bookingCSVService := services.NewBookingCSVService(bookingRepository, showRepository, adminBookedCustomerRepository, skyCustomerRepository)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -73,7 +76,8 @@ func main() {
 	showController := controllers.NewShowController(showService)
 	slotController := controllers.NewSlotController(slotService)
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
-	bookingController := controllers.NewBookingController(bookingService, adminBookingService, customerBookingService)
+	bookingController := controllers.NewBookingController(bookingService, adminBookingService, customerBookingService, checkInService, bookingCSVService)
+	revenueController := controllers.NewDashboardRevenueController(revenueService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -174,6 +178,8 @@ func main() {
 	{
 		adminAPIs.GET(constants.SlotEndPoint, slotController.GetAvailableSlots) // Get Available Slots
 
+		adminAPIs.GET(constants.AllSlotEndPoint, slotController.GetAllSlots) // Get All Slots
+
 		showCreation := adminAPIs.Group(constants.ShowEndPoint)
 		{
 			showCreation.GET(constants.MoviesEndPoint, showController.GetMovies) // Get Movies for Show creation
@@ -184,6 +190,13 @@ func main() {
 		{
 			bookingAPIs.POST(constants.CreateCustomerBookingEndpoint, bookingController.CreateAdminBooking) // Create Booking Through Admin
 		}
+
+		revenueAPIs := adminAPIs.Group(constants.RevenueEndpoint)
+		{
+			revenueAPIs.GET("", revenueController.GetRevenue) // Revenue API with query param filtering
+		}
+
+		adminAPIs.GET(constants.BookingCSVEndpoint, bookingController.DownloadBookingsCSV) // Download booking data as csv with query param filters
 	}
 
 	adminStaffAPIs := adminStaffRouter.Group("")
@@ -196,6 +209,13 @@ func main() {
 		staff := adminStaffAPIs.Group(constants.StaffEndPoint)
 		{
 			staff.GET(constants.ProfileEndPoint, adminStaffController.GetStaffProfile) // Get Staff Profile
+		}
+
+		checkin := adminStaffAPIs.Group(constants.CheckinEndpoint)
+		{
+			checkin.GET(constants.BookingsEndpoint, bookingController.GetCheckInBookings)   // Get all confirmed bookings
+			checkin.POST(constants.BookingsEndpoint, bookingController.BulkCheckInBookings) // Mark bookings as checked-in in bulk
+			checkin.POST(constants.BookingEndpoint, bookingController.SingleCheckInBooking) // Mark a booking as checked-in
 		}
 	}
 

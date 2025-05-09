@@ -1,0 +1,1939 @@
+REVENUE API TEST RESULTS
+========================
+
+Test run at: 2025-05-05 19:11:15
+
+TEST #1: Default, all data
+URL: /revenue
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "c8935e28-0abd-47e3-9a30-8cbda7d433ca",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 21525.539999999994,
+        "mean_revenue": 768.7692857142855,
+        "median_revenue": 447.34,
+        "total_bookings": 28,
+        "total_seats_booked": 63,
+        "groups": [
+            {
+                "label": "All",
+                "total_revenue": 21525.539999999994,
+                "mean_revenue": 768.7692857142855,
+                "median_revenue": 447.34,
+                "total_bookings": 28,
+                "total_seats_booked": 63
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #2: Explicit all timeframe
+URL: /revenue?timeframe=all
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "b5bdf7e8-ddb3-431f-8452-7d1ebbc01c89",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 21525.539999999994,
+        "mean_revenue": 768.7692857142855,
+        "median_revenue": 447.34,
+        "total_bookings": 28,
+        "total_seats_booked": 63,
+        "groups": [
+            {
+                "label": "All",
+                "total_revenue": 21525.539999999994,
+                "mean_revenue": 768.7692857142855,
+                "median_revenue": 447.34,
+                "total_bookings": 28,
+                "total_seats_booked": 63
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #3: Daily timeframe
+URL: /revenue?timeframe=daily
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "e53c8072-6321-4b29-8d63-b1e98bc245db",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 21525.539999999994,
+        "mean_revenue": 768.7692857142855,
+        "median_revenue": 447.34,
+        "total_bookings": 28,
+        "total_seats_booked": 63,
+        "groups": [
+            {
+                "label": "2025-04-23",
+                "total_revenue": 1659.8999999999999,
+                "mean_revenue": 553.3,
+                "median_revenue": 553.3,
+                "total_bookings": 3,
+                "total_seats_booked": 6
+            },
+            {
+                "label": "2025-04-24",
+                "total_revenue": 2016.5,
+                "mean_revenue": 2016.5,
+                "median_revenue": 2016.5,
+                "total_bookings": 1,
+                "total_seats_booked": 10
+            },
+            {
+                "label": "2025-04-25",
+                "total_revenue": 691.28,
+                "mean_revenue": 691.28,
+                "median_revenue": 691.28,
+                "total_bookings": 1,
+                "total_seats_booked": 2
+            },
+            {
+                "label": "2025-04-26",
+                "total_revenue": 3973.5900000000006,
+                "mean_revenue": 361.2354545454546,
+                "median_revenue": 342.76,
+                "total_bookings": 11,
+                "total_seats_booked": 11
+            },
+            {
+                "label": "2025-04-27",
+                "total_revenue": 5960.099999999999,
+                "mean_revenue": 1986.6999999999998,
+                "median_revenue": 1639.36,
+                "total_bookings": 3,
+                "total_seats_booked": 15
+            },
+            {
+                "label": "2025-04-28",
+                "total_revenue": 224.29,
+                "mean_revenue": 224.29,
+                "median_revenue": 224.29,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            },
+            {
+                "label": "2025-04-29",
+                "total_revenue": 5709.78,
+                "mean_revenue": 1141.956,
+                "median_revenue": 426.35,
+                "total_bookings": 5,
+                "total_seats_booked": 15
+            },
+            {
+                "label": "2025-05-02",
+                "total_revenue": 1290.1,
+                "mean_revenue": 430.0333333333333,
+                "median_revenue": 449.84,
+                "total_bookings": 3,
+                "total_seats_booked": 3
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #4: Weekly timeframe
+URL: /revenue?timeframe=weekly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "86740c8e-ee66-4c0a-b60f-fcf5eca063f0",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 21525.539999999994,
+        "mean_revenue": 768.7692857142855,
+        "median_revenue": 447.34,
+        "total_bookings": 28,
+        "total_seats_booked": 63,
+        "groups": [
+            {
+                "label": "2025-W17",
+                "total_revenue": 14301.369999999999,
+                "mean_revenue": 752.7036842105263,
+                "median_revenue": 447.34,
+                "total_bookings": 19,
+                "total_seats_booked": 44
+            },
+            {
+                "label": "2025-W18",
+                "total_revenue": 7224.17,
+                "mean_revenue": 802.6855555555555,
+                "median_revenue": 426.35,
+                "total_bookings": 9,
+                "total_seats_booked": 19
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #5: Monthly timeframe
+URL: /revenue?timeframe=monthly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "464c4dbe-0545-4711-99c7-eb4db03b1520",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 21525.539999999994,
+        "mean_revenue": 768.7692857142855,
+        "median_revenue": 447.34,
+        "total_bookings": 28,
+        "total_seats_booked": 63,
+        "groups": [
+            {
+                "label": "2025-04",
+                "total_revenue": 20235.44,
+                "mean_revenue": 809.4176,
+                "median_revenue": 447.34,
+                "total_bookings": 25,
+                "total_seats_booked": 60
+            },
+            {
+                "label": "2025-05",
+                "total_revenue": 1290.1,
+                "mean_revenue": 430.0333333333333,
+                "median_revenue": 449.84,
+                "total_bookings": 3,
+                "total_seats_booked": 3
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #6: Yearly timeframe
+URL: /revenue?timeframe=yearly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "cf32eff5-3e46-44e2-ac2c-f76c4320fe28",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 21525.539999999994,
+        "mean_revenue": 768.7692857142855,
+        "median_revenue": 447.34,
+        "total_bookings": 28,
+        "total_seats_booked": 63,
+        "groups": [
+            {
+                "label": "2025",
+                "total_revenue": 21525.539999999994,
+                "mean_revenue": 768.7692857142855,
+                "median_revenue": 447.34,
+                "total_bookings": 28,
+                "total_seats_booked": 63
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #7: Filter by movie ID
+URL: /revenue?movie_id=tt6823368
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "9d6fd31f-9896-44b6-aa86-8394d0139b5d",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 7823.750000000001,
+        "mean_revenue": 977.9687500000001,
+        "median_revenue": 447.34,
+        "total_bookings": 8,
+        "total_seats_booked": 20,
+        "groups": [
+            {
+                "label": "Glass",
+                "total_revenue": 7823.750000000001,
+                "mean_revenue": 977.9687500000001,
+                "median_revenue": 447.34,
+                "total_bookings": 8,
+                "total_seats_booked": 20
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #8: Filter by slot ID (Morning)
+URL: /revenue?slot_id=1
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "72c297ef-f30f-49bb-ad51-6e876a0da7e2",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 8946.48,
+        "mean_revenue": 894.6479999999999,
+        "median_revenue": 447.34,
+        "total_bookings": 10,
+        "total_seats_booked": 22,
+        "groups": [
+            {
+                "label": "Morning",
+                "total_revenue": 8946.48,
+                "mean_revenue": 894.6479999999999,
+                "median_revenue": 447.34,
+                "total_bookings": 10,
+                "total_seats_booked": 22
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #9: Filter by slot ID (Afternoon)
+URL: /revenue?slot_id=2
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "9d009ec7-640f-428d-9d2b-a16704ff75bf",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 5591.9800000000005,
+        "mean_revenue": 559.1980000000001,
+        "median_revenue": 366.59000000000003,
+        "total_bookings": 10,
+        "total_seats_booked": 22,
+        "groups": [
+            {
+                "label": "Afternoon",
+                "total_revenue": 5591.9800000000005,
+                "mean_revenue": 559.1980000000001,
+                "median_revenue": 366.59000000000003,
+                "total_bookings": 10,
+                "total_seats_booked": 22
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #10: Filter by slot ID (Evening)
+URL: /revenue?slot_id=3
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "16bfb792-630b-4f5e-86a2-422f612eb1f2",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 6599.68,
+        "mean_revenue": 1099.9466666666667,
+        "median_revenue": 489.52500000000003,
+        "total_bookings": 6,
+        "total_seats_booked": 17,
+        "groups": [
+            {
+                "label": "Evening",
+                "total_revenue": 6599.68,
+                "mean_revenue": 1099.9466666666667,
+                "median_revenue": 489.52500000000003,
+                "total_bookings": 6,
+                "total_seats_booked": 17
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #11: Filter by Crime genre
+URL: /revenue?genre=Crime
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "39f35845-5b42-4444-9dbf-be5eaa7ac4fc",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Crime",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #12: Filter by Drama genre
+URL: /revenue?genre=Drama
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "29fd3895-2a61-4b90-95a9-670710b53f9b",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 18653.359999999997,
+        "mean_revenue": 932.6679999999999,
+        "median_revenue": 447.34,
+        "total_bookings": 20,
+        "total_seats_booked": 55,
+        "groups": [
+            {
+                "label": "Drama",
+                "total_revenue": 18653.359999999997,
+                "mean_revenue": 932.6679999999999,
+                "median_revenue": 447.34,
+                "total_bookings": 20,
+                "total_seats_booked": 55
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #13: Filter by Action genre
+URL: /revenue?genre=Action
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "98690f95-900b-4fd0-9b9f-4ba051e0a3b6",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 1290.1,
+        "mean_revenue": 430.0333333333333,
+        "median_revenue": 449.84,
+        "total_bookings": 3,
+        "total_seats_booked": 3,
+        "groups": [
+            {
+                "label": "Action",
+                "total_revenue": 1290.1,
+                "mean_revenue": 430.0333333333333,
+                "median_revenue": 449.84,
+                "total_bookings": 3,
+                "total_seats_booked": 3
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #14: Filter by April
+URL: /revenue?month=4
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "7419a03d-a317-4fd9-be57-0f016caa4781",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 20235.44,
+        "mean_revenue": 809.4176,
+        "median_revenue": 447.34,
+        "total_bookings": 25,
+        "total_seats_booked": 60,
+        "groups": [
+            {
+                "label": "April",
+                "total_revenue": 20235.44,
+                "mean_revenue": 809.4176,
+                "median_revenue": 447.34,
+                "total_bookings": 25,
+                "total_seats_booked": 60
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #15: Filter by May
+URL: /revenue?month=5
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "f8840e24-46e3-465b-b93a-ea07647625a3",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 1290.1,
+        "mean_revenue": 430.0333333333333,
+        "median_revenue": 449.84,
+        "total_bookings": 3,
+        "total_seats_booked": 3,
+        "groups": [
+            {
+                "label": "May",
+                "total_revenue": 1290.1,
+                "mean_revenue": 430.0333333333333,
+                "median_revenue": 449.84,
+                "total_bookings": 3,
+                "total_seats_booked": 3
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #16: Filter by year 2025
+URL: /revenue?year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "d88e7ed6-b9a8-4ccb-9222-01e13644c75a",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 21525.539999999994,
+        "mean_revenue": 768.7692857142855,
+        "median_revenue": 447.34,
+        "total_bookings": 28,
+        "total_seats_booked": 63,
+        "groups": [
+            {
+                "label": "2025",
+                "total_revenue": 21525.539999999994,
+                "mean_revenue": 768.7692857142855,
+                "median_revenue": 447.34,
+                "total_bookings": 28,
+                "total_seats_booked": 63
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #17: Filter by April 2025
+URL: /revenue?month=4&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "6533acaa-b308-4d79-9f00-70db94cb7e0e",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 20235.44,
+        "mean_revenue": 809.4176,
+        "median_revenue": 447.34,
+        "total_bookings": 25,
+        "total_seats_booked": 60,
+        "groups": [
+            {
+                "label": "April;2025",
+                "total_revenue": 20235.44,
+                "mean_revenue": 809.4176,
+                "median_revenue": 447.34,
+                "total_bookings": 25,
+                "total_seats_booked": 60
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #18: Filter by May 2025
+URL: /revenue?month=5&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "5077fbe7-3a62-47ae-a14e-081ee9005c4d",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 1290.1,
+        "mean_revenue": 430.0333333333333,
+        "median_revenue": 449.84,
+        "total_bookings": 3,
+        "total_seats_booked": 3,
+        "groups": [
+            {
+                "label": "May;2025",
+                "total_revenue": 1290.1,
+                "mean_revenue": 430.0333333333333,
+                "median_revenue": 449.84,
+                "total_bookings": 3,
+                "total_seats_booked": 3
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #19: Movie with daily timeframe
+URL: /revenue?movie_id=tt6823368&timeframe=daily
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "db56a053-bf97-420c-a0fe-0152f723ea75",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 7823.750000000001,
+        "mean_revenue": 977.9687500000001,
+        "median_revenue": 447.34,
+        "total_bookings": 8,
+        "total_seats_booked": 20,
+        "groups": [
+            {
+                "label": "Glass;2025-04-26",
+                "total_revenue": 2086.7,
+                "mean_revenue": 417.34,
+                "median_revenue": 447.34,
+                "total_bookings": 5,
+                "total_seats_booked": 5
+            },
+            {
+                "label": "Glass;2025-04-27",
+                "total_revenue": 5512.76,
+                "mean_revenue": 2756.38,
+                "median_revenue": 2756.38,
+                "total_bookings": 2,
+                "total_seats_booked": 14
+            },
+            {
+                "label": "Glass;2025-04-28",
+                "total_revenue": 224.29,
+                "mean_revenue": 224.29,
+                "median_revenue": 224.29,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #20: Movie with weekly timeframe
+URL: /revenue?movie_id=tt6823368&timeframe=weekly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "251e0627-1c02-43cc-8dc9-f705883e385e",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 7823.750000000001,
+        "mean_revenue": 977.9687500000001,
+        "median_revenue": 447.34,
+        "total_bookings": 8,
+        "total_seats_booked": 20,
+        "groups": [
+            {
+                "label": "Glass;2025-W17",
+                "total_revenue": 7599.460000000001,
+                "mean_revenue": 1085.637142857143,
+                "median_revenue": 447.34,
+                "total_bookings": 7,
+                "total_seats_booked": 19
+            },
+            {
+                "label": "Glass;2025-W18",
+                "total_revenue": 224.29,
+                "mean_revenue": 224.29,
+                "median_revenue": 224.29,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #21: Movie with monthly timeframe
+URL: /revenue?movie_id=tt6823368&timeframe=monthly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "d102d3b7-3cc4-443e-bbb9-069f8bf084f8",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 7823.750000000001,
+        "mean_revenue": 977.9687500000001,
+        "median_revenue": 447.34,
+        "total_bookings": 8,
+        "total_seats_booked": 20,
+        "groups": [
+            {
+                "label": "Glass;2025-04",
+                "total_revenue": 7823.750000000001,
+                "mean_revenue": 977.9687500000001,
+                "median_revenue": 447.34,
+                "total_bookings": 8,
+                "total_seats_booked": 20
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #22: Movie with yearly timeframe
+URL: /revenue?movie_id=tt6823368&timeframe=yearly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "91456096-7584-40b8-8461-d9de49906754",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 7823.750000000001,
+        "mean_revenue": 977.9687500000001,
+        "median_revenue": 447.34,
+        "total_bookings": 8,
+        "total_seats_booked": 20,
+        "groups": [
+            {
+                "label": "Glass;2025",
+                "total_revenue": 7823.750000000001,
+                "mean_revenue": 977.9687500000001,
+                "median_revenue": 447.34,
+                "total_bookings": 8,
+                "total_seats_booked": 20
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #23: Slot with daily timeframe
+URL: /revenue?slot_id=3&timeframe=daily
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "c20199ab-de1e-45eb-92ae-aea40b897c0b",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 6599.68,
+        "mean_revenue": 1099.9466666666667,
+        "median_revenue": 489.52500000000003,
+        "total_bookings": 6,
+        "total_seats_booked": 17,
+        "groups": [
+            {
+                "label": "Evening;2025-04-25",
+                "total_revenue": 691.28,
+                "mean_revenue": 691.28,
+                "median_revenue": 691.28,
+                "total_bookings": 1,
+                "total_seats_booked": 2
+            },
+            {
+                "label": "Evening;2025-04-26",
+                "total_revenue": 665.85,
+                "mean_revenue": 332.925,
+                "median_revenue": 332.925,
+                "total_bookings": 2,
+                "total_seats_booked": 2
+            },
+            {
+                "label": "Evening;2025-04-29",
+                "total_revenue": 5242.55,
+                "mean_revenue": 1747.5166666666667,
+                "median_revenue": 552.7,
+                "total_bookings": 3,
+                "total_seats_booked": 13
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #24: Slot with weekly timeframe
+URL: /revenue?slot_id=3&timeframe=weekly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "48f6dc60-0e5c-42ce-86ce-d9f7bb2e9c25",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 6599.68,
+        "mean_revenue": 1099.9466666666667,
+        "median_revenue": 489.52500000000003,
+        "total_bookings": 6,
+        "total_seats_booked": 17,
+        "groups": [
+            {
+                "label": "Evening;2025-W17",
+                "total_revenue": 1357.13,
+                "mean_revenue": 452.3766666666667,
+                "median_revenue": 420.64,
+                "total_bookings": 3,
+                "total_seats_booked": 4
+            },
+            {
+                "label": "Evening;2025-W18",
+                "total_revenue": 5242.55,
+                "mean_revenue": 1747.5166666666667,
+                "median_revenue": 552.7,
+                "total_bookings": 3,
+                "total_seats_booked": 13
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #25: Slot with monthly timeframe
+URL: /revenue?slot_id=3&timeframe=monthly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "c23945a1-ddcd-40fc-a41b-fea079ccdd7b",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 6599.68,
+        "mean_revenue": 1099.9466666666667,
+        "median_revenue": 489.52500000000003,
+        "total_bookings": 6,
+        "total_seats_booked": 17,
+        "groups": [
+            {
+                "label": "Evening;2025-04",
+                "total_revenue": 6599.68,
+                "mean_revenue": 1099.9466666666667,
+                "median_revenue": 489.52500000000003,
+                "total_bookings": 6,
+                "total_seats_booked": 17
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #26: Slot with yearly timeframe
+URL: /revenue?slot_id=3&timeframe=yearly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "ec0abafe-c471-4972-9ffc-13cb09abdddd",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 6599.68,
+        "mean_revenue": 1099.9466666666667,
+        "median_revenue": 489.52500000000003,
+        "total_bookings": 6,
+        "total_seats_booked": 17,
+        "groups": [
+            {
+                "label": "Evening;2025",
+                "total_revenue": 6599.68,
+                "mean_revenue": 1099.9466666666667,
+                "median_revenue": 489.52500000000003,
+                "total_bookings": 6,
+                "total_seats_booked": 17
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #27: Genre with daily timeframe
+URL: /revenue?genre=Crime&timeframe=daily
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "ab1a8e2c-be6c-4e3f-838b-65fc4282ad3b",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Crime;2025-04-26",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #28: Genre with weekly timeframe
+URL: /revenue?genre=Crime&timeframe=weekly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "14b5afa8-c9a1-4b5e-ac6a-b25424d48e1c",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Crime;2025-W17",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #29: Genre with monthly timeframe
+URL: /revenue?genre=Crime&timeframe=monthly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "c71efc85-531e-4185-9461-e2b9957b4763",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Crime;2025-04",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #30: Genre with yearly timeframe
+URL: /revenue?genre=Crime&timeframe=yearly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "8eca193f-5bca-4378-b5fd-3f1bd38676a6",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Crime;2025",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #31: Movie + slot
+URL: /revenue?movie_id=tt6823368&slot_id=3
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "46d8b2a2-c467-446f-86e5-12f959a71982",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #32: Movie + genre
+URL: /revenue?movie_id=tt6823368&genre=Crime
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "1c9cfab3-0fff-4845-a2d3-7e3b737b7143",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #33: Slot + genre
+URL: /revenue?slot_id=3&genre=Crime
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "ed03db5c-bbb3-4675-b2e5-544c3d0b8c98",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Evening;Crime",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #34: Movie + month
+URL: /revenue?movie_id=tt6823368&month=4
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "616b542d-7b2a-4f48-b4d8-ea47964e2f1b",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 7823.750000000001,
+        "mean_revenue": 977.9687500000001,
+        "median_revenue": 447.34,
+        "total_bookings": 8,
+        "total_seats_booked": 20,
+        "groups": [
+            {
+                "label": "Glass;April",
+                "total_revenue": 7823.750000000001,
+                "mean_revenue": 977.9687500000001,
+                "median_revenue": 447.34,
+                "total_bookings": 8,
+                "total_seats_booked": 20
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #35: Movie + year
+URL: /revenue?movie_id=tt6823368&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "3973fee3-16ba-40e1-ac5c-de3ce365d1af",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 7823.750000000001,
+        "mean_revenue": 977.9687500000001,
+        "median_revenue": 447.34,
+        "total_bookings": 8,
+        "total_seats_booked": 20,
+        "groups": [
+            {
+                "label": "Glass;2025",
+                "total_revenue": 7823.750000000001,
+                "mean_revenue": 977.9687500000001,
+                "median_revenue": 447.34,
+                "total_bookings": 8,
+                "total_seats_booked": 20
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #36: Slot + month
+URL: /revenue?slot_id=3&month=4
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "571b0271-c51f-4048-ae44-57f3b34993d7",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 6599.68,
+        "mean_revenue": 1099.9466666666667,
+        "median_revenue": 489.52500000000003,
+        "total_bookings": 6,
+        "total_seats_booked": 17,
+        "groups": [
+            {
+                "label": "Evening;April",
+                "total_revenue": 6599.68,
+                "mean_revenue": 1099.9466666666667,
+                "median_revenue": 489.52500000000003,
+                "total_bookings": 6,
+                "total_seats_booked": 17
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #37: Slot + year
+URL: /revenue?slot_id=3&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "4817c260-7131-4e0e-89c0-a27876685ea9",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 6599.68,
+        "mean_revenue": 1099.9466666666667,
+        "median_revenue": 489.52500000000003,
+        "total_bookings": 6,
+        "total_seats_booked": 17,
+        "groups": [
+            {
+                "label": "Evening;2025",
+                "total_revenue": 6599.68,
+                "mean_revenue": 1099.9466666666667,
+                "median_revenue": 489.52500000000003,
+                "total_bookings": 6,
+                "total_seats_booked": 17
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #38: Genre + month
+URL: /revenue?genre=Crime&month=4
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "b654c2cb-d674-4b28-9b06-43adc83f872e",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Crime;April",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #39: Genre + year
+URL: /revenue?genre=Crime&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "b1995851-9b43-41c2-9868-5926df9c8d7f",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Crime;2025",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #40: Movie + slot + timeframe
+URL: /revenue?movie_id=tt6823368&slot_id=3&timeframe=monthly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "ff8db941-d061-48de-9d47-1c3ca8e521f2",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #41: Movie + genre + timeframe
+URL: /revenue?movie_id=tt6823368&genre=Crime&timeframe=monthly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "3ea8649d-8c66-4289-8366-6aed700348c8",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #42: Slot + genre + timeframe
+URL: /revenue?slot_id=3&genre=Crime&timeframe=monthly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "0be74a35-9ee0-4808-8d13-88a00d3bdc2f",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Evening;Crime;2025-04",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #43: Movie + slot + month
+URL: /revenue?movie_id=tt6823368&slot_id=3&month=4
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "ccf05228-3a9e-462d-b58e-ff41bfeed362",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #44: Movie + genre + month
+URL: /revenue?movie_id=tt6823368&genre=Crime&month=4
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "923abf56-7355-42c0-aea8-bc3d91955bd4",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #45: Slot + genre + month
+URL: /revenue?slot_id=3&genre=Crime&month=4
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "8f27f79b-4b40-4bd6-983c-856503880e62",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Evening;Crime;April",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #46: Movie + slot + year
+URL: /revenue?movie_id=tt6823368&slot_id=3&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "7a06f593-e9eb-41c3-b2eb-42b95a69ce62",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #47: Movie + genre + year
+URL: /revenue?movie_id=tt6823368&genre=Crime&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "21cddf3f-4561-4d18-8276-42c83f215787",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #48: Slot + genre + year
+URL: /revenue?slot_id=3&genre=Crime&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "df66e242-da9b-4fc8-8de3-f1691b159178",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Evening;Crime;2025",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #49: Movie + slot + month + year
+URL: /revenue?movie_id=tt6823368&slot_id=3&month=4&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "eab9a671-fa49-41ea-bc3b-151c319216ef",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #50: Movie + genre + month + year
+URL: /revenue?movie_id=tt6823368&genre=Crime&month=4&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "01aaf2ec-2ad9-4a65-81ea-f28020f4326a",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #51: Slot + genre + month + year
+URL: /revenue?slot_id=3&genre=Crime&month=4&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "2ef14e88-ea94-4529-8ecb-452e70f423d4",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 245.21,
+        "mean_revenue": 245.21,
+        "median_revenue": 245.21,
+        "total_bookings": 1,
+        "total_seats_booked": 1,
+        "groups": [
+            {
+                "label": "Evening;Crime;April;2025",
+                "total_revenue": 245.21,
+                "mean_revenue": 245.21,
+                "median_revenue": 245.21,
+                "total_bookings": 1,
+                "total_seats_booked": 1
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #52: Movie then genre
+URL: /revenue?movie_id=tt6823368&genre=Crime
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "3f15a867-f119-4453-84b9-7ce0b60dcafe",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #53: Genre then movie
+URL: /revenue?genre=Crime&movie_id=tt6823368
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "1d0f00ed-cff6-4f5c-b3e3-1811bffac917",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #54: Timeframe then slot
+URL: /revenue?timeframe=monthly&slot_id=3
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "24872826-3c85-4b2a-abab-268afe6209d2",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 6599.68,
+        "mean_revenue": 1099.9466666666667,
+        "median_revenue": 489.52500000000003,
+        "total_bookings": 6,
+        "total_seats_booked": 17,
+        "groups": [
+            {
+                "label": "2025-04;Evening",
+                "total_revenue": 6599.68,
+                "mean_revenue": 1099.9466666666667,
+                "median_revenue": 489.52500000000003,
+                "total_bookings": 6,
+                "total_seats_booked": 17
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #55: Slot then timeframe
+URL: /revenue?slot_id=3&timeframe=monthly
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "fc8b239d-e173-4a47-99cd-99bfa6623a5a",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 6599.68,
+        "mean_revenue": 1099.9466666666667,
+        "median_revenue": 489.52500000000003,
+        "total_bookings": 6,
+        "total_seats_booked": 17,
+        "groups": [
+            {
+                "label": "Evening;2025-04",
+                "total_revenue": 6599.68,
+                "mean_revenue": 1099.9466666666667,
+                "median_revenue": 489.52500000000003,
+                "total_bookings": 6,
+                "total_seats_booked": 17
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #56: Complex param order
+URL: /revenue?slot_id=3&movie_id=tt6823368&timeframe=daily
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "ee386fda-322e-45f6-8957-7ce36c44d46a",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #57: Month then year
+URL: /revenue?month=4&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "b1df305b-b518-4a5b-905a-8578e1066bb6",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 20235.44,
+        "mean_revenue": 809.4176,
+        "median_revenue": 447.34,
+        "total_bookings": 25,
+        "total_seats_booked": 60,
+        "groups": [
+            {
+                "label": "April;2025",
+                "total_revenue": 20235.44,
+                "mean_revenue": 809.4176,
+                "median_revenue": 447.34,
+                "total_bookings": 25,
+                "total_seats_booked": 60
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #58: Year then month
+URL: /revenue?year=2025&month=4
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "950a55dc-fd4d-4bc8-89d4-0152145e640d",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 20235.44,
+        "mean_revenue": 809.4176,
+        "median_revenue": 447.34,
+        "total_bookings": 25,
+        "total_seats_booked": 60,
+        "groups": [
+            {
+                "label": "2025;April",
+                "total_revenue": 20235.44,
+                "mean_revenue": 809.4176,
+                "median_revenue": 447.34,
+                "total_bookings": 25,
+                "total_seats_booked": 60
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #59: Invalid timeframe
+URL: /revenue?timeframe=invalid
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Invalid query parameters","request_id":"6a9a0b88-2739-4b65-9c39-f92a1830b940"}
+
+================================================================================
+
+TEST #60: Invalid month (too high)
+URL: /revenue?month=13
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Invalid query parameters","request_id":"f22c8103-9580-498b-bc36-3e9d565320e5"}
+
+================================================================================
+
+TEST #61: Invalid month (zero)
+URL: /revenue?month=0
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Invalid query parameters","request_id":"84b37f59-923d-4cbc-adcb-f1f927df3a7c"}
+
+================================================================================
+
+TEST #62: Non-numeric month
+URL: /revenue?month=abc
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Invalid query parameters","request_id":"7aa96770-7467-4488-ae08-06c6932714f8"}
+
+================================================================================
+
+TEST #63: Timeframe + month
+URL: /revenue?timeframe=daily&month=4
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Timeframe cannot be combined with month or year filters","request_id":"2e9fe36b-9661-4729-b7d8-7ec2eb208713"}
+
+================================================================================
+
+TEST #64: Timeframe + year
+URL: /revenue?timeframe=weekly&year=2025
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Timeframe cannot be combined with month or year filters","request_id":"254fd410-e3e2-4ab9-9b52-8966eefe13d5"}
+
+================================================================================
+
+TEST #65: Timeframe + month + year
+URL: /revenue?timeframe=monthly&month=4&year=2025
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Timeframe cannot be combined with month or year filters","request_id":"4f197716-af17-42b6-bd79-a965a685649b"}
+
+================================================================================
+
+TEST #66: Timeframe + month + movie
+URL: /revenue?timeframe=yearly&month=4&movie_id=tt6823368
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Timeframe cannot be combined with month or year filters","request_id":"6ed2a707-c4f4-4723-8763-92b7b2296f6b"}
+
+================================================================================
+
+TEST #67: Timeframe + year + slot
+URL: /revenue?timeframe=daily&year=2025&slot_id=3
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Timeframe cannot be combined with month or year filters","request_id":"e1da63f4-3d07-4a69-bd3a-62fc385f3bbf"}
+
+================================================================================
+
+TEST #68: Timeframe + month + genre
+URL: /revenue?timeframe=weekly&month=4&genre=Crime
+Status Code: 400
+Response:
+{"status":"ERROR","code":"INVALID_PARAMS","message":"Timeframe cannot be combined with month or year filters","request_id":"fe43aa2d-b84a-487d-8f7c-bfff600c43a2"}
+
+================================================================================
+
+TEST #69: Non-existent movie ID
+URL: /revenue?movie_id=nonexistent
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "cbb0d434-1257-4273-9e9a-79799416346a",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #70: Non-existent slot ID
+URL: /revenue?slot_id=999
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "123a7da6-0981-449e-93b1-4a244bb03f57",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #71: Non-existent genre
+URL: /revenue?genre=NonexistentGenre
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "2d9a328b-0697-435b-ab88-7c55cf934576",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #72: Time period with no data
+URL: /revenue?month=1&year=2020
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "f2fd6237-591a-4dee-a9c9-499f08e741b0",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #73: Multiple filters with no data
+URL: /revenue?month=1&year=2020&movie_id=tt6823368
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "ddc45c39-bced-4baf-8158-849b2f82a675",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #74: Multiple dimensions with valid data
+URL: /revenue?movie_id=tt6823368&slot_id=1&genre=Drama&month=4&year=2025
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "1cc626e8-bb7d-4019-86cd-9cefc5a72902",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 7599.460000000001,
+        "mean_revenue": 1085.637142857143,
+        "median_revenue": 447.34,
+        "total_bookings": 7,
+        "total_seats_booked": 19,
+        "groups": [
+            {
+                "label": "Glass;Morning;Drama;April;2025",
+                "total_revenue": 7599.460000000001,
+                "mean_revenue": 1085.637142857143,
+                "median_revenue": 447.34,
+                "total_bookings": 7,
+                "total_seats_booked": 19
+            }
+        ]
+    }
+}
+
+================================================================================
+
+TEST #75: All filters with non-existent value
+URL: /revenue?movie_id=nonexistent&slot_id=999&genre=NonexistentGenre
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "d38de2a9-309b-4424-8b34-4458b8a88490",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
+TEST #76: Mixed valid/invalid filters
+URL: /revenue?movie_id=tt6823368&slot_id=999&genre=Drama
+Status Code: 200
+Response:
+{
+    "message": "Revenue data fetched successfully",
+    "request_id": "9808fe76-3a62-469e-bb30-f3152bd29908",
+    "status": "SUCCESS",
+    "data": {
+        "total_revenue": 0,
+        "mean_revenue": 0,
+        "median_revenue": 0,
+        "total_bookings": 0,
+        "total_seats_booked": 0,
+        "groups": []
+    }
+}
+
+================================================================================
+
