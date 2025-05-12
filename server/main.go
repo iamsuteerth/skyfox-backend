@@ -52,11 +52,12 @@ func main() {
 	adminBookedCustomerRepository := repositories.NewAdminBookedCustomerRepository(db)
 	pendingBookingRepository := repositories.NewPendingBookingRepository(db)
 	paymentTransactionRepository := repositories.NewPaymentTransactionRepository(db)
+	walletRepository := repositories.NewWalletRepository(db)
 
 	seed.SeedDB(userRepository, staffRepository)
 
 	userService := services.NewUserService(userRepository)
-	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepository, securityQuestionRepository, s3Service)
+	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepository, securityQuestionRepository, walletRepository, s3Service)
 	securityQuestionService := services.NewSecurityQuestionService(securityQuestionRepository, skyCustomerRepository, resetTokenRepository)
 	passwordResetService := services.NewPasswordResetService(resetTokenRepository, skyCustomerRepository, userRepository)
 	showService := services.NewShowService(showRepository, bookingRepository, movieService, slotRepository)

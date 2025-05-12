@@ -26,6 +26,7 @@ type skyCustomerService struct {
 	skyCustomerRepo      repositories.SkyCustomerRepository
 	userRepo             repositories.UserRepository
 	securityQuestionRepo repositories.SecurityQuestionRepository
+	walletRepo           repositories.WalletRepository
 	s3Service            S3Service
 }
 
@@ -33,12 +34,14 @@ func NewSkyCustomerService(
 	skyCustomerRepo repositories.SkyCustomerRepository,
 	userRepo repositories.UserRepository,
 	securityQuestionRepo repositories.SecurityQuestionRepository,
+	walletRepo repositories.WalletRepository,
 	s3Service S3Service,
 ) SkyCustomerService {
 	return &skyCustomerService{
 		skyCustomerRepo:      skyCustomerRepo,
 		userRepo:             userRepo,
 		securityQuestionRepo: securityQuestionRepo,
+		walletRepo:           walletRepo,
 		s3Service:            s3Service,
 	}
 }
@@ -121,6 +124,15 @@ func (s *skyCustomerService) CreateCustomer(
 		if customer.ProfileImg != "" {
 			_ = s.s3Service.DeleteProfileImage(ctx, customer.ProfileImg)
 		}
+		return err
+	}
+
+	wallet := &models.CustomerWallet{
+		Username: customer.Username,
+		Balance:  0.0,
+	}
+
+	if err := s.walletRepo.CreateWallet(ctx, wallet); err != nil {
 		return err
 	}
 

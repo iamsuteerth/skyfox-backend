@@ -1,0 +1,5 @@
+BEGIN;
+
+ALTER TYPE payment_mode_enum ADD VALUE IF NOT EXISTS 'Wallet';
+
+COMMIT;
