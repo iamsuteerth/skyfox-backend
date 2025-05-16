@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/govalues/decimal"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
@@ -154,38 +155,46 @@ func (s *revenueService) filterBookings(ctx context.Context, bookings []*models.
 	return filtered
 }
 
-func (s *revenueService) calculateOverallStats(bookings []*models.Booking) (float64, float64, float64, int, int) {
+func (s *revenueService) calculateOverallStats(bookings []*models.Booking) (decimal.Decimal, decimal.Decimal, decimal.Decimal, int, int) {
 	if len(bookings) == 0 {
-		return 0, 0, 0, 0, 0
+		return decimal.Zero, decimal.Zero, decimal.Zero, 0, 0
 	}
 
-	var totalRevenue float64
-	var amounts []float64
+	var totalRevenue decimal.Decimal
+	var amounts []decimal.Decimal
 	totalSeats := 0
 
 	for _, booking := range bookings {
-		totalRevenue += booking.AmountPaid
+		totalRevenue, _ = totalRevenue.Add(booking.AmountPaid)
 		amounts = append(amounts, booking.AmountPaid)
 		totalSeats += booking.NoOfSeats
 	}
 
-	meanRevenue := totalRevenue / float64(len(bookings))
+	lenOfBookings, _ := decimal.NewFromInt64(int64(len(bookings)), 0, 0)
+
+	meanRevenue, _ := totalRevenue.Quo(lenOfBookings)
 	medianRevenue := calculateMedian(amounts)
 
 	return totalRevenue, meanRevenue, medianRevenue, len(bookings), totalSeats
 }
 
-func calculateMedian(values []float64) float64 {
+func calculateMedian(values []decimal.Decimal) decimal.Decimal {
 	if len(values) == 0 {
-		return 0
+		return decimal.Zero
 	}
 
-	sort.Float64s(values)
+	sort.Slice(values, func(i, j int) bool {
+		return values[i].Cmp(values[j]) < 0
+	})
 
 	middle := len(values) / 2
 	if len(values)%2 == 0 {
-		return (values[middle-1] + values[middle]) / 2
+		sum, _ := values[middle-1].Add(values[middle])
+		two := decimal.MustParse("2")
+		median, _ := sum.Quo(two)
+		return median
 	}
+
 	return values[middle]
 }
 

@@ -52,12 +52,13 @@ func main() {
 	adminBookedCustomerRepository := repositories.NewAdminBookedCustomerRepository(db)
 	pendingBookingRepository := repositories.NewPendingBookingRepository(db)
 	paymentTransactionRepository := repositories.NewPaymentTransactionRepository(db)
-	walletRepository := repositories.NewWalletRepository(db)
+	customerWalletRepository := repositories.NewCustomerWalletRepository(db)
+	walletTxdRepository := repositories.NewWalletTransactionRepository(db)
 
 	seed.SeedDB(userRepository, staffRepository)
 
 	userService := services.NewUserService(userRepository)
-	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepository, securityQuestionRepository, walletRepository, s3Service)
+	skyCustomerService := services.NewSkyCustomerService(skyCustomerRepository, userRepository, securityQuestionRepository, customerWalletRepository, s3Service)
 	securityQuestionService := services.NewSecurityQuestionService(securityQuestionRepository, skyCustomerRepository, resetTokenRepository)
 	passwordResetService := services.NewPasswordResetService(resetTokenRepository, skyCustomerRepository, userRepository)
 	showService := services.NewShowService(showRepository, bookingRepository, movieService, slotRepository)
@@ -65,10 +66,11 @@ func main() {
 	adminStaffProfileService := services.NewAdminStaffProfileService(userRepository, staffRepository)
 	bookingService := services.NewBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, slotRepository, adminBookedCustomerRepository, skyCustomerRepository, movieService)
 	adminBookingService := services.NewAdminBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, adminBookedCustomerRepository, slotRepository)
-	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, skyCustomerRepository, paymentService)
+	customerBookingService := services.NewCustomerBookingService(showRepository, bookingRepository, bookingSeatMappingRepository, pendingBookingRepository, paymentTransactionRepository, slotRepository, skyCustomerRepository, customerWalletRepository, walletTxdRepository, paymentService)
 	checkInService := services.NewCheckInService(bookingRepository, showRepository)
 	revenueService := services.NewRevenueService(bookingRepository, showRepository, slotRepository, movieService)
 	bookingCSVService := services.NewBookingCSVService(bookingRepository, showRepository, adminBookedCustomerRepository, skyCustomerRepository)
+	// walletService := services.NewWalletService(customerWalletRepo, walletTxdRepository, paymentTransactionRepository, paymentService)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)

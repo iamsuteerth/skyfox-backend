@@ -3,11 +3,11 @@ package services
 import (
 	"context"
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/govalues/decimal"
 	"github.com/iamsuteerth/skyfox-backend/pkg/constants"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
@@ -93,7 +93,7 @@ func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req reques
 		return nil, utils.NewBadRequestError("SEATS_UNAVAILABLE", "One or more selected seats are not available", nil)
 	}
 
-	var amountPaid float64
+	var amountPaid decimal.Decimal
 
 	expectedPrice, err := s.calculateTotalPrice(ctx, show, req.SeatNumbers)
 	if err != nil {
@@ -101,8 +101,11 @@ func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req reques
 		return nil, err
 	}
 
-	if math.Abs(req.AmountPaid-expectedPrice) > 0.01 {
-		log.Warn().Float64("submitted", req.AmountPaid).Float64("expected", expectedPrice).Msg("Amount mismatch")
+	if !req.AmountPaid.Equal(expectedPrice) {
+		log.Warn().
+			Str("submitted", req.AmountPaid.String()).
+			Str("expected", expectedPrice.String()).
+			Msg("Amount mismatch")
 		return nil, utils.NewBadRequestError("INVALID_AMOUNT", "The amount paid does not match the expected price", nil)
 	}
 
@@ -163,31 +166,32 @@ func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req reques
 	return bookingResponse, nil
 }
 
-func (s *adminBookingService) calculateTotalPrice(ctx context.Context, show *models.Show, seatNumbers []string) (float64, error) {
+func (s *adminBookingService) calculateTotalPrice(ctx context.Context, show *models.Show, seatNumbers []string) (decimal.Decimal, error) {
 	seatMap, err := s.showRepo.GetSeatMapForShow(ctx, show.Id)
 	if err != nil {
 		log.Error().Err(err).Int("showID", show.Id).Msg("Failed to get seat map for price calculation")
-		return 0, err
+		return decimal.Zero, err
 	}
 
-	seatPrices := make(map[string]float64)
+	seatPrices := make(map[string]decimal.Decimal)
+	deluxeOffset, _ := decimal.NewFromFloat64(constants.DELUXE_OFFSET)
 	for _, seat := range seatMap {
-		var price float64
+		var price decimal.Decimal
 		if seat.SeatType == "Deluxe" {
-			price = show.Cost + constants.DELUXE_OFFSET
+			price, _ = show.Cost.Add(deluxeOffset)
 		} else {
 			price = show.Cost
 		}
 		seatPrices[seat.SeatNumber] = price
 	}
 
-	var totalPrice float64
+	var totalPrice decimal.Decimal
 	for _, seatNumber := range seatNumbers {
 		price, exists := seatPrices[seatNumber]
 		if !exists {
-			return 0, utils.NewBadRequestError("INVALID_SEAT", fmt.Sprintf("Seat %s not found in seat map", seatNumber), nil)
+			return decimal.Zero, utils.NewBadRequestError("INVALID_SEAT", fmt.Sprintf("Seat %s not found in seat map", seatNumber), nil)
 		}
-		totalPrice += price
+		totalPrice, _ = totalPrice.Add(price)
 	}
 
 	return totalPrice, nil

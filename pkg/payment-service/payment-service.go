@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/govalues/decimal"
 	"github.com/iamsuteerth/skyfox-backend/pkg/config"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
@@ -27,7 +28,7 @@ type validationError struct {
 }
 
 type PaymentService interface {
-	ProcessPayment(ctx context.Context, cardNumber, cvv, expiry, name string, amount float64) (string, error)
+	ProcessPayment(ctx context.Context, cardNumber, cvv, expiry, name string, amount decimal.Decimal) (string, error)
 }
 
 type paymentService struct {
@@ -40,7 +41,7 @@ func NewPaymentService(cfg config.PaymentServiceConfig) PaymentService {
 	}
 }
 
-func (s *paymentService) ProcessPayment(ctx context.Context, cardNumber, cvv, expiry, name string, amount float64) (string, error) {
+func (s *paymentService) ProcessPayment(ctx context.Context, cardNumber, cvv, expiry, name string, amount decimal.Decimal) (string, error) {
 	url := fmt.Sprintf("%s/payment", s.config.BaseURL)
 
 	paymentReq := request.PaymentRequest{

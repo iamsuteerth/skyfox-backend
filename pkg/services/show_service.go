@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/govalues/decimal"
 	"github.com/iamsuteerth/skyfox-backend/pkg/constants"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
@@ -83,11 +84,13 @@ func (s *showService) GetMovieById(ctx context.Context, id string) (*models.Movi
 }
 
 func (s *showService) CreateShow(ctx context.Context, showRequest request.ShowRequest) (*models.Show, error) {
-	if showRequest.Cost <= 0 {
+	if showRequest.Cost.Cmp(decimal.Zero) != 1 {
 		return nil, utils.NewBadRequestError("INVALID_COST", "The cost must be greater than 0", nil)
 	}
 
-	if showRequest.Cost > 3000 {
+	maxCost, _ := decimal.NewFromInt64(3000, 0, 0)
+
+	if showRequest.Cost.Cmp(maxCost) == 1  {
 		return nil, utils.NewBadRequestError("INVALID_COST", "The cost must be less than or equal to 3000", nil)
 	}
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/govalues/decimal"
 	"github.com/iamsuteerth/skyfox-backend/pkg/constants"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	movieservice "github.com/iamsuteerth/skyfox-backend/pkg/movie-service"
@@ -68,9 +69,11 @@ func (s *bookingService) GetSeatMapForShow(ctx context.Context, showID int) ([]m
 		return nil, err
 	}
 
+	deluxeOffset, _ := decimal.NewFromFloat64(constants.DELUXE_OFFSET)
+
 	for i := range seatMap {
 		if seatMap[i].SeatType == "Deluxe" {
-			seatMap[i].Price = show.Cost + constants.DELUXE_OFFSET
+			seatMap[i].Price, _ = show.Cost.Add(deluxeOffset)
 		} else {
 			seatMap[i].Price = show.Cost
 		}

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/govalues/decimal"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
@@ -26,7 +27,7 @@ type skyCustomerService struct {
 	skyCustomerRepo      repositories.SkyCustomerRepository
 	userRepo             repositories.UserRepository
 	securityQuestionRepo repositories.SecurityQuestionRepository
-	walletRepo           repositories.WalletRepository
+	walletRepo           repositories.CustomerWalletRepository
 	s3Service            S3Service
 }
 
@@ -34,7 +35,7 @@ func NewSkyCustomerService(
 	skyCustomerRepo repositories.SkyCustomerRepository,
 	userRepo repositories.UserRepository,
 	securityQuestionRepo repositories.SecurityQuestionRepository,
-	walletRepo repositories.WalletRepository,
+	walletRepo repositories.CustomerWalletRepository,
 	s3Service S3Service,
 ) SkyCustomerService {
 	return &skyCustomerService{
@@ -129,7 +130,7 @@ func (s *skyCustomerService) CreateCustomer(
 
 	wallet := &models.CustomerWallet{
 		Username: customer.Username,
-		Balance:  0.0,
+		Balance:  decimal.Zero,
 	}
 
 	if err := s.walletRepo.CreateWallet(ctx, wallet); err != nil {
