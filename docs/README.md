@@ -1134,14 +1134,14 @@
           {
             "column": "1",
             "occupied": false,
-            "price": 208.97,
+            "price": "208.97",
             "seat_number": "A1",
             "type": "Standard"
           },
           {
             "column": "2",
             "occupied": false,
-            "price": 208.97,
+            "price": "208.97",
             "seat_number": "A2",
             "type": "Standard"
           },

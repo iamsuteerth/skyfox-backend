@@ -132,34 +132,44 @@ func (bc *BookingController) InitializeCustomerBooking(ctx *gin.Context) {
 }
 
 func (bc *BookingController) ProcessPayment(ctx *gin.Context) {
-	requestID := utils.GetRequestID(ctx)
-
-	var paymentRequest request.ProcessPaymentRequest
-	if err := ctx.ShouldBindJSON(&paymentRequest); err != nil {
-		if validationErrs, ok := err.(validator.ValidationErrors); ok {
-			utils.HandleErrorResponse(ctx, utils.NewValidationError(validationErrs), requestID)
-			return
-		}
-		utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid payment data", err), requestID)
-		return
-	}
-
-	claims, err := security.GetTokenClaims(ctx)
-	if err != nil {
-		utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify user credentials", err), requestID)
-		return
-	}
-
-	username, _ := claims["username"].(string)
-
-	confirmedBooking, err := bc.customerBookingService.ProcessPayment(ctx.Request.Context(), username, paymentRequest)
-	if err != nil {
-		log.Error().Err(err).Interface("request", paymentRequest).Msg("Failed to process payment")
-		utils.HandleErrorResponse(ctx, err, requestID)
-		return
-	}
-
-	utils.SendOKResponse(ctx, "Payment processed successfully", requestID, confirmedBooking)
+    requestID := utils.GetRequestID(ctx)
+    
+    var paymentRequest request.ProcessPaymentRequest
+    if err := ctx.ShouldBindJSON(&paymentRequest); err != nil {
+        if validationErrs, ok := err.(validator.ValidationErrors); ok {
+            var relevantErrors validator.ValidationErrors
+            for _, fieldErr := range validationErrs {
+                if fieldErr.Field() == "BookingID" || fieldErr.Field() == "PaymentMethod" {
+                    relevantErrors = append(relevantErrors, fieldErr)
+                }
+            }
+            
+            if len(relevantErrors) > 0 {
+                utils.HandleErrorResponse(ctx, utils.NewValidationError(relevantErrors), requestID)
+                return
+            }
+        } else {
+            utils.HandleErrorResponse(ctx, utils.NewBadRequestError("INVALID_REQUEST", "Invalid payment data", err), requestID)
+            return
+        }
+    }
+    
+    claims, err := security.GetTokenClaims(ctx)
+    if err != nil {
+        utils.HandleErrorResponse(ctx, utils.NewUnauthorizedError("UNAUTHORIZED", "Unable to verify user credentials", err), requestID)
+        return
+    }
+    
+    username, _ := claims["username"].(string)
+    
+    confirmedBooking, err := bc.customerBookingService.ProcessPayment(ctx.Request.Context(), username, paymentRequest)
+    if err != nil {
+        log.Error().Err(err).Interface("request", paymentRequest).Msg("Failed to process payment")
+        utils.HandleErrorResponse(ctx, err, requestID)
+        return
+    }
+    
+    utils.SendOKResponse(ctx, "Payment processed successfully", requestID, confirmedBooking)
 }
 
 func (bc *BookingController) CancelBooking(ctx *gin.Context) {

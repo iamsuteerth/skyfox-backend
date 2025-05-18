@@ -174,11 +174,13 @@ func (s *customerBookingService) InitializeBooking(ctx context.Context, username
 
 	go s.monitorBookingExpiration(booking.Id, expirationTime)
 
+	totalPriceFloat, _ := totalPrice.Float64()
+
 	return &response.InitializeBookingResponse{
 		BookingID:       booking.Id,
 		ShowID:          booking.ShowId,
 		SeatNumbers:     req.SeatNumbers,
-		AmountDue:       totalPrice,
+		AmountDue:       totalPriceFloat,
 		ExpirationTime:  expirationTime,
 		TimeRemainingMs: int64(5 * time.Minute / time.Millisecond),
 	}, nil
@@ -287,7 +289,16 @@ func (s *customerBookingService) ProcessPayment(ctx context.Context, username st
 			transactionID = deductTxnID
 			booking.PaymentType = "Wallet"
 
-		case walletBalance.Cmp(decimal.Zero) == 1 && walletBalance.Cmp(bookingAmount) == -1:
+			if err := s.bookingRepo.UpdateBookingPaymentType(ctx, booking.Id, booking.PaymentType); err != nil {
+				log.Error().Err(err).Int("bookingId", booking.Id).Str("paymentType", booking.PaymentType).
+					Msg("Failed to update booking payment type after processing payment")
+				return nil, err
+			}
+
+		case walletBalance.Cmp(bookingAmount) == -1:
+			if req.CardNumber == "" || req.CVV == "" || req.ExpiryMonth == "" || req.ExpiryYear == "" || req.CardholderName == "" {
+				return nil, utils.NewBadRequestError("INSUFFICIENT_BALANCE", "Not enough wallet balance and no card details provided", nil)
+			}
 			requiredTopUp, _ := bookingAmount.Sub(walletBalance)
 
 			expiry := fmt.Sprintf("%s/%s", req.ExpiryMonth, req.ExpiryYear)
@@ -373,6 +384,12 @@ func (s *customerBookingService) ProcessPayment(ctx context.Context, username st
 			transactionID = deductTxnID
 			booking.PaymentType = "Wallet"
 
+			if err := s.bookingRepo.UpdateBookingPaymentType(ctx, booking.Id, booking.PaymentType); err != nil {
+				log.Error().Err(err).Int("bookingId", booking.Id).Str("paymentType", booking.PaymentType).
+					Msg("Failed to update booking payment type after processing payment")
+				return nil, err
+			}
+
 		default:
 			return nil, utils.NewBadRequestError("INSUFFICIENT_BALANCE", "Not enough wallet balance and no card details provided", nil)
 		}
@@ -422,6 +439,8 @@ func (s *customerBookingService) ProcessPayment(ctx context.Context, username st
 		return nil, err
 	}
 
+	bookingAmtPaid, _ := booking.AmountPaid.Float64()
+
 	response := &response.BookingResponse{
 		BookingID:     booking.Id,
 		ShowID:        booking.ShowId,
@@ -430,7 +449,7 @@ func (s *customerBookingService) ProcessPayment(ctx context.Context, username st
 		CustomerName:  customer.Name,
 		PhoneNumber:   customer.Number,
 		SeatNumbers:   seatNumbers,
-		AmountPaid:    booking.AmountPaid,
+		AmountPaid:    bookingAmtPaid,
 		PaymentType:   string(booking.PaymentType),
 		BookingTime:   booking.BookingTime,
 		Status:        "Confirmed",
@@ -536,13 +555,16 @@ func (s *customerBookingService) GetBookingsForCustomer(ctx context.Context, use
 			log.Warn().Int("booking_id", booking.Id).Msg("Failed to fetch seats, using empty list")
 			seats = []string{}
 		}
+
+		bookingAmtPaid, _ := booking.AmountPaid.Float64()
+
 		result = append(result, response.CustomerBookingInfo{
 			BookingID:   booking.Id,
 			ShowID:      booking.ShowId,
 			ShowDate:    show.Date.Format("2006-01-02"),
 			ShowTime:    slot.StartTime,
 			SeatNumbers: seats,
-			AmountPaid:  booking.AmountPaid,
+			AmountPaid:  bookingAmtPaid,
 			PaymentType: booking.PaymentType,
 			BookingTime: booking.BookingTime,
 			Status:      booking.Status,
@@ -574,13 +596,16 @@ func (s *customerBookingService) GetLatestBookingForCustomer(ctx context.Context
 		log.Warn().Int("booking_id", booking.Id).Msg("Failed to fetch seats, using empty list")
 		seats = []string{}
 	}
+
+	bookingAmtPaid, _ := booking.AmountPaid.Float64()
+
 	return &response.CustomerBookingInfo{
 		BookingID:   booking.Id,
 		ShowID:      booking.ShowId,
 		ShowDate:    show.Date.Format("2006-01-02"),
 		ShowTime:    slot.StartTime,
 		SeatNumbers: seats,
-		AmountPaid:  booking.AmountPaid,
+		AmountPaid:  bookingAmtPaid,
 		PaymentType: booking.PaymentType,
 		BookingTime: booking.BookingTime,
 		Status:      booking.Status,

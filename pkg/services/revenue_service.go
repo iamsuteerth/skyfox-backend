@@ -63,10 +63,14 @@ func (s *revenueService) GetRevenue(ctx context.Context, req request.RevenueDash
 		return nil, err
 	}
 
+	totalRevenueFloat, _ := totalRevenue.Float64()
+	meanRevenueFloat, _ := meanRevenue.Float64()
+	medianRevenueFloat, _ := medianRevenue.Float64()
+
 	return &response.RevenueDashboardResponse{
-		TotalRevenue:     totalRevenue,
-		MeanRevenue:      meanRevenue,
-		MedianRevenue:    medianRevenue,
+		TotalRevenue:     totalRevenueFloat,
+		MeanRevenue:      meanRevenueFloat,
+		MedianRevenue:    medianRevenueFloat,
 		TotalBookings:    totalBookings,
 		TotalSeatsBooked: totalSeats,
 		Groups:           groups,
@@ -366,11 +370,15 @@ func (s *revenueService) groupBookingData(ctx context.Context, bookings []*model
 	for label, groupBookings := range groups {
 		totalRev, meanRev, medianRev, totalBook, totalSeats := s.calculateOverallStats(groupBookings)
 
+		totalRevenueFloat, _ := totalRev.Float64()
+		meanRevenueFloat, _ := meanRev.Float64()
+		medianRevenueFloat, _ := medianRev.Float64()
+
 		result = append(result, response.RevenueGroupStats{
 			Label:            label,
-			TotalRevenue:     totalRev,
-			MeanRevenue:      meanRev,
-			MedianRevenue:    medianRev,
+			TotalRevenue:     totalRevenueFloat,
+			MeanRevenue:      meanRevenueFloat,
+			MedianRevenue:    medianRevenueFloat,
 			TotalBookings:    totalBook,
 			TotalSeatsBooked: totalSeats,
 		})

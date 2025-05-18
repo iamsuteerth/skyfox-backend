@@ -17,6 +17,7 @@ type BookingRepository interface {
 	BookedSeatsByShow(ctx context.Context, showId int) int
 	CreatePendingBooking(ctx context.Context, booking *models.Booking) error
 	UpdateBookingStatus(ctx context.Context, bookingID int, status string) error
+	UpdateBookingPaymentType(ctx context.Context, bookingID int, paymentType string) error
 	DeleteBookingsByIds(ctx context.Context, bookingIds []int) error
 	FindByCustomerUsername(ctx context.Context, username string) ([]*models.Booking, error)
 	FindLatestByCustomerUsername(ctx context.Context, username string) (*models.Booking, error)
@@ -161,6 +162,20 @@ func (repo *bookingRepository) UpdateBookingStatus(ctx context.Context, bookingI
 		return utils.NewInternalServerError("DATABASE_ERROR", "Failed to update booking status", err)
 	}
 
+	return nil
+}
+
+func (repo *bookingRepository) UpdateBookingPaymentType(ctx context.Context, bookingID int, paymentType string) error {
+	query := `
+		UPDATE booking
+		SET payment_type = $1
+		WHERE id = $2
+	`
+	_, err := repo.db.Exec(ctx, query, paymentType, bookingID)
+	if err != nil {
+		log.Error().Err(err).Int("bookingID", bookingID).Str("paymentType", paymentType).Msg("Failed to update payment type")
+		return utils.NewInternalServerError("DATABASE_ERROR", "Failed to update payment type", err)
+	}
 	return nil
 }
 

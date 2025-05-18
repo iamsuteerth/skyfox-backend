@@ -11,6 +11,7 @@ import (
 
 	"github.com/govalues/decimal"
 	"github.com/iamsuteerth/skyfox-backend/pkg/constants"
+	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
 	movieservice "github.com/iamsuteerth/skyfox-backend/pkg/movie-service"
 	"github.com/iamsuteerth/skyfox-backend/pkg/repositories"
@@ -406,7 +407,7 @@ func (s *bookingService) GeneratePDF(ctx context.Context, bookingID int) (string
 	return base64PDF, nil
 }
 
-func (s *bookingService) getTicketData(ctx context.Context, bookingID int) (*models.TicketData, error) {
+func (s *bookingService) getTicketData(ctx context.Context, bookingID int) (*response.TicketData, error) {
 	booking, err := s.bookingRepo.GetBookingById(ctx, bookingID)
 	if err != nil {
 		return nil, err
@@ -454,14 +455,16 @@ func (s *bookingService) getTicketData(ctx context.Context, bookingID int) (*mod
 		contactNumber = customer.Number
 	}
 
-	ticketData := &models.TicketData{
+	bookingAmountPaid, _ := booking.AmountPaid.Float64()
+
+	ticketData := &response.TicketData{
 		BookingID:     booking.Id,
 		ShowName:      movie.Name,
 		ShowDate:      show.Date.Format("2006-01-02"),
 		ShowTime:      slot.StartTime,
 		CustomerName:  customerName,
 		ContactNumber: contactNumber,
-		AmountPaid:    booking.AmountPaid,
+		AmountPaid:    bookingAmountPaid,
 		NumberOfSeats: booking.NoOfSeats,
 		SeatNumbers:   seatNumbers,
 		Status:        booking.Status,

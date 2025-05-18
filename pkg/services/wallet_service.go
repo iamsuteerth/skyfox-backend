@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/govalues/decimal"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/request"
 	"github.com/iamsuteerth/skyfox-backend/pkg/dto/response"
 	"github.com/iamsuteerth/skyfox-backend/pkg/models"
@@ -42,6 +43,15 @@ func NewWalletService(
 }
 
 func (s *walletService) AddFunds(ctx context.Context, username string, req *request.AddWalletFundsRequest) (*response.WalletResponse, error) {
+	if req.Amount.Cmp(decimal.Zero) <= 0 {
+		return nil, utils.NewBadRequestError("INVALID_AMOUNT", "Amount must be greater than zero", nil)
+	}
+
+	maxAmount, _ := decimal.NewFromFloat64(10000)
+	
+	if req.Amount.Cmp(maxAmount) > 0 {
+		return nil, utils.NewBadRequestError("AMOUNT_TOO_LARGE", "Maximum amount allowed is 10000", nil)
+	}
 	expiry := fmt.Sprintf("%s/%s", req.ExpiryMonth, req.ExpiryYear)
 	transactionID, err := s.paymentService.ProcessPayment(
 		ctx,
@@ -91,9 +101,11 @@ func (s *walletService) AddFunds(ctx context.Context, username string, req *requ
 		return nil, err
 	}
 
+	updatedWalletBalance, _ := updatedWallet.Balance.Float64()
+
 	return &response.WalletResponse{
 		Username:  username,
-		Balance:   updatedWallet.Balance,
+		Balance:   updatedWalletBalance,
 		UpdatedAt: updatedWallet.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
@@ -108,9 +120,11 @@ func (s *walletService) GetWalletBalance(ctx context.Context, username string) (
 		return nil, utils.NewNotFoundError("WALLET_NOT_FOUND", "Wallet not found for user", nil)
 	}
 
+	balance, _ := wallet.Balance.Float64()
+
 	return &response.WalletResponse{
 		Username:  username,
-		Balance:   wallet.Balance,
+		Balance:   balance,
 		UpdatedAt: wallet.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
@@ -132,19 +146,20 @@ func (s *walletService) GetTransactions(ctx context.Context, username string) (*
 
 	var transactionResponses []response.WalletTransactionResponse
 	for _, t := range transactions {
-		var bookingID int64
-		if t.BookingID != nil {
-			bookingID = *t.BookingID
-		}
-
-		transactionResponses = append(transactionResponses, response.WalletTransactionResponse{
+		amount, _ := t.Amount.Float64()
+		response := response.WalletTransactionResponse{
 			ID:              t.ID,
-			Amount:          t.Amount,
+			Amount:          amount,
 			TransactionType: t.TransactionType,
-			BookingID:       &bookingID,
 			TransactionID:   t.TransactionID,
 			Timestamp:       t.Timestamp.Format(time.RFC3339),
-		})
+		}
+
+		if t.BookingID != nil {
+			response.BookingID = t.BookingID
+		}
+
+		transactionResponses = append(transactionResponses, response)
 	}
 
 	return &response.WalletTransactionsResponse{

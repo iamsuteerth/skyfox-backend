@@ -142,7 +142,7 @@ func (repo *showRepository) GetSeatMapForShow(ctx context.Context, showID int) (
             SUBSTRING(s.seat_number, 1, 1) AS seat_row,
             SUBSTRING(s.seat_number, 2) AS seat_column,
             s.seat_type,
-            0.0 AS price, -- We'll set the price at the service layer
+            0.0 AS price, 
             EXISTS (
                 SELECT 1
                 FROM booking_seat_mapping bsm

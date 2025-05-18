@@ -41,6 +41,10 @@ const (
 	// Admin Dashboard Related Endpoints
 	RevenueEndpoint    = "/revenue"
 	BookingCSVEndpoint = "/booking-csv"
+	// Wallet Related Endpoints
+	WalletEndpoint       = "/wallet"
+	AddFundsEndpoint     = "/add-funds"
+	TransactionsEndpoint = "/transactions"
 )
 
 const (

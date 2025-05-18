@@ -70,7 +70,7 @@ func main() {
 	checkInService := services.NewCheckInService(bookingRepository, showRepository)
 	revenueService := services.NewRevenueService(bookingRepository, showRepository, slotRepository, movieService)
 	bookingCSVService := services.NewBookingCSVService(bookingRepository, showRepository, adminBookedCustomerRepository, skyCustomerRepository)
-	// walletService := services.NewWalletService(customerWalletRepo, walletTxdRepository, paymentTransactionRepository, paymentService)
+	walletService := services.NewWalletService(customerWalletRepository, walletTxdRepository, paymentTransactionRepository, paymentService)
 
 	authController := controllers.NewAuthController(userService)
 	skyCustomerController := controllers.NewSkyCustomerController(userService, skyCustomerService, securityQuestionService)
@@ -81,6 +81,7 @@ func main() {
 	adminStaffController := controllers.NewAdminStaffController(adminStaffProfileService)
 	bookingController := controllers.NewBookingController(bookingService, adminBookingService, customerBookingService, checkInService, bookingCSVService)
 	revenueController := controllers.NewDashboardRevenueController(revenueService)
+	walletController := controllers.NewWalletController(walletService)
 
 	binding.Validator = new(customValidator.DtoValidator)
 
@@ -174,6 +175,13 @@ func main() {
 		{
 			bookings.GET("", bookingController.GetCustomerBookings)                                    // Get all customer bookings
 			bookings.GET(constants.LatestBookingsEndpoint, bookingController.GetCustomerLatestBooking) // Get latest customer booking
+		}
+
+		wallet := customerAPIs.Group(constants.WalletEndpoint)
+		{
+			wallet.GET("", walletController.GetWalletBalance)                            // Get Wallet Balance
+			wallet.GET(constants.TransactionsEndpoint, walletController.GetTransactions) // Get All Transactions From Token Claims For A User
+			wallet.POST(constants.AddFundsEndpoint, walletController.AddFunds)           // Add Funds To A User's Wallet
 		}
 	}
 

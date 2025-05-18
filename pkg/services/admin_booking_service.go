@@ -149,6 +149,8 @@ func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req reques
 		return nil, err
 	}
 
+	bookingAmtPaid, _ := booking.AmountPaid.Float64()
+
 	bookingResponse := &response.BookingResponse{
 		BookingID:    booking.Id,
 		ShowID:       booking.ShowId,
@@ -157,7 +159,7 @@ func (s *adminBookingService) CreateAdminBooking(ctx context.Context, req reques
 		CustomerName: customer.Name,
 		PhoneNumber:  customer.Number,
 		SeatNumbers:  req.SeatNumbers,
-		AmountPaid:   booking.AmountPaid,
+		AmountPaid:   bookingAmtPaid,
 		PaymentType:  booking.PaymentType,
 		BookingTime:  booking.BookingTime,
 		Status:       booking.Status,
