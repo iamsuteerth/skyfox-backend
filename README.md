@@ -6,6 +6,8 @@ A Go-based backend service for the SkyFox movie booking system with Supabase Pos
 
 SkyFox Backend is a modern, well-structured API service that provides authentication, customer management, and a security question-based password recovery system for the SkyFox movie booking application. Built with Go and the Gin framework, it implements clean architecture principles with proper separation of controllers, services, and repositories.
 
+> **Note:** This repository contains the POC architecture. For production-level architecture, please refer to [skyfox-devops](https://github.com/iamsuteerth/skyfox-devops).
+
 ![Architecture Diagram](./skyfox-backend-arch.png)
 
 ## Features
@@ -23,6 +25,8 @@ SkyFox Backend is a modern, well-structured API service that provides authentica
 - Secure profile image management with S3 and presigned URLs
 - **Sophisticated Booking System**: Two-phase booking process with temporary seat reservation, automated expiration, and integrated payment processing.
 - **Efficient Concurrency Handling**: Each booking gets its own dedicated monitor, allowing thousands of concurrent reservations with precise timing control.
+- **Digital Wallet System**: Integrated customer wallet for funds management with secure transaction tracking and support for partial wallet payments.
+- **OLTP Support**: Decimal package implementation for precise financial calculations and transaction processing.
 
 ## Project Structure
 
@@ -82,7 +86,7 @@ S3_BUCKET=your-project-profile-images
 go mod download
 ```
 
-## AWS Elastic Beanstalk Deployment
+## AWS ElasticBeanstalk POC Deployment
 
 The SkyFox Backend is deployed on AWS Elastic Beanstalk, providing a scalable and managed environment for the application.
 
@@ -219,6 +223,14 @@ The migration files are stored in the `supabase/migration` directory:
 - `000014_circular_dependency_fix.down.sql` - Reverts the circular dependency fix
 - `000015_performance_idices.up.sql` - Add performance indices on revenue related fields
 - `000015_performance_idices.dowb.sql` - Removes the indices on revenue related fields
+- `000016_wallet_payment_type.up.sql` - Updates payment_mode enum to include Wallet as a payment type
+- `000016_wallet_payment_type.down.sql` - Postgres doesn't allow us to remove element from an enum.
+- `000017_wallet_db_tables.up.sql` - Creates customer_wallet table for storing wallet balances
+- `000017_wallet_db_tables.down.sql` - Drops the customer_wallet table
+- `000018_wallet_transaction_type_enum.up.sql` - Creates wallet_transaction_type enum for ADD/DEDUCT operations
+- `000018_wallet_transaction_type_enum.down.sql` - Drops the wallet_transaction_type enum
+- `000019_wallet_transaction_table.up.sql` - Creates wallet_transaction table for tracking wallet operations
+- `000019_wallet_transaction_table.down.sql` - Drops the wallet_transaction table
 
 To apply these migrations to your Supabase project, use the Supabase SQL Editor or a migration tool.
 
@@ -299,6 +311,42 @@ The application implements a sophisticated profile image management system using
 
 This implementation provides an optimal balance of security, performance, and user experience by leveraging AWS S3's capabilities while maintaining proper access controls.
 
+## Wallet System
+
+The SkyFox platform includes a comprehensive digital wallet system that enables customers to:
+
+- Add funds to their wallet using card payments
+- Use wallet balance for ticket bookings
+- View transaction history for all wallet operations
+- Combine wallet and card payments for a seamless experience
+
+### Key Features
+
+1. **Precise Financial Calculations**: Utilizes the decimal package to ensure accurate monetary operations without floating-point errors, critical for OLTP systems.
+
+2. **Transaction Tracking**: All wallet operations (ADD/DEDUCT) are tracked with timestamps and transaction IDs for complete auditability.
+
+3. **Payment Integration**: Seamlessly integrates with the existing payment system to support:
+   - Full wallet payments (when wallet has sufficient balance)
+   - Partial wallet payments (automatically topping up wallet with card payment for the shortfall)
+   - Traditional card payments
+
+4. **Automatic Wallet Creation**: Each customer account is provisioned with a wallet upon registration.
+
+5. **Security**: All financial transactions are protected with proper validations and database constraints.
+
+## OLTP Support
+
+The system implements robust OLTP (Online Transaction Processing) capabilities through:
+
+1. **Decimal Package Integration**: Using the decimal package for all monetary values ensures exact arithmetic without the precision issues of floating-point calculations.
+
+2. **Transaction Consistency**: All financial operations maintain ACID properties with proper rollback mechanisms.
+
+3. **Concurrency Control**: The wallet system handles multiple simultaneous transactions without race conditions.
+
+4. **Audit Trail**: Complete transaction history is maintained for reporting and reconciliation.
+
 ## Authentication
 
 The application uses JWT (JSON Web Token) for authentication. Tokens are valid for 24 hours and include the user's role for authorization purposes.
@@ -310,6 +358,7 @@ The application implements role-based access control:
 1. **Customer Role**:
    - Can view shows only for the current date plus 6 days
    - Has access to personal profile and booking history
+   - Can manage their wallet and view transaction history
 
 2. **Staff Role**:
    - Has access to check-in functionality
@@ -377,7 +426,10 @@ Administrators can create bookings directly through a simplified one-step proces
 ### Customer Booking Workflow
 Customers follow a two-step booking process:
 1. Initialize booking with seat selection (seats reserved for 5 minutes)
-2. Complete payment within the reservation window to confirm booking
+2. Complete payment within the reservation window to confirm booking using:
+   - Credit/debit card
+   - Wallet funds
+   - Combined wallet and card payment
 3. Automatic seat release if payment is not completed in time
 
 This dual approach accommodates both in-person and online ticket purchases while maintaining consistent data structures.
@@ -423,6 +475,10 @@ The database includes the following tables:
 13. **payment_transaction**: Records payment details for online bookings
 
 14. **pending_booking_tracker**: Manages temporary seat reservations
+
+15. **customer_wallet** - Stores wallet balance for each customer
+
+16. **wallet_transaction** - Records all wallet operations (ADD/DEDUCT)
 
 ## License
 

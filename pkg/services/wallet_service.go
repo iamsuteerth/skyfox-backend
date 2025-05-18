@@ -48,7 +48,7 @@ func (s *walletService) AddFunds(ctx context.Context, username string, req *requ
 	}
 
 	maxAmount, _ := decimal.NewFromFloat64(10000)
-	
+
 	if req.Amount.Cmp(maxAmount) > 0 {
 		return nil, utils.NewBadRequestError("AMOUNT_TOO_LARGE", "Maximum amount allowed is 10000", nil)
 	}
@@ -63,7 +63,7 @@ func (s *walletService) AddFunds(ctx context.Context, username string, req *requ
 	)
 	if err != nil {
 		log.Error().Err(err).Str("username", username).Msg("Card payment failed when adding funds to wallet")
-		return nil, utils.NewBadRequestError("PAYMENT_FAILED", "Failed to process card payment", err)
+		return nil, err
 	}
 
 	wallet, err := s.customerWalletRepo.GetWalletByUsername(ctx, username)

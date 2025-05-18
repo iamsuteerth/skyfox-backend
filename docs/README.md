@@ -1106,6 +1106,172 @@
   }
   ```
 
+## Customer Wallet Management
+
+### Get Wallet Balance
+- **URL**: `/customer/wallet`
+- **Method**: `GET`
+- **Authentication**: Required (Customer Only)
+- **Description**: Retrieves the current wallet balance for the authenticated customer.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Wallet balance retrieved successfully",
+    "request_id": "9aa96687-6fd1-47e0-b9f6-f8cf671ca319",
+    "status": "SUCCESS",
+    "data": {
+        "username": "suteerth",
+        "balance": 0,
+        "updated_at": "2025-05-18T12:05:51+05:30"
+    }
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "ddf786f8-67ca-438b-8719-59bb4ac7f51e"
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Customer role required",
+    "request_id": "9d05ef16-2dd6-4fcf-b197-268bb3b5e42d"
+  }
+  ```
+
+### Add Funds to Wallet
+- **URL**: `/customer/wallet/add-funds`
+- **Method**: `POST`
+- **Authentication**: Required (Customer Only)
+- **Description**: Adds funds to the customer's wallet using card payment.
+- **Request Body**:
+  ```json
+  {
+    "amount": 500.00,
+    "card_number": "4242424242424242",
+    "cvv": "123",
+    "expiry_month": "12",
+    "expiry_year": "27",
+    "cardholder_name": "John Doe"
+  }
+  ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Funds added successfully",
+    "request_id": "5fb34230-6627-4af8-83fe-961046110de6",
+    "status": "SUCCESS",
+    "data": {
+        "username": "suteerth",
+        "balance": 500.00,
+        "updated_at": "2025-05-18T00:22:39+05:30"
+    }
+  }
+  ```
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_AMOUNT",
+    "message": "Amount must be greater than zero",
+    "request_id": "97ec65e6-cccc-4bbe-bf3e-9f0da11533f5"
+  }
+  ```
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "PAYMENT_VALIDATION_FAILED",
+    "message": "Payment validation failed: Card number failed Luhn check (card_number)",
+    "request_id": "1424baa2-e0ff-4088-b26b-65492d030cbb"
+  }
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "ddf786f8-67ca-438b-8719-59bb4ac7f51e"
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Customer role required",
+    "request_id": "9d05ef16-2dd6-4fcf-b197-268bb3b5e42d"
+  }
+  ```
+
+### Get Wallet Transactions
+- **URL**: `/customer/wallet/transactions`
+- **Method**: `GET`
+- **Authentication**: Required (Customer Only)
+- **Description**: Retrieves the transaction history for the customer's wallet.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "message": "Wallet transactions retrieved successfully",
+    "request_id": "9dab3c83-d13b-4e22-8b2f-af05243f4edc",
+    "status": "SUCCESS",
+    "data": {
+        "transactions": [
+            {
+                "id": 2,
+                "amount": "230.94",
+                "transaction_type": "DEDUCT",
+                "booking_id": 1,
+                "transaction_id": "d8fcdc7b-0edc-4603-8845-21c7bcebed8d",
+                "timestamp": "2025-05-18T10:42:11+05:30"
+            },
+            {
+                "id": 1,
+                "amount": "500.00",
+                "transaction_type": "ADD",
+                "transaction_id": "1695b7e7-11c2-4ac7-b486-794bab4b8c17",
+                "timestamp": "2025-05-18T00:22:39+05:30"
+            }
+        ]
+    }
+  }
+  ```
+- **Success Response (200 OK) - No Transactions**:
+  ```json
+  {
+    "message": "Wallet transactions retrieved successfully",
+    "request_id": "065934c2-b6aa-456e-b074-c81a56794858",
+    "status": "SUCCESS",
+    "data": {
+        "transactions": null
+    }
+  }
+  ```
+- **Error Response (401 Unauthorized)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INVALID_TOKEN",
+    "message": "Unauthorized",
+    "request_id": "ddf786f8-67ca-438b-8719-59bb4ac7f51e"
+  }
+  ```
+- **Error Response (403 Forbidden)**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "FORBIDDEN",
+    "message": "Access denied. Customer role required",
+    "request_id": "9d05ef16-2dd6-4fcf-b197-268bb3b5e42d"
+  }
+  ```
+
 ## Booking Management
 
 ### Get Seat Map
@@ -1427,16 +1593,25 @@
 - **URL**: `/customer/booking/:id/payment`
 - **Method**: `POST`
 - **Authentication**: Required (Customer only)
-- **Description**: Processes payment for a pending booking and confirms it.
+- **Description**: Processes payment for a pending booking and confirms it. Supports multiple payment methods.
 - **Notes**:
   - Must be completed within the 5-minute expiration window
   - Only the customer who created the booking can process payment
   - Successfully processed bookings are set to "Confirmed" status
-  - Payment validation includes Luhn check for card number and expiry date validation
-- **Request Body**:
+  - Payment method can be Card or Wallet
+  - For Wallet payment with insufficient balance, card details can be provided to top-up the wallet
+- **Request Body for Wallet Payment**:
+  ```json
+  {
+    "booking_id": 5,
+    "payment_method": "Wallet"
+  }
+  ```
+- **Request Body for Card Payment**:
   ```json
   {
     "booking_id": 10,
+    "payment_method": "Card",
     "card_number": "4111111111111111",
     "cvv": "123",
     "expiry_month": "12",
@@ -1444,35 +1619,88 @@
     "cardholder_name": "John Doe"
   }
   ```
-- **Success Response (200 OK)**:
+- **Request Body for Wallet Payment with Card Top-up**:
+  ```json
+  {
+    "booking_id": 5,
+    "payment_method": "Wallet",
+    "card_number": "4111111111111111",
+    "cvv": "123",
+    "expiry_month": "12",
+    "expiry_year": "25",
+    "cardholder_name": "John Doe"
+  }
+  ```
+- **Success Response (200 OK) - Wallet Payment**:
   ```json
   {
     "message": "Payment processed successfully",
-    "request_id": "969a7924-f48e-4ee0-9b1a-f20b046f2adc",
+    "request_id": "a5c40c8c-4c54-440c-aaf1-66de795d47cc",
     "status": "SUCCESS",
     "data": {
-      "booking_id": 10,
-      "show_id": 22,
-      "show_date": "2025-04-26",
-      "show_time": "13:00:00.000000",
-      "movie": {
-        "movieId": "tt7349950",
-        "name": "It Chapter Two",
-        "duration": "2h49m0s",
-        "plot": "Twenty-seven years after their first encounter with the terrifying Pennywise, the Losers Club have grown up and moved away, until a devastating phone call brings them back.",
-        "imdbRating": "6.6",
-        "moviePoster": "https://m.media-amazon.com/images/M/MV5BYTJlNjlkZTktNjEwOS00NzI5LTlkNDAtZmEwZDFmYmM2MjU2XkEyXkFqcGdeQXVyNjg2NjQwMDQ@._V1_SX300.jpg",
-        "genre": "Drama, Fantasy, Horror"
-      },
-      "seat_numbers": [
-        "B1",
-        "I1"
-      ],
-      "amount_paid": 553.3,
-      "payment_type": "Card",
-      "booking_time": "2025-04-23T16:46:18.154511+05:30",
-      "status": "Confirmed",
-      "transaction_id": "71d2b74c-4f79-49d1-9a6c-7eddaaf454a5"
+        "booking_id": 1,
+        "show_id": 26,
+        "show_date": "2025-05-18",
+        "show_time": "13:00:00.000000",
+        "customer_name": "Suteerth Subramaniam",
+        "phone_number": "8779978324",
+        "seat_numbers": [
+            "A1"
+        ],
+        "amount_paid": "230.94",
+        "payment_type": "Wallet",
+        "booking_time": "2025-05-18T10:40:59.186925+05:30",
+        "status": "Confirmed",
+        "transaction_id": "d8fcdc7b-0edc-4603-8845-21c7bcebed8d"
+    }
+  }
+  ```
+- **Success Response (200 OK) - Card Payment**:
+  ```json
+  {
+    "message": "Payment processed successfully",
+    "request_id": "881db287-7d8a-4bcb-9a1c-e54e3dd0dd38",
+    "status": "SUCCESS",
+    "data": {
+        "booking_id": 2,
+        "show_id": 26,
+        "show_date": "2025-05-18",
+        "show_time": "13:00:00.000000",
+        "customer_name": "Suteerth Subramaniam",
+        "phone_number": "8779978324",
+        "seat_numbers": [
+            "A2"
+        ],
+        "amount_paid": "230.94",
+        "payment_type": "Card",
+        "booking_time": "2025-05-18T11:47:49.236765+05:30",
+        "status": "Confirmed",
+        "transaction_id": "cf8c6b45-7613-4ad6-85ed-36f97572fcf0"
+    }
+  }
+  ```
+- **Success Response (200 OK) - Wallet Payment with Card Top-up**:
+  ```json
+  {
+    "message": "Payment processed successfully",
+    "request_id": "4a3208f1-7821-4c50-aebe-1e88a48c242c",
+    "status": "SUCCESS",
+    "data": {
+        "booking_id": 5,
+        "show_id": 26,
+        "show_date": "2025-05-18",
+        "show_time": "13:00:00.000000",
+        "customer_name": "Suteerth Subramaniam",
+        "phone_number": "8779978324",
+        "seat_numbers": [
+            "A3",
+            "A4"
+        ],
+        "amount_paid": "461.88",
+        "payment_type": "Wallet",
+        "booking_time": "2025-05-18T12:04:12.139734+05:30",
+        "status": "Confirmed",
+        "transaction_id": "2fd3de7e-13e6-411b-a570-4f008422d6ad"
     }
   }
   ```
@@ -1485,30 +1713,27 @@
     "request_id": "19c3079b-15c9-4671-aa0c-1f0ebdfdb436"
   }
   ```
-- **Error Response (400 Bad Request) - Missing Fields**:
+- **Error Response (400 Bad Request) - Insufficient Wallet Balance**:
+  ```json
+  {
+    "status": "ERROR",
+    "code": "INSUFFICIENT_BALANCE",
+    "message": "Not enough wallet balance and no card details provided",
+    "request_id": "26dee912-00e4-42b6-b16e-5959691cc520"
+  }
+  ```
+- **Error Response (400 Bad Request) - Invalid Payment Method**:
   ```json
   {
     "status": "ERROR",
     "code": "VALIDATION_ERROR",
     "message": "Validation failed",
-    "request_id": "d67c5c25-a9e6-4285-9467-be545283c18c",
+    "request_id": "193b2a40-5499-4bd2-9288-a66e09328dd2",
     "errors": [
-      {
-        "field": "CVV",
-        "message": "This field is required"
-      },
-      {
-        "field": "ExpiryMonth",
-        "message": "This field is required"
-      },
-      {
-        "field": "ExpiryYear",
-        "message": "This field is required"
-      },
-      {
-        "field": "CardholderName",
-        "message": "This field is required"
-      }
+        {
+            "field": "PaymentMethod",
+            "message": "Invalid value"
+        }
     ]
   }
   ```
