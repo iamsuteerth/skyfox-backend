@@ -52,10 +52,10 @@ seed_slot_data() {
   echo "Seeding slot data..."
   PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -q -c "
   INSERT INTO slot (name, start_time, end_time) VALUES 
-    ('Morning', '09:00:00', '12:00:00'),
-    ('Afternoon', '13:00:00', '16:00:00'),
-    ('Evening', '17:00:00', '20:00:00'),
-    ('Night', '21:00:00', '00:00:00');"
+    ('Morning', '08:30:00', '11:30:00'),
+    ('Afternoon', '12:30:00', '15:30:00'),
+    ('Evening', '16:30:00', '19:30:00'),
+    ('Night', '20:30:00', '23:30:00');"
   
   slot_count=$(PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -t -c "SELECT COUNT(*) FROM slot;")
   echo "✓ Added $slot_count time slots"

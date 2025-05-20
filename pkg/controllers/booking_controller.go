@@ -381,7 +381,7 @@ func (c *BookingController) SingleCheckInBooking(ctx *gin.Context) {
 	if len(alreadyDone) > 0 {
 		msg = "Booking was already checked in"
 	} else if len(invalid) > 0 {
-		msg = "Check-in failed: invalid booking (already expired/invalid status/or show ended)"
+		msg = "Check-in failed: invalid booking (already expired/invalid status/too early for check-in/or show ended)"
 	}
 	utils.SendOKResponse(ctx, msg, utils.GetRequestID(ctx), resp)
 }

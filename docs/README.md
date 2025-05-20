@@ -1590,7 +1590,7 @@
   ```
 
 ### Process Payment for Booking
-- **URL**: `/customer/booking/:id/payment`
+- **URL**: `/customer/booking/payment`
 - **Method**: `POST`
 - **Authentication**: Required (Customer only)
 - **Description**: Processes payment for a pending booking and confirms it. Supports multiple payment methods.
@@ -2136,7 +2136,7 @@
 - **URL:** `/check-in/bookings`  
 - **Method:** `POST`  
 - **Authentication:** Required (Admin/Staff role)  
-- **Description:** Attempts to check in the list of booking IDs. Already checked-in, invalid, or expired bookings are skipped, and the response details which bookings were checked in, already done, or invalid.
+- **Description:** Attempts to check in the list of booking IDs. Check-in is only allowed starting 1 hour before show start time until the show ends. Already checked-in, invalid, or bookings outside the check-in window are skipped, and the response details which bookings were checked in, already done, or invalid.
 - **Request Body**
   ```json
   {
@@ -2179,7 +2179,7 @@
 - **URL:** `/check-in/booking`  
 - **Method:** `POST`  
 - **Authentication:** Required (Admin/Staff role)  
-- **Description:** Attempts to check in a single booking by ID. Returns which category the booking falls into (`checked_in`, `already_done`, or `invalid`)
+- **Description:** Attempts to check in a single booking by ID.Check-in is only allowed starting 1 hour before show start time until the show ends. Already checked-in, invalid, or bookings outside the check-in window are skipped, and the response details if booking was checked in, already done, or invalid.
 - **Request Body:**
   ```json
   {
