@@ -14,7 +14,6 @@ import (
 type CheckInService interface {
 	FindConfirmedBookings(ctx context.Context) ([]*models.Booking, error)
 	MarkBookingsCheckedIn(ctx context.Context, bookingIDs []int) (checkedIn []int, alreadyDone []int, invalid []int, err error)
-	// MarkBookingCheckedIn(ctx context.Context, bookingID int) (bool, error)
 }
 
 type checkInService struct {
@@ -101,33 +100,6 @@ func (s *checkInService) MarkBookingsCheckedIn(ctx context.Context, bookingIDs [
 	}
 	return checkedIn, alreadyDone, invalid, nil
 }
-
-// func (s *checkInService) MarkBookingCheckedIn(ctx context.Context, bookingID int) (bool, error) {
-//     booking, err := s.bookingRepo.GetBookingById(ctx, bookingID)
-//     if err != nil {
-//         return false, err
-//     }
-//     if booking == nil || booking.Status != "Confirmed" {
-//         return false, nil
-//     }
-//     show, err := s.showRepo.FindById(ctx, booking.ShowId)
-//     if err != nil || show == nil {
-//         return false, nil
-//     }
-//     now := time.Now()
-//     if !isWithinCheckInWindow(now, show.Date, show.Slot.StartTime) {
-//         return false, nil
-//     }
-//     endTimeParsed, parseErr := parseShowEndTime(show.Date, show.Slot.EndTime)
-//     if parseErr != nil {
-//         log.Warn().Int("show_id", show.Id).Msg("Could not parse show end time")
-//         return false, nil
-//     }
-//     if time.Now().After(endTimeParsed) {
-//         return false, nil
-//     }
-//     return s.bookingRepo.MarkBookingCheckedIn(ctx, bookingID)
-// }
 
 func isWithinCheckInWindow(now time.Time, showDate time.Time, startTime string) bool {
 	startTimeParsed, err := parseShowStartTime(showDate, startTime)
