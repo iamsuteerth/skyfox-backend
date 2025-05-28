@@ -212,7 +212,6 @@ The migration files are stored in the `supabase/migration` directory:
 - `000009_booking_timestamp_update.down.sql` - Reverts booking_time timezone change
 - `000010_relationship_btw_abc_booking.up.sql` - Sets up cascading delete from booking to admin_booked_customer
 - `000010_relationship_btw_abc_booking.down.sql` - Reverts the cascading delete relationship
-- `000010_relationship_btw_abc_booking.down.sql` - Reverts the cascading delete relationship
 - `000011_payment_txd_table.up.sql` - Creates payment transaction table for online payments
 - `000011_payment_txd_table.down.sql` - Removes payment transaction table
 - `000012_pending_booking_tracker.up.sql` - Creates table to track pending bookings and their expiration times
@@ -231,8 +230,66 @@ The migration files are stored in the `supabase/migration` directory:
 - `000018_wallet_transaction_type_enum.down.sql` - Drops the wallet_transaction_type enum
 - `000019_wallet_transaction_table.up.sql` - Creates wallet_transaction table for tracking wallet operations
 - `000019_wallet_transaction_table.down.sql` - Drops the wallet_transaction table
+- `000020_add_cascade_delete_behavior.up.sql` - Adds CASCADE delete behavior to customer foreign key constraints for development flexibility
+- `000020_add_cascade_delete_behavior.down.sql` - Removes CASCADE delete behavior, restoring original constraint behavior
+- `000021_optimize_database_indices.up.sql` - Optimizes database performance by adding composite and partial indexes for common query patterns while removing redundant indexes
+- `000021_optimize_database_indices.down.sql` - Reverts index optimizations and restores original index structure
 
 To apply these migrations to your Supabase project, use the Supabase SQL Editor or a migration tool.
+
+### Migration Analysis Tool
+
+The SkyFox Backend includes a custom migration analysis tool that consolidates all database migration files into comprehensive documentation for review and analysis.
+
+#### **Purpose**
+
+The Migration Analyzer Script addresses the common challenge of understanding database schema evolution across multiple migration files. As projects grow and accumulate dozens of migrations, it becomes difficult to:
+- Visualize the complete database schema evolution
+- Identify migration dependencies and potential conflicts
+- Create comprehensive setup scripts for fresh environments
+- Plan effective rollback strategies for production deployments
+
+#### **Features**
+
+- **Consolidated View**: Merges all `.up.sql` and `.down.sql` files into single, readable documents
+- **Proper Ordering**: Processes UP migrations in ascending order and DOWN migrations in descending order for correct application sequence
+- **Comprehensive Headers**: Each migration is clearly labeled with separators for easy navigation
+- **Summary Statistics**: Provides counts of total migrations and missing files
+- **Error Detection**: Identifies missing migration files and reports warnings
+- **Fresh Setup Support**: The consolidated UP file can serve as a complete database setup script
+
+#### **Usage**
+
+```bash
+# Make the script executable
+chmod +x analyze_migrations.sh
+
+# Run from your project root (adjust MIGRATIONS_DIR path as needed)
+./analyze_migrations.sh
+```
+
+#### **Output Files**
+
+The tool generates two primary files in the `./migration_analysis/` directory:
+
+1. **`mega_up_migration.sql`**: Contains all UP migrations in chronological order
+   - Use for fresh database setup
+   - Review complete schema evolution
+   - Identify cumulative changes
+
+2. **`mega_down_migration.sql`**: Contains all DOWN migrations in reverse order
+   - Use for complete database teardown
+   - Plan rollback strategies
+   - Test migration reversibility
+
+#### **Development Benefits**
+
+- **Documentation**: Generate comprehensive migration documentation
+- **Debugging**: Quickly identify conflicting or problematic migrations
+- **Onboarding**: Help new developers understand the database structure evolution
+- **Production Planning**: Create reliable deployment and rollback procedures
+
+This tool is particularly valuable for the SkyFox project given its 20+ migrations spanning user management, booking systems, payment processing, and wallet functionality.
 
 ## Running the Application
 
