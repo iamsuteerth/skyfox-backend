@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 
 	"github.com/go-playground/validator/v10"
@@ -14,7 +15,9 @@ import (
 	"github.com/iamsuteerth/skyfox-backend/pkg/constants"
 	"github.com/iamsuteerth/skyfox-backend/pkg/controllers"
 	"github.com/iamsuteerth/skyfox-backend/pkg/database/seed"
+	"github.com/iamsuteerth/skyfox-backend/pkg/metrics"
 	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/cors"
+	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/observability"
 	"github.com/iamsuteerth/skyfox-backend/pkg/middleware/security"
 	customValidator "github.com/iamsuteerth/skyfox-backend/pkg/middleware/validator"
 	movieservice "github.com/iamsuteerth/skyfox-backend/pkg/movie-service"
@@ -89,8 +92,20 @@ func main() {
 		customValidator.RegisterCustomValidations(v)
 	}
 
+	metrics.InitMetrics()
+
 	router := gin.Default()
+
+	router.Use(observability.PrometheusMiddleware())
+
 	router.Use(cors.SetupCORS())
+
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+	})
+
 	router.Use(security.APIKeyAuthMiddleware())
 
 	noAuthRouter := router.Group("")
@@ -109,10 +124,6 @@ func main() {
 	adminStaffRouter := router.Group("")
 	adminStaffRouter.Use(security.AuthMiddleware())
 	adminStaffRouter.Use(security.AdminStaffMiddleware())
-
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
-	})
 
 	noAuthAPIs := noAuthRouter.Group("")
 	{
