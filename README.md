@@ -4,11 +4,16 @@ A Go-based backend service for the SkyFox movie booking system with Supabase Pos
 
 ## Overview
 
-SkyFox Backend is a modern, well-structured API service that provides authentication, customer management, and a security question-based password recovery system for the SkyFox movie booking application. Built with Go and the Gin framework, it implements clean architecture principles with proper separation of controllers, services, and repositories.
+- SkyFox Backend is a modern, well-structured API service that provides authentication, RBAC, customer management, and a security question-based password recovery system for the SkyFox movie booking application. 
+- Built with Go and the Gin framework, it implements clean architecture principles with proper separation of controllers, services, and repositories.
 
-> **Note:** This repository contains the POC architecture. For production-level architecture, please refer to [skyfox-devops](https://github.com/iamsuteerth/skyfox-devops).
+> **Note:** This documentation is specific to the backend. For DevOps, please refer to [skyfox-devops](https://github.com/iamsuteerth/skyfox-devops).
 
-![Architecture Diagram](./skyfox-backend-arch.png)
+### Production AWS Architecture
+![Architecture Diagram - Production](./AWS_Skyfox.png)
+
+### Legacy NGINX Architecture
+![Architecture Diagram - POC](./skyfox-backend-arch.png)
 
 ## Features
 
@@ -27,6 +32,19 @@ SkyFox Backend is a modern, well-structured API service that provides authentica
 - **Efficient Concurrency Handling**: Each booking gets its own dedicated monitor, allowing thousands of concurrent reservations with precise timing control.
 - **Digital Wallet System**: Integrated customer wallet for funds management with secure transaction tracking and support for partial wallet payments.
 - **OLTP Support**: Decimal package implementation for precise financial calculations and transaction processing.
+
+## Go Backend Security Defenses
+
+- **API Key Gatekeeping:** Every business endpoint is protected by a mandatory API key, validated on every request.
+- **No File-Based Secrets:** The application never reads secrets from the filesystem or in-repo config files. All sensitive data comes from environment variables only.
+- **Read-Only Secrets at Runtime:** Environment variables holding secrets are injected at runtime from AWS SSM and are never logged, echoed, or returned in responses.
+- **Scanner-Resistant Routing:** Common attack paths (`/secrets/aws/*`, `/env/*`, `/config/*`, etc.) are always met with 403 Forbidden—never a 200, never a file disclosure.
+- **Detailed Audit Logging:** Every denied access attempt (403) is logged with source IP and request details, supporting proactive threat monitoring.
+- **No Leaky Endpoints:** Even advanced bots probing for AWS credentials, ENV, or config files cannot extract real secrets.
+
+> **Summary:**  
+> The SkyFox Go backend is designed with modern SaaS threat models in mind.  
+> Production deployments are immune to standard cloud credential harvesting attacks—even if bots hit you 1,000,000 times, they only get a 403.
 
 ## Project Structure
 
@@ -85,109 +103,6 @@ S3_BUCKET=your-project-profile-images
 ```bash
 go mod download
 ```
-
-## AWS ElasticBeanstalk POC Deployment
-
-The SkyFox Backend is deployed on AWS Elastic Beanstalk, providing a scalable and managed environment for the application.
-
-### Deployment Architecture
-
-Our deployment uses a containerized approach with Docker, running on ARM64 architecture for optimal cost-efficiency and performance:
-
-- **Platform**: Docker running on 64bit Amazon Linux 2023
-- **Instance Type**: ARM64-based t4g instances (t4g.micro, t4g.small)
-- **Environment Type**: Single instance (suitable for development and initial production)
-
-### Deployment Process
-
-1. **Multi-Stage Docker Build**:
-   - First stage: Builds the Go application with proper optimization
-   - Second stage: Creates a lightweight image with Nginx and the compiled binary
-
-2. **Image Storage**:
-   - The Docker image is stored in Amazon ECR (Elastic Container Registry)
-   - Tagged and versioned for consistent deployments
-
-3. **Environment Configuration**:
-   - Environment variables are securely managed through Elastic Beanstalk
-   - IAM roles provide secure access to AWS services like S3
-
-4. **Monitoring and Logging**:
-   - Basic CloudWatch monitoring is enabled
-   - Application logs are retained for 7 days
-   - Supervisor manages process logs within the container
-
-## Nginx Reverse Proxy with API Key Security
-
-The SkyFox Backend implements a robust security layer using Nginx as a reverse proxy with API key validation.
-
-### Key Features
-
-- **API Gateway Pattern**: Nginx functions as an API Gateway, providing a security layer in front of the Go application
-- **API Key Validation**: All requests (except health checks) require a valid API key in the `X-Api-Key` header
-- **Rate Limiting**: Protects against abuse with configurable request rate limiting
-- **Process Management**: Supervisor ensures both Nginx and the Go application run reliably
-- **Security Headers**: Implements best practices for HTTP security headers
-- **Performance Optimization**: Includes Gzip compression, connection optimizations, and efficient file serving
-
-### How It Works
-
-1. **Request Flow**:
-   - Incoming requests arrive at Nginx on port 80
-   - Nginx validates the API key in the `X-Api-Key` header
-   - Valid requests are proxied to the Go application on port 8080
-   - The API key is stripped before forwarding to the backend for security
-
-2. **Configuration Management**:
-   - Nginx configuration uses environment variable substitution
-   - The API Gateway key is securely stored as an environment variable
-   - Configuration is generated at container startup
-
-3. **Health Checks**:
-   - A dedicated `/health` endpoint bypasses API key requirements
-   - Returns a simple JSON response: `{"status":"healthy"}`
-   - Enables monitoring systems to verify application health
-
-### Security Benefits
-
-- **Attack Surface Reduction**: The Go application is never directly exposed to the internet
-- **Secret Management**: API keys are never hard-coded in the application
-- **Request Filtering**: Unauthorized requests are blocked before reaching the application code
-- **Header Sanitization**: Security-sensitive headers are managed by Nginx
-- **Connection Control**: Timeouts and buffer sizes are optimized to prevent abuse
-- **Standardized Errors**: Unauthorized requests receive consistent error responses
-
-### Testing with Docker
-
-To test this setup locally:
-
-1. **Build the Docker image**:
-   ```bash
-   docker build -t skyfox-backend:local .
-   ```
-
-2. **Run the container**:
-   ```bash
-   docker run -p 80:80 \
-     -e PORT=8080 \
-     -e API_GATEWAY_KEY=your_api_key_here \
-     -e OTHER_ENV_VARIABLES=values \
-     skyfox-backend:local
-   ```
-
-3. **Test the API key validation**:
-   ```bash
-   # This should return 403
-   curl http://localhost/
-
-   # This should succeed
-   curl -H "X-Api-Key: your_api_key_here" http://localhost/
-
-   # Health check should always work
-   curl http://localhost/health
-   ```
-
-This deployment architecture provides a secure, scalable, and maintainable infrastructure for the SkyFox Backend service, leveraging AWS managed services while implementing industry best practices for API security.
 
 ## Database Migration
 
